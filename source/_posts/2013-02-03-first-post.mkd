@@ -1,0 +1,99 @@
+---
+layout: post
+title: "githubとoctpressでブログを構築する"
+date: 2013-02-03 20:43:23
+comments: true
+categories: octpress
+---
+
+ここのとおりに作業を進める
+
+* [GitHubにブログを設置してみたよ](http://shogo82148.github.com/blog/2012/03/21/test/)
+
+詰まったこと
+--------------------------
+
+### bundle installでエラー
+
+こんなエラーがでた。
+
+<pre>env: ruby_bundler_wrapper: No such file or directory</pre>
+
+[ここ](http://www.qnm.co/articles/ruby-bundler-wrapper.html)によると、.gemrcにある`custom_shebang directive`を削除すればOKとあったので、そのとおりにし、もう一度`gem install bundler`をからやり直したらうまく行った。
+
+### rake installでエラー
+
+<pre>
+$ rake install
+env: ruby_bundler_wrapper: No such file or directory
+</pre>
+
+おなじ事象やんけ…。
+
+もうすこし調べてみると、[ここ](https://github.com/mpapis/rubygems-bundler/issues/3#issuecomment-1859556) がみつかる。
+  どうやら`bundle install`したあとは`gem regenerate_binstubs`をしたほうが良いらしい。
+
+実際にためしてみるとうまく行った。
+
+
+### デプロイの前にプレビュー
+
+このコマンドでコンテンツ生成してプレビューのためのサーバ立ち上げまでやってくれる。
+
+<pre>
+rake generate && rake preview
+</pre>
+
+### デプロイするときにエラーがでる
+
+こんなエラーがでたり
+
+<pre>
+## Generating Site with Jekyll
+  1 require "rubygems"
+unchanged sass/screen.scss
+Configuration from /Users/sgyk/local/octopress/_config.yml
+Building site: source -> public
+Successfully generated site: source -> public
+## Deploying website via Rsync
+ssh: Could not resolve hostname sgykfjsm: nodename nor servname provided, or not known
+rsync: connection unexpectedly closed (0 bytes received so far) [sender]
+rsync error: unexplained error (pre 255) at /SourceCache/rsync/rsync-42/rsync/io.c(452) [sender=2.6.9]
+FAILED
+</pre>
+
+
+ちょっとssh変えてもダメだった
+
+<pre>
+## Generating Site with Jekyll
+unchanged sass/screen.scss
+Configuration from /Users/sgyk/local/octopress/_config.yml
+Building site: source -> public
+Successfully generated site: source -> public
+## Deploying website via Rsync
+Permission denied (publickey).
+rsync: connection unexpectedly closed (0 bytes received so far) [sender]
+rsync error: unexplained error (pre 255) at /SourceCache/rsync/rsync-42/rsync/io.c(452) [sender=2.6.9]
+FAILED
+</pre>
+
+そういえば最初に登録したリポジトリURLがhttpsだったことを思い出し、`rake setup_github_pages`をgitプロトコルのほうに変更するところからやり直した。
+
+
+そんなこんなでできた
+
+テーマをかえる
+------------------------------
+
+Octopressをgithubに設定するため、色々ググったが、その際に気づいたのが、多くのOctopressユーザはデフォルトのテーマでやっているということ。
+そうでないユーザもチラホラいたが、なんとなくテーマを変えたくなったので、以下でテーマを探した。
+
+* [3rd Party Octopress Themes](https://github.com/imathis/octopress/wiki/3rd-Party-Octopress-Themes)
+
+今回は[White Lake Octopress Theme](https://github.com/gehaxelt/CSS-WhiteLake)を選択した。
+あとは`_config.yml`でTwitterアカウントやgithubアカウントを設定したり。そんなところです。
+
+Octopressは色々とプラグインが充実しているらしいが、今回はこのへんで終了。
+
+
