@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: troubleshooting | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/troubleshooting/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[起動に失敗したインスタンスを調査する例]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2015/02/13/how-to-analysis-unlaunched-instance/"/>
+    <updated>2015-02-13T03:43:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2015/02/13/how-to-analysis-unlaunched-instance</id>
+    <content type="html"><![CDATA[<p>先日、とあるサービスで利用しているBeanstalk環境でインスタンスが起動に失敗した。ログを見ると、S3からリソースの取得に失敗していたようだ。<br>ネットワーク接続の状態としては、AWS内のネットワークでは疎通可能だが、インターネットを経由した通信は不可、という状況。具体的には、例えばAWSのインスタンスからはsshログイン可能だが、グローバルからのsshログインはできないといったような感じ。色々調べたけど、不意に調査対象のインスタンスがTerminateしてしまい、結局原因がわからないままになってしまった。</p>
+
+<p>調査はAWS Supportとやりとりしながら行ったのだけれども、色々と情報収集を都度指示されて捗らなかった。<br>なので、ここには次また事象が再発した場合に備えて、障害発生時に取得しておきべきこと、確認すべきことを整理する。</p>
+
+<!-- more -->
+
+
+<a name="L....................."></a>
+<h2>確認すべきこと</h2>
+
+<ul>
+<li>対象インスタンスに設定されているSecurityGroup
+
+<ul>
+<li>どこからのアクセスを許可しているか</li>
+<li>許可しているプロトコルは何か</li>
+<li>どのポートを開けているか</li>
+</ul>
+</li>
+<li>通信状態に問題がある場合
+
+<ul>
+<li>AWS内ネットワークからアクセス可能か（例えばsshログインなど）</li>
+<li>インターネットからアクセス可能か（例えばcurlでのHTTPアクセスなど）</li>
+</ul>
+</li>
+<li>対象インスタンスにログイン可能な場合
+
+<ul>
+<li>AWS内ネットワークへのアクセスは可能か（例えば<code>curl <a href="http://169.254.169.254/latest/meta-data/">http://169.254.169.254/latest/meta-data/</a></code>でインスタンスのメタデータが取得可能か）</li>
+<li>インターネットへのアクセスは可能か（例えば<code>curl <a href="http://www.google.com">http://www.google.com</a></code>がTimeoutしないか）</li>
+</ul>
+</li>
+<li>対象インスタンスにログインできない場合
+
+<ul>
+<li>Management ConsoleのEC2の画面から対象インスタンスを選択 > Actions > Instance Settings > Get System Logで起動時のログを参照できるかを確認する。</li>
+<li>確認できた場合はそれをテキストファイルなどにコピーしてSupportへ提供する。</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="L....................."></a>
+<h2>収拾すべき情報</h2>
+
+<p>起動に成功したインスタンスと起動に失敗したインスタンスのそれぞれで収拾を行なうこと。</p>
+
+<ul>
+<li>各種設定ファイル
+
+<ul>
+<li>/etc/ssh/sshd_config</li>
+<li>/etc/resolv.conf</li>
+</ul>
+</li>
+<li>各種コマンドの結果
+
+<ul>
+<li>ps -ef</li>
+<li>traceroute, nslookup, dig
+
+<ul>
+<li>これらのコマンドはsshログインできた端末（例えば踏み台に使ったEC2インスタンス）と、sshログインできなかった端末（例えば対象インスタンスへインターネット経由でsshログインを行った作業者の端末）の両方で行うこと。</li>
+<li>www.google.co.jpやrepo.ap-northeast-1.amazonaws.comなど、いくつかのパターンを試すと良い。</li>
+</ul>
+</li>
+<li>tcpdump
+
+<ul>
+<li>.cap形式でコマンドの結果を保存してSupportへ提供する。</li>
+<li>tcpdump port 80 -w filename.cap</li>
+</ul>
+</li>
+<li>netstat -rn, netstat -an</li>
+<li>ssh -vvv</li>
+<li>iptablesの起動有無
+
+<ul>
+<li>sudo /etc/init.d/iptables status</li>
+<li>sudo /etc/init.d/ip6tables status</li>
+<li>起動している場合は設定をテキストファイルなどにコピーしてSupportへ提供する。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="L.................."></a>
+<h2>注意すること</h2>
+
+<p>今回、油断して障害発生した端末が不意にTerminateしてしまい、原因を究明することができなかった。このような障害インスタンスはStanby状態にすることで稼働を維持することができる。具体的にはマニュアルの<a href="http://docs.aws.amazon.com/ja_jp/AutoScaling/latest/DeveloperGuide/TroubleshootingAnAutoScalingInstance.html">Auto Scaling グループのインスタンスのトラブルシューティング</a>を参照すること。Auto ScalingやBeanstalkなどを利用していなければ、勝手にTerminateされることは無いと思うので、Terminate Protectionを設定しておけば大丈夫だと思う。</p>
+]]></content>
+  </entry>
+  
+</feed>

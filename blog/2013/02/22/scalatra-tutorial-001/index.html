@@ -1,0 +1,377 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>scalatraでいろいろやる その１ - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="Set up Scaltraをインストールする前に以下の4つがインストールされていることを確認する。 JDK
+SBT
+conscript
+giter8 JDK いつものコマンドで確認。 [sgyk@fujishima] 13-02-21 22:48:43 ~/local/tmp
+$ java - &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.com/blog/2013/02/22/scalatra-tutorial-001">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.com" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">scalatraでいろいろやる その１</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2013-02-22T00:08:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>22</span><span class='date-suffix'>nd</span>, <span class='date-year'>2013</span></span> <span class='time'>12:08 am</span></time>
+        
+        
+          
+           | <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/edit/master/source/_posts/2013-02-22-scalatra-tutorial-001.markdown">Edit</a>
+          
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><a name="Set.up"></a>
+<h2>Set up</h2>
+
+<p>Scaltraをインストールする前に以下の4つがインストールされていることを確認する。</p>
+
+<ol>
+<li>JDK</li>
+<li>SBT</li>
+<li>conscript</li>
+<li>giter8</li>
+</ol>
+
+
+<!-- more -->
+
+
+<a name="JDK"></a>
+<h3>JDK</h3>
+
+<p>いつものコマンドで確認。</p>
+
+<pre>[sgyk@fujishima] 13-02-21 22:48:43 ~/local/tmp
+$ java -version
+java version "1.7.0_15"
+Java(TM) SE Runtime Environment (build 1.7.0_15-b03)
+Java HotSpot(TM) 64-Bit Server VM (build 23.7-b01, mixed mode)</pre>
+
+
+<p>JDKが入ってなければ、<a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Java SE Development Kit 7 Downloads</a>からダウンロードして入れておく。</p>
+
+<a name="SBT"></a>
+<h3>SBT</h3>
+
+<p>Scalaやってれば入ってるはず。自分の場合は起動してみたらdeprecatedって言われた。</p>
+
+<pre>
+[sgyk@fujishima] 13-02-21 22:34:01 ~
+$ sbt
+[warn] Alternative project directory .sbt (/Users/sgyk/.sbt) has been deprecated since sbt 0.12.0.
+[warn]   Please use the standard location: /Users/sgyk/project
+[info] Loading project definition from /Users/sgyk/.sbt
+[info] Set current project to default-bf7818 (in build file:/Users/sgyk/)
+</pre>
+
+
+<p>のでbrewで入れなおした。</p>
+
+<pre>sgyk@fujishima] 13-02-21 22:34:44 ~
+$ brew uninstall sbt
+Uninstalling /usr/local/Cellar/sbt/0.12.1...
+[sgyk@fujishima] 13-02-21 22:34:51 ~
+$ brew install sbt
+==> Downloading http://typesafe.artifactoryonline.com/typesafe/ivy-releases/org.scala-sbt/sbt-launch/0.12.2/sbt-launch.jar
+######################################################################## 100.0%
+==> Caveats
+You can use $SBT_OPTS to pass additional JVM options to SBT.
+For convenience, this can specified in `~/.sbtconfig`.
+
+For example:
+    SBT_OPTS="-XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=256M"
+==> Summary
+🍺  /usr/local/Cellar/sbt/0.12.2: 3 files, 1.1M, built in 9 seconds</pre>
+
+
+<a name="Conscript"></a>
+<h3>Conscript</h3>
+
+<p><a href="https://github.com/n8han/conscript">Conscript</a>はScalaとかその関連ツールをインストールしたりアップデートするツールらしい。</p>
+
+<blockquote><ul>
+<li>Queries a github project for launch configurations</li>
+<li>Writes these to your local filesystem, with a personalized boot path</li>
+<li>Creates scripts to execute the launch configurations</li>
+</ul>
+</blockquote>
+
+<p><br>で、このあとにインストールするgiter8がこれに依存してるのでインストールする必要がある。</p>
+
+<p><code>curl <a href="https://raw.github.com/n8han/conscript/master/setup.sh">https://raw.github.com/n8han/conscript/master/setup.sh</a> | sh</code>でインストールすればOK。</p>
+
+<a name="giter8"></a>
+<h3>giter8</h3>
+
+<p>giter8については、<a href="http://blog.twiwt.org/e/f12c0f">ここ</a>を読めば、色々書いているけど、要はテンプレートを作ってれるツールらしい。</p>
+
+<blockquote><p>Giter8 は github 上に公開されたテンプレートからアプリケーションのひな形を作成するコマンドラインツールだ。 Scala で実装されており、 sbt のランチャー を使って起動するが、様々な用途に使える。</p></blockquote>
+
+<p>とりあえず <code>cs n8han/giter8</code>でインストール。<br />なんか色々落としてくるので、ちょっと時間がかかる。無事にインストールができたら確認。</p>
+
+<pre>[sgyk@fujishima] 13-02-21 22:49:13 ~
+$ which g8
+/Users/sgyk/bin/g8
+</pre>
+
+
+<a name="first.project"></a>
+<h2>first project</h2>
+
+<p>そんなこんなセットアップが終わったら、早速Scalatraのプロジェクトを作る。</p>
+
+<a name="Build.Project"></a>
+<h3>Build Project</h3>
+
+<p><code>g8 scalatra/scalatra-sbt </code>を<em>プロジェクトを作りたいディレクトリ位置</em>で実行する。</p>
+
+<pre>[sgyk@fujishima] 13-02-21 22:56:51 ~/local/script/scala
+$ g8 scalatra/scalatra-sbt
+organization [com.example]: com.sgykfjsm
+package [com.example.app]: com.sgykfjsm.app
+name [My Scalatra Web App]: Scalatra Test
+scalatra_version [2.2.0]:
+servlet_name [MyScalatraServlet]: MyFirstScalatraServlet
+scala_version [2.10.0]:
+version [0.1.0-SNAPSHOT]:
+
+Template applied in ./scalatra-test
+</pre>
+
+
+<p>色々聞かれるけど適当に答えておけば良い。未入力部分は[]部分のデフォルトが適用されるんだと思う。</p>
+
+<p>出来上がったプロジェクトに入ると以下の様な構成になっている。</p>
+
+<pre>[sgyk@fujishima] 13-02-21 22:58:06 ~/local/script/scala
+$ cd scalatra-test/
+[sgyk@fujishima] 13-02-21 22:58:12 ~/local/script/scala/scalatra-test
+$ ls -l
+total 48
+drwxr-xr-x   7 sgyk  staff    238  2 21 22:57 .
+drwxr-xr-x  20 sgyk  staff    680  2 21 22:58 ..
+-rw-r--r--   1 sgyk  staff    756  2 21 22:57 .gitignore
+-rw-r--r--   1 sgyk  staff    224  2 21 22:57 README.md
+drwxr-xr-x   5 sgyk  staff    170  2 21 22:57 project
+-rw-r--r--   1 sgyk  staff  14321  2 21 22:57 sbt
+drwxr-xr-x   4 sgyk  staff    136  2 21 22:57 src</pre>
+
+
+<p>色々な依存関係を開発前に解決しておきたいので、sbtに実行権限をつけて、sbtを実行しておく。<br />ここでも時間がちょっとかかるので、しばし待つこと。回線が細いと大変かもしれない。</p>
+
+<p>sbtが無事に起動したら、プロンプトがそのまま生きているので、試しにScalatraを起動してみる。</p>
+
+<pre>> container:start
+[info] Generating /Users/sgyk/local/script/scala/scalatra-test/target/scala-2.10/resource_managed/main/rebel.xml.
+[info] Compiling Templates in Template Directory: /Users/sgyk/local/script/scala/scalatra-test/src/main/webapp/WEB-INF/templates
+SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+[info] Compiling 5 Scala sources to /Users/sgyk/local/script/scala/scalatra-test/target/scala-2.10/classes...
+[info] jetty-8.1.8.v20121106
+[info] NO JSP Support for /, did not find org.apache.jasper.servlet.JspServlet
+Null identity service, trying login service: null
+Finding identity service: null
+[info] started o.e.j.w.WebAppContext{/,[file:/Users/sgyk/local/script/scala/scalatra-test/src/main/webapp/]}
+[info] started o.e.j.w.WebAppContext{/,[file:/Users/sgyk/local/script/scala/scalatra-test/src/main/webapp/]}
+23:11:49.785 [pool-6-thread-5] INFO  o.scalatra.servlet.ScalatraListener - Initializing life cycle class: ScalatraBootstrap
+[info] started o.e.j.w.WebAppContext{/,[file:/Users/sgyk/local/script/scala/scalatra-test/src/main/webapp/]}
+23:11:50.061 [pool-6-thread-5] INFO  o.f.s.servlet.ServletTemplateEngine - Scalate template engine using working directory: /var/folders/9_/ggs_d8vd48z5ht76s3cwc7qr0000gn/T/scalate-7636222796467281743-workdir
+[info] Started SelectChannelConnector@0.0.0.0:8080
+[success] Total time: 13 s, completed 2013/02/21 23:11:50</pre>
+
+
+<p>途中になんか失敗してるけど、まぁ気にしない。 <a href="http://localhost:8080">http://localhost:8080</a> にアクセスしてみると、以下の様な画面が表示されるはず。
+<img src="https://dl.dropbox.com/s/tw6w2o3i0y07vt0/2013-02-21%2023.15.45.png?m" alt="screen shot" /></p>
+
+<a name="sbt-idea"></a>
+<h3>sbt-idea</h3>
+
+<p>ここまででも結構時間かかってる…。僕はScalaはいつもIntelliJ IDEAで開発してるので、以下のコードを<code>project/plugins.sbt</code>に追加して、それ用のプラグインもインストールしておく。</p>
+
+<pre>addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.2.0")</pre>
+
+
+<p>で、またsbtを起動して<code>gen-idea</code>を実行しておく。</p>
+
+<p>締めに<code>git init</code>でもしとけばいいんじゃないでしょうか。<br />このあとは簡単なアプリケーションを作ってみる。</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2013-02-22T00:08:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>22</span><span class='date-suffix'>nd</span>, <span class='date-year'>2013</span></span> <span class='time'>12:08 am</span></time>
+      <span class="categories">full history <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/commit/master/source/_posts/2013-02-22-scalatra-tutorial-001.markdown">here</a></span>
+
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/scala/'>scala</a>, <a class='category' href='/blog/categories/scalatra/'>scalatra</a>, <a class='category' href='/blog/categories/tutorial/'>tutorial</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/02/20/scalatra-introduction/" title="Previous Post: Scalatraについて調べた">&laquo; Scalatraについて調べた</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/02/26/scalatra-tutorial-002/" title="Next Post: scalatraでいろいろやる その２">scalatraでいろいろやる その２ &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: ansible | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/ansible/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[AnsibleでMySQLをインストールする。]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2015/02/17/install-mysql-with-ansible/"/>
+    <updated>2015-02-17T09:19:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2015/02/17/install-mysql-with-ansible</id>
+    <content type="html"><![CDATA[<p>AWSなんかを使ってると、イチからMySQLなどの基本的なミドルウェアをセットアップすることは減ってくる。そんな中、AnsibleでMySQLをインストールする事になったのだけど、意外と忘れてたりAnsibleで作業するのと手作業で進めることの差異でちょっと詰まったりしたので、ここに備忘しておく。</p>
+
+<!-- more -->
+
+
+<a name="L.................."></a>
+<h2>大まかな手順</h2>
+
+<ol>
+<li>最新安定版(MySQL5.6)をインストールするためのリポジトリを設定する。</li>
+<li>リポジトリ軽油でインストールする。</li>
+<li>初期セットアップを行なう。
+
+<ul>
+<li>rootのパスワード初期化</li>
+<li>mysql_secure_installationによるMySQLの初期化</li>
+<li>諸々の設定</li>
+</ul>
+</li>
+</ol>
+
+
+<p>たったこれだけなんだけど、Ansibleでこれらの作業を実装するのはちょっと面倒。というのも、mysql_secure_installationはコマンドを実行すると対話的に処理を進めることになるが、これをAnsibleで実行するのがちょっと面倒だったりする。また、rootのパスワード初期化についても考慮が必要で、playbookに直書きするのはもちろん駄目だし、mysql_config_editorはこれまた対話式のコマンドなので、自動化が微妙に難しい。諸々の設定に関して、設定すべき内容は案件などによると思うが、予めいくつかのmy.cnfなどを用意しておいて、それをコピーして使うようすればいいだけなので、あまり問題にはならない。</p>
+
+<p>ということで、rootのパスワード初期化および管理とmysql_secure_installationについて考える。</p>
+
+<a name="root...................................."></a>
+<h2>rootのパスワード初期化と管理</h2>
+
+<p>いくつかのブログなどにあるHowTo記事でrootの初期パスワードは.mysql_secretというファイルにある、と書かれていることがある。が、今回MySQL5.6をインストールしてみてもそのようなファイルは無かった。今までも見たことがないので、もしかしたらインストールの方法によってはこのファイルが生成されるのかもしれないが、とにかく無い。なので、パスワードの初期化は基本に忠実に以下のようにMySQLを起動させてからパスワードをSQLで更新した。</p>
+
+<pre><code>/bin/sh /usr/bin/mysqld_safe \
+    --datadir=/var/lib/mysql \
+    --socket=/var/lib/mysql/mysql.sock \
+    --pid-file=/var/run/mysqld/mysqld.pid \
+    --basedir=/usr \
+    --user=mysql \
+    --skip-grant-tables \
+    --skip-networking
+</code></pre>
+
+<p>この起動コマンドについての詳細は<a href="http://dev.mysql.com/doc/refman/5.1/en/resetting-permissions.html#resetting-permissions-generic">Resetting the Root Password: Generic Instructions</a>を参照。この方法がシンプルで覚えることが少なくて良いと思う。</p>
+
+<p>これでMySQLサーバを起動した後、以下のSQLでパスワードを更新する。パスワードはAnsibleの中で<code>cat /dev/urandom | LC_CTYPE=C tr -dc &lsquo;[:alnum:]&rsquo; | head -c 16 ; echo</code>とかやって適当な文字列を生成してあげれば良いと思う。パスワードをplaybookに直書きするよりかはマシだろう。</p>
+
+<pre><code class="sql">UPDATE mysql.user SET Password=PASSWORD('NewPassWord') WHERE User='root';
+FLUSH PRIVILEGES;
+</code></pre>
+
+<p>ここまでは特段問題が無くて、問題はこのパスワードをどこに保管するか、ということ。結論から言えば、/etc/my.cnf.d配下に管理することに落ち着いた。以下の様なファイルを作っておいて、それを/etc/my.cnf.d配下に配置しておけば良いと思う。</p>
+
+<pre><code class="ini">[db-administrator]
+user = root
+password = { { mysql_root_password.stdout }}
+host = localhost
+</code></pre>
+
+<p><code></code>の部分はAnsible内で設定されるプレースホルダー。また、通常は<code>[client]</code>となっている部分は別の文言に変えている。そうでないと、デフォルトの接続情報として使われるので、注意すること。また、/etc/my.cnf.d配下のファイルが読み込まれるように、/etc/my.cnfには<code>!includedir /etc/my.cnf.d</code>を追加しておくこと。</p>
+
+<a name="Ansible...mysql_secure_installation..........................."></a>
+<h2>Ansibleでmysql_secure_installationを如何に行なうか。</h2>
+
+<p>ざっと思いついたのは以下の通り。</p>
+
+<ol>
+<li>普通にmysql_secure_installationを実行して、対話的に処理を行う。
+
+<ul>
+<li>そもそもAnsibleで行なう必要が無いのと、rootのパスワードなどをどこかにメモすることになるので却下</li>
+</ul>
+</li>
+<li>expectを使って、予め回答を入力しておいて、処理を自動化させる。
+
+<ul>
+<li>expectについては、<a href="http://www.math.kobe-u.ac.jp/~kodama/tips-expect.html%E3%81%BE%E3%81%9F%E3%81%AFhttp://linuxjm.sourceforge.jp/html/expect/man1/expect.1.html%E3%81%AA%E3%81%A9%E3%82%92%E5%8F%82%E7%85%A7%E3%80%82">http://www.math.kobe-u.ac.jp/~kodama/tips-expect.html%E3%81%BE%E3%81%9F%E3%81%AFhttp://linuxjm.sourceforge.jp/html/expect/man1/expect.1.html%E3%81%AA%E3%81%A9%E3%82%92%E5%8F%82%E7%85%A7%E3%80%82</a></li>
+<li>expectを別途インストールする必要がある。</li>
+<li>expcet/Tclの文法などを新たに覚えなければならない、かつあまり使うことがなさそうなので、あんまり覚える気がしない。</li>
+<li>試してみたけど微妙だった（予めすべてのパターンの質問を拾って、回答を用意しなければならない）</li>
+<li>ということで却下</li>
+</ul>
+</li>
+<li>mysql_secure_installationと同等の処理を実装し、それを実行する。
+
+<ul>
+<li>mysql_secure_installationがやっている処理自体はいくつかのSQLを実行しているだけで、実装自体は容易。</li>
+<li>ただし、今後のバージョンアップなどでmysql_secure_installationの内容を常に気にしておく必要がある。</li>
+<li>1と2の案に比べて、必要な時間が圧倒的に少なく済むので、今回はこの案にした。</li>
+</ul>
+</li>
+</ol>
+
+
+<p>で、その内容は以下の通り。</p>
+
+<pre><code class="bash">#!/bin/bash
+# http://dev.mysql.com/doc/refman/5.0/en/resetting-permissions.html#resetting-permissions-unix
+
+set -xeu
+
+[ $(/usr/bin/whoami) = 'root' ] || {
+    /bin/echo root only
+    exit 1
+}
+
+init_file=/tmp/mysql-init
+
+/bin/cat &lt;&lt;EOF &gt; ${init_file}
+-- Set the root password
+UPDATE mysql.user SET Password=PASSWORD('${mysql_root_password}') WHERE User='root';
+FLUSH PRIVILEGES;
+-- Remove anonymous users
+DELETE FROM mysql.user WHERE User='';
+-- Disallow remote root login
+DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost',  '127.0.0.1',  '::1');
+-- Remove test database
+DROP DATABASE IF EXISTS test;
+DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
+-- Reload privilege tables
+FLUSH PRIVILEGES;
+EOF
+chmod 600 ${init_file}
+
+nohup /bin/sh /usr/bin/mysqld_safe \
+    --datadir=/var/lib/mysql \
+    --socket=/var/lib/mysql/mysql.sock \
+    --pid-file=/var/run/mysqld/mysqld.pid \
+    --basedir=/usr \
+    --user=mysql \
+    --skip-grant-tables \
+    --skip-networking &amp;
+
+while :
+do
+    [ -r /var/run/mysqld/mysqld.pid ] || continue
+
+    if ps -ef | grep -q $(cat /var/run/mysqld/mysqld.pid) ; then
+        break
+    fi
+    sleep 10
+done
+
+mysql -uroot &lt; ${init_file} # 実際の処理では--login-pathを指定してrootでログイン、実行としている。
+
+/etc/init.d/mysqld stop
+
+rm -f ${init_file}
+
+exit
+</code></pre>
+
+<p>実際に書いてみると、なんてことは無いコードではある。</p>
+
+<p>あと、他に何か書こうかと思ったけど、忘れたので、とりあえずMySQL56をインストールするためのplaybookを載っけてお茶を濁すことにする。</p>
+
+<pre><code class="yaml">---
+- name: Install Official MySQL Repository
+  yum: name=""
+  with_items:
+    - http://dev.mysql.com/get/mysql-community-release-el6-5.noarch.rpm
+  sudo: yes
+  tags:
+    - yum
+    - mysql
+
+- name: Disable Official MySQL Repository
+  replace: dest="/etc/yum.repos.d/.repo" regexp="^enabled *= *1$" backup=yes replace='enabled=0'
+  with_items:
+    - mysql-community
+    - mysql-community-source
+  sudo: yes
+  tags:
+    - yum
+    - mysql
+
+- name: Install MySQL56
+  yum: name="" state=latest enablerepo=mysql56-community,remi
+  with_items:
+    - php56-php-mysqlnd # remi
+    - mysql-community-client
+    - mysql-community-common
+    - mysql-community-devel
+    - mysql-community-libs
+    - mysql-community-server
+    - MySQL-python # for remote-host
+
+  sudo: yes
+  tags:
+    - mysql
+
+- name: Create root user password
+  shell: cat /dev/urandom | LC_CTYPE=C tr -dc '[:alnum:]' | head -c 16
+  register: mysql_root_password
+  tags:
+    - mysql
+
+- name: Execute mysql_secure_installation
+  script: secure_install.sh ""
+  sudo: yes
+  register: result
+  tags:
+    - mysql
+
+- name: Add Line for include append config
+  lineinfile: &gt;
+    dest=/etc/my.cnf
+    line="!includedir /etc/my.cnf.d"
+    backup=yes
+  sudo: yes
+  register: result
+  tags:
+    - mysql
+
+
+- name: Copy my.cnf To /etc/my.cnf.d/login.cnf
+  template: &gt;
+    src=my.cnf.j2
+    dest=/etc/my.cnf.d/login.cnf
+    owner=root
+    group=root
+    mode=0600
+  sudo: yes
+  tags:
+    - mysql
+
+- name: Add mysqld to StartUps on boot And Be Running
+  service: enabled=yes name=mysqld state=running
+  sudo: yes
+  tags:
+    - mysql
+</code></pre>
+]]></content>
+  </entry>
+  
+</feed>

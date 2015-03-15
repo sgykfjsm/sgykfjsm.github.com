@@ -1,0 +1,874 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: ec2 | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/ec2/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[ec2にcouchbaseをインストールする。ついでにPython SDKとtd-agentも。]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2013/08/18/couchbase-on-ec2-with-td-agent/"/>
+    <updated>2013-08-18T22:46:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2013/08/18/couchbase-on-ec2-with-td-agent</id>
+    <content type="html"><![CDATA[<a name="L......"></a>
+<h2>目的</h2>
+
+<p>ec2にCouchbaseを入れるついでに、fluentdで集めたログをcouchbaseに貯めこむ。</p>
+
+<a name="couchbase............"></a>
+<h2>couchbaseについて</h2>
+
+<ul>
+<li>元々はLutus Notesを起源に持つ<a href="http://couchdb.apache.org/">CouchDB</a>の開発者のひとりであるDamien Katz氏が商業展開している製品。</li>
+<li>Memcachedもベースとなっているので、<a href="http://www.couchbase.com/jp/memcached">MemcachedをCouchbaseクラスタにリプレースした事例もある。</a></li>
+<li>Enterprise Edition(EE)とCommunity Edition(CE)の２つがあり、前者は2nodeまで無料、後者は無制限に無料で使える。</li>
+<li>EEとCEの違いは、EEではサポートが購入でき、CEに比べ先進的な機能が付属している。対してCEはEEの型落ちのような位置づけである。</li>
+<li>MongoDBと同じドキュメント型NoSQLに位置づけられる。</li>
+<li>自動シャーディング、分散クエリ、独立したキャッシュ郡などの機能や特徴を持つ。</li>
+</ul>
+
+
+<!-- more -->
+
+
+<a name="L......"></a>
+<h2>導入</h2>
+
+<p>今回はEC2のm1.smallにインストールするが、AWSの<a href="http://aws.typepad.com/aws_japan/2013/08/running-couchbase-on-aws-new-white-paper.html">ホワイトペーパー</a>では最小でもlargeインスタンスが推奨されている。今回はお遊びなので、smallとするが本番利用時にはインスタンスのスケールは高めにしたほうが良さそう。</p>
+
+<p>AWSのmarket placeには<a href="https://aws.amazon.com/marketplace/search/results/ref=gtw_navgno_search_box?searchTerms=couchbase&amp;search=">AMIが用意</a>されており、一方ではRightScaleによるテンプレートもある。(<a href="http://www.couchbase.com/docs/couchbase-manual-2.1.0/couchbase-bestpractice-cloud.html">4.6. Using Couchbase in the Cloud</a>)</p>
+
+<p>このように手軽にインストールできる方法はいくつかの方法があるが、今回は学習のためRPMからインストールを行う。</p>
+
+<p>ダウンロードページは以下のURLである。<br>
+<a href="http://www.couchbase.com/jp/download">http://www.couchbase.com/jp/download</a></p>
+
+<p>これ以降の作業は用意したEC2にログインして行う。</p>
+
+<a name="L............"></a>
+<h3>事前準備</h3>
+
+<p>これはとても重要なのだけど、立ち上げたインスタンスにはElasticIPを振っておくこと。でないと、SDKからのアクセスが出来ない。
+なぜそうなのかはまだ理由がつかめていない。
+また、もしCouchbase Serverのnode名がPrivate IPsになっていたら、以下の手順にしたがってnode名を変更しておく必要がある。</p>
+
+<ul>
+<li><a href="http://www.couchbase.com/docs/couchbase-manual-2.0/couchbase-getting-started-hostnames-pre2.0.html">2.4.1. Hostnames for Couchbase Server 2.0.1 and Earlier</a></li>
+</ul>
+
+
+<p>この設定をしてないととても大変なことになる。</p>
+
+<a name="OpenSSL............"></a>
+<h3>OpenSSLを入れる</h3>
+
+<pre><code>[ec2-user@ip-xx-xxx-xx-xxx tmp]$ sudo yum install -y openssl098e
+Loaded plugins: priorities, security, update-motd, upgrade-helper
+amzn-main                                                                                                        | 2.1 kB     00:00
+# 省略
+Installed:
+  openssl098e.x86_64 0:0.9.8e-17.8.amzn1
+
+Complete!
+</code></pre>
+
+<a name="couchbase.server.2.0.1............"></a>
+<h3>couchbase server 2.0.1を入れる</h3>
+
+<p>取得元のURLは<a href="http://www.couchbase.com/jp/download">ダウンロードページ</a>から。</p>
+
+<pre><code>[ec2-user@ip-xx-xxx-xx-xxx tmp]$ wget http://packages.couchbase.com/releases/2.0.1/couchbase-server-community_x86_64_2.0.1.rpm
+--2013-08-11 08:47:37--  http://packages.couchbase.com/releases/2.0.1/couchbase-server-community_x86_64_2.0.1.rpm
+# 省略
+2013-08-11 08:49:00 (1.47 MB/s) - `couchbase-server-community_x86_64_2.0.1.rpm' へ保存完了 [126631806/126631806]
+[ec2-user@ip-xx-xxx-xx-xxx tmp]$ sudo rpm -ivh couchbase-server-community_x86_64_2.0.1.rpm
+準備中...                ########################################### [100%]
+Minimum RAM required  : 4 GB
+System RAM configured : 1696704 kB
+
+Minimum number of processors required : 4 cores
+Number of processors on the system    : 1 cores
+
+   1:couchbase-server       ########################################### [100%]
+Starting couchbase-server[  OK  ]
+
+You have successfully installed Couchbase Server.
+Please browse to http://ip-xx-xxx-xx-xxx:8091/ to configure your server.
+Please refer to http://couchbase.com for additional resources.
+
+Please note that you have to update your firewall configuration to
+allow connections to the following ports: 11211, 11210, 11209, 4369,
+8091, 8092 and from 21100 to 21299.
+
+By using this software you agree to the End User License Agreement.
+See /opt/couchbase/LICENSE.txt.
+</code></pre>
+
+<p>ログに以下のように出ているけど、全く足りてない…、が、今回は学習のためなので気にしない。なお、コレを満たすインスタンスはlargeまたはxlargeからなので、NoSQL系はやはりなんだかんだ言ってお金が無いとダメなのである。
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Minimum RAM required  : 4 GB
+</span><span class='line'>System RAM configured : 1696704 kB&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Minimum number of processors required : 4 cores
+</span><span class='line'>Number of processors on the system    : 1 cores</span></code></pre></td></tr></table></div></figure></p>
+
+<p>あとは指定されたURL:<a href="http://ip-xx-xxx-xx-xxx:8091/%E3%81%AB%E3%82%A2%E3%82%AF%E3%82%BB%E3%82%B9%E3%81%97%E3%81%A6GUI%E3%81%AE%E3%82%A6%E3%82%A3%E3%82%B6%E3%83%BC%E3%83%89%E3%81%AB%E5%BE%93%E3%81%A3%E3%81%A6%E3%81%84%E3%81%91%E3%81%B0%E5%B0%8E%E5%85%A5%E3%81%AF%E7%B5%82%E4%BA%86%E3%80%82%E7%B0%A1%E5%8D%98%E3%81%A7%E3%81%82%E3%82%8B%E3%80%82">http://ip-xx-xxx-xx-xxx:8091/%E3%81%AB%E3%82%A2%E3%82%AF%E3%82%BB%E3%82%B9%E3%81%97%E3%81%A6GUI%E3%81%AE%E3%82%A6%E3%82%A3%E3%82%B6%E3%83%BC%E3%83%89%E3%81%AB%E5%BE%93%E3%81%A3%E3%81%A6%E3%81%84%E3%81%91%E3%81%B0%E5%B0%8E%E5%85%A5%E3%81%AF%E7%B5%82%E4%BA%86%E3%80%82%E7%B0%A1%E5%8D%98%E3%81%A7%E3%81%82%E3%82%8B%E3%80%82</a></p>
+
+<a name="CRUD"></a>
+<h2>CRUD</h2>
+
+<p>CouchbaseはREST APIを備えているが、用途としてはノードやクラスタの管理に利用するのが正しいっぽい。<br>
+公式ドキュメントでは以下のように有る。</p>
+
+<blockquote><p>REST APIはサーバへのデータ読み書きに利用するべきではありません。
+たとえば、setやgetなどのデータ操作はCouchbase SDKによって処理します。
+Couchbase SDKを参照してください。</p></blockquote>
+
+<p>というわけで、CRUDを試すためにはSDKが必要である。</p>
+
+<a name="Python.SDK"></a>
+<h2>Python SDK</h2>
+
+<p>今回はサクッとやりたいのでPython SDKを使う。Python SDKはCouchbaseのC SDKを使って作られているので、まず C SDKをインストールする。<br>
+ちなみに公式の<a href="http://www.couchbase.com/communities/python/getting-started">Getting Start</a>に従った。</p>
+
+<pre><code>[sgyk@fujishima]
+$ brew install libcouchbase
+==&gt; Downloading http://packages.couchbase.com/clients/c/libcouchbase-2.0.7.tar.gz
+######################################################################## 100.0%
+==&gt; ./configure --prefix=/usr/local/Cellar/libcouchbase/2.0.7 --disable-examples --disable-tests --disable-couchbasemock
+==&gt; make install
+🍺  /usr/local/Cellar/libcouchbase/2.0.7: 106 files, 964K, built in 28 seconds
+</code></pre>
+
+<p>Pythonのバージョンは2.6以上であることが必要。
+<code>
+[sgyk@fujishima]
+$ python -V
+Python 2.7.3
+</code></p>
+
+<p>次に<code>pip</code>でSDKをインストールするが、XcodeのCLI Toolsをインストールしていないと以下のエラーが出て悲しい気持ちになるので、インストールしていなければ予めインストールしておくこと。
+<code>
+unable to execute /usr/bin/clang: No such file or directory
+</code></p>
+
+<p>Python SDKをインストールする。
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[sgyk@fujishima]
+</span><span class='line'>$ pip install couchbase
+</span><span class='line'>Downloading/unpacking couchbase
+</span><span class='line'>  Running setup.py egg_info for package couchbase&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;a name="L......"&gt;&lt;/a&gt;
+</span><span class='line'>&lt;h1&gt;省略&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Successfully installed couchbase
+</span><span class='line'>Cleaning up&hellip;</span></code></pre></td></tr></table></div></figure></p>
+
+<p>ちゃんとインストールできたかを確認する。
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+<span class='line-number'>157</span>
+<span class='line-number'>158</span>
+<span class='line-number'>159</span>
+<span class='line-number'>160</span>
+<span class='line-number'>161</span>
+<span class='line-number'>162</span>
+<span class='line-number'>163</span>
+<span class='line-number'>164</span>
+<span class='line-number'>165</span>
+<span class='line-number'>166</span>
+<span class='line-number'>167</span>
+<span class='line-number'>168</span>
+<span class='line-number'>169</span>
+<span class='line-number'>170</span>
+<span class='line-number'>171</span>
+<span class='line-number'>172</span>
+<span class='line-number'>173</span>
+<span class='line-number'>174</span>
+<span class='line-number'>175</span>
+<span class='line-number'>176</span>
+<span class='line-number'>177</span>
+<span class='line-number'>178</span>
+<span class='line-number'>179</span>
+<span class='line-number'>180</span>
+<span class='line-number'>181</span>
+<span class='line-number'>182</span>
+<span class='line-number'>183</span>
+<span class='line-number'>184</span>
+<span class='line-number'>185</span>
+<span class='line-number'>186</span>
+<span class='line-number'>187</span>
+<span class='line-number'>188</span>
+<span class='line-number'>189</span>
+<span class='line-number'>190</span>
+<span class='line-number'>191</span>
+<span class='line-number'>192</span>
+<span class='line-number'>193</span>
+<span class='line-number'>194</span>
+<span class='line-number'>195</span>
+<span class='line-number'>196</span>
+<span class='line-number'>197</span>
+<span class='line-number'>198</span>
+<span class='line-number'>199</span>
+<span class='line-number'>200</span>
+<span class='line-number'>201</span>
+<span class='line-number'>202</span>
+<span class='line-number'>203</span>
+<span class='line-number'>204</span>
+<span class='line-number'>205</span>
+<span class='line-number'>206</span>
+<span class='line-number'>207</span>
+<span class='line-number'>208</span>
+<span class='line-number'>209</span>
+<span class='line-number'>210</span>
+<span class='line-number'>211</span>
+<span class='line-number'>212</span>
+<span class='line-number'>213</span>
+<span class='line-number'>214</span>
+<span class='line-number'>215</span>
+<span class='line-number'>216</span>
+<span class='line-number'>217</span>
+<span class='line-number'>218</span>
+<span class='line-number'>219</span>
+<span class='line-number'>220</span>
+<span class='line-number'>221</span>
+<span class='line-number'>222</span>
+<span class='line-number'>223</span>
+<span class='line-number'>224</span>
+<span class='line-number'>225</span>
+<span class='line-number'>226</span>
+<span class='line-number'>227</span>
+<span class='line-number'>228</span>
+<span class='line-number'>229</span>
+<span class='line-number'>230</span>
+<span class='line-number'>231</span>
+<span class='line-number'>232</span>
+<span class='line-number'>233</span>
+<span class='line-number'>234</span>
+<span class='line-number'>235</span>
+<span class='line-number'>236</span>
+<span class='line-number'>237</span>
+<span class='line-number'>238</span>
+<span class='line-number'>239</span>
+<span class='line-number'>240</span>
+<span class='line-number'>241</span>
+<span class='line-number'>242</span>
+<span class='line-number'>243</span>
+<span class='line-number'>244</span>
+<span class='line-number'>245</span>
+<span class='line-number'>246</span>
+<span class='line-number'>247</span>
+<span class='line-number'>248</span>
+<span class='line-number'>249</span>
+<span class='line-number'>250</span>
+<span class='line-number'>251</span>
+<span class='line-number'>252</span>
+<span class='line-number'>253</span>
+<span class='line-number'>254</span>
+<span class='line-number'>255</span>
+<span class='line-number'>256</span>
+<span class='line-number'>257</span>
+<span class='line-number'>258</span>
+<span class='line-number'>259</span>
+<span class='line-number'>260</span>
+<span class='line-number'>261</span>
+<span class='line-number'>262</span>
+<span class='line-number'>263</span>
+<span class='line-number'>264</span>
+<span class='line-number'>265</span>
+<span class='line-number'>266</span>
+<span class='line-number'>267</span>
+<span class='line-number'>268</span>
+<span class='line-number'>269</span>
+<span class='line-number'>270</span>
+<span class='line-number'>271</span>
+<span class='line-number'>272</span>
+<span class='line-number'>273</span>
+<span class='line-number'>274</span>
+<span class='line-number'>275</span>
+<span class='line-number'>276</span>
+<span class='line-number'>277</span>
+<span class='line-number'>278</span>
+<span class='line-number'>279</span>
+<span class='line-number'>280</span>
+<span class='line-number'>281</span>
+<span class='line-number'>282</span>
+<span class='line-number'>283</span>
+<span class='line-number'>284</span>
+<span class='line-number'>285</span>
+<span class='line-number'>286</span>
+<span class='line-number'>287</span>
+<span class='line-number'>288</span>
+<span class='line-number'>289</span>
+<span class='line-number'>290</span>
+<span class='line-number'>291</span>
+<span class='line-number'>292</span>
+<span class='line-number'>293</span>
+<span class='line-number'>294</span>
+<span class='line-number'>295</span>
+<span class='line-number'>296</span>
+<span class='line-number'>297</span>
+<span class='line-number'>298</span>
+<span class='line-number'>299</span>
+<span class='line-number'>300</span>
+<span class='line-number'>301</span>
+<span class='line-number'>302</span>
+<span class='line-number'>303</span>
+<span class='line-number'>304</span>
+<span class='line-number'>305</span>
+<span class='line-number'>306</span>
+<span class='line-number'>307</span>
+<span class='line-number'>308</span>
+<span class='line-number'>309</span>
+<span class='line-number'>310</span>
+<span class='line-number'>311</span>
+<span class='line-number'>312</span>
+<span class='line-number'>313</span>
+<span class='line-number'>314</span>
+<span class='line-number'>315</span>
+<span class='line-number'>316</span>
+<span class='line-number'>317</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[sgyk@fujishima]
+</span><span class='line'>$ python
+</span><span class='line'>Python 2.7.3 (default, Nov  9 2012, 22:02:35)
+</span><span class='line'>[GCC 4.2.1 Compatible Apple Clang 4.0 ((tags/Apple/clang-421.0.60))] on darwin
+</span><span class='line'>Type &ldquo;help&rdquo;, &ldquo;copyright&rdquo;, &ldquo;credits&rdquo; or &ldquo;license&rdquo; for more information.&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;blockquote&gt;&lt;blockquote&gt;&lt;blockquote&gt;&lt;p&gt;from couchbase import Couchbase&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;```
+</span><span class='line'>エラーが発生しなければOK&lt;/p&gt;&lt;/blockquote&gt;&lt;/blockquote&gt;&lt;/blockquote&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;なんか気の利いたやつを書こうかと思ったけど、&lt;a href="https://github.com/couchbase/couchbase-python-client#using"&gt;githubのサンプルコード&lt;/a&gt;をとりあえず試してみるのが良さそう。&lt;br&gt;
+</span><span class='line'>サンプルコードを見たらわかるように、非常に少ないステップでデータ操作ができることがわかると思う。&lt;br&gt;
+</span><span class='line'>あとは&lt;a href="http://pythonhosted.org/couchbase/"&gt;APIドキュメント&lt;/a&gt;をさらっと見ておけばとりあえずのことはできそうではある。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;a name="Fluentd............"&gt;&lt;/a&gt;
+</span><span class='line'>&lt;h2&gt;Fluentdとの連携&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;正直、あんまり書くべきことはなかったりする。というのも、すでに&lt;a href="https://github.com/obieq/fluent-plugin-couchbase#"&gt;プラグインが用意されている&lt;/a&gt;ため、それを使えばあっという間にできる。少しハマったところは、書き込みの箇所が&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code class="ruby"&gt;# https://github.com/obieq/fluent-plugin-couchbase/blob/master/lib/fluent/plugin/out_couchbase.rb#L52
+</span><span class='line'>connection[record.delete('key'),  :ttl =&gt; self.ttl] = record
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;となっているため、ログレコードの中にkeyという要素（rubyでいうところのエントリ？）が必要になる。これが無いと、couchbaseに書き込む際にログレコードが&lt;code&gt;nil&lt;/code&gt;となってしまい、エラーが発生する。&lt;br&gt;
+</span><span class='line'>それ以外はtd-agentとプラグイン、couchbaseがよろしくやってくれるため非常に楽に格納できる。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;また、couchbaseはバケットごとに認証を設けることができるが、上で紹介したプラグインはバケット認証に対応していない。&lt;br&gt;
+</span><span class='line'>これに対応しているのは&lt;a href="https://github.com/atware/fluent-plugin-couchbase"&gt;atware/fluent-plugin-couchbase&lt;/a&gt;のリポジトリにある。ちなみに&lt;a href="http://www.atware.co.jp/"&gt;株式会社 アットウェア&lt;/a&gt;という会社は多分、今のところ、日本で一番Couchbaseに精通している会社かもしれない。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;a name="L......"&gt;&lt;/a&gt;
+</span><span class='line'>&lt;h2&gt;今後&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Couchbaseの導入からtd-agentの連携までの作業は慣れたら多分1時間かからない。&lt;br&gt;問題はむしろこの後にあって、CouchbaseではRDBでいうところのSQLのようなDMLはViewと呼ばれるJavascriptのMapReduceで記述する必要がある。なので、ログの運用をCouchbaseに切り替える場合は、如何にしてこれまでRDBで動かしてきたSQLを移行するかが大きな問題となる。SQLバリバリのエンジニアがJavascriptを同じ程度書けるかと言われると多くはそうでないと思うので。まぁこれはNoSQL系DBを運用するときの宿命なので今更いうことでも無いか。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;CouchbaseのViewについてはまた色々調べて、ブログにまとめようかな。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;a name="L......"&gt;&lt;/a&gt;
+</span><span class='line'>&lt;h2&gt;参考&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;ul&gt;
+</span><span class='line'>&lt;li&gt;&lt;a href="http://www.atware.co.jp/2013/07/25/fluentd-couchbase-log-analysis/"&gt;Fluentd + Couchbase によるログ解析導入事例&lt;/a&gt;&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;&lt;a href="http://www.atmarkit.co.jp/fdb/rensai/dbwatch2012/dbwatch201202_02.html"&gt;どっちが面白い？ ドキュメント指向データベース&lt;/a&gt;&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;&lt;a href="http://pythonhosted.org/couchbase/"&gt;Couchbase Python Client Library Documentation&lt;/a&gt;&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;&lt;a href="https://github.com/obieq/fluent-plugin-couchbase"&gt;obieq/fluent-plugin-couchbase&lt;/a&gt;&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;&lt;a href="http://aws.typepad.com/aws/2013/08/running-couchbase-on-aws-new-white-paper.html"&gt;Running Couchbase on AWS - New White Paper&lt;/a&gt;&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>
+</span><span class='line'>]]&gt;&lt;/content&gt;
+</span><span class='line'>  &lt;/entry&gt;
+</span><span class='line'>  
+</span><span class='line'>  &lt;entry&gt;
+</span><span class='line'>    &lt;title type="html"&gt;&lt;![CDATA[ec2にfluentdをインストールする]]&gt;&lt;/title&gt;
+</span><span class='line'>    &lt;link href="http://sgykfjsm.github.com/blog/2013/08/11/fluentd-on-ec2-with-s3/"/&gt;
+</span><span class='line'>    &lt;updated&gt;2013-08-11T02:23:00+09:00&lt;/updated&gt;
+</span><span class='line'>    &lt;id&gt;http://sgykfjsm.github.com/blog/2013/08/11/fluentd-on-ec2-with-s3&lt;/id&gt;
+</span><span class='line'>    &lt;content type="html"&gt;&lt;![CDATA[&lt;a name="L......"&gt;&lt;/a&gt;
+</span><span class='line'>&lt;h2&gt;目的&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;fluentdをec2に導入してS3にアップロードする。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;a name="L......"&gt;&lt;/a&gt;
+</span><span class='line'>&lt;h2&gt;導入&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;送出側と収集側はどちらもm1.micro、Amazon Linuxで用意した。&lt;br&gt;
+</span><span class='line'>手順は公式の&lt;a href="http://docs.fluentd.org/articles/install-by-rpm"&gt;Installing Fluentd Using rpm Package&lt;/a&gt;に従った。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;!-- more --&gt;
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;a name="L........................................................."&gt;&lt;/a&gt;
+</span><span class='line'>&lt;h3&gt;ファイルディスクリプタの数を変更する。&lt;/h3&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo cp -p /etc/security/limits.conf /etc/security/limits.conf.org
+</span><span class='line'>[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo vim /etc/security/limits.conf
+</span><span class='line'>[ec2-user@ip-xx-xxx-xxx-xxx ~]$ diff /etc/security/limits.conf.org /etc/security/limits.conf
+</span><span class='line'>49a50,54
+</span><span class='line'>&gt; root soft nofile 65536
+</span><span class='line'>&gt; root hard nofile 65536
+</span><span class='line'>&gt; * soft nofile 65536
+</span><span class='line'>&gt; * hard nofile 65536
+</span><span class='line'>[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo shutdown -r now
+</span><span class='line'># 再起動完了後に再度ログイン
+</span><span class='line'>[ec2-user@ip-xx-xxx-xxx-xxx ~]$ ulimit -n
+</span><span class='line'>65536
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;a name="L....................................................................."&gt;&lt;/a&gt;
+</span><span class='line'>&lt;h3&gt;ネットワークカーネルのパラメータ値を追加する。&lt;/h3&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo cp -p /etc/sysctl.conf /etc/sysctl.conf.org
+</span><span class='line'>[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo vim /etc/sysctl.conf
+</span><span class='line'>[ec2-user@ip-xx-xxx-xxx-xxx ~]$ diff /etc/sysctl.conf.org /etc/sysctl.conf
+</span><span class='line'>40a41,45
+</span><span class='line'>&gt;
+</span><span class='line'>&gt; net.ipv4.tcp_tw_recycle = 1
+</span><span class='line'>&gt; net.ipv4.tcp_tw_reuse = 1
+</span><span class='line'>&gt; net.ipv4.ip_local_port_range = 10240    65535
+</span><span class='line'>&gt;
+</span><span class='line'>[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo sysctl -w
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;a name="L.............................................td-agent.............................."&gt;&lt;/a&gt;
+</span><span class='line'>&lt;h3&gt;インストールスクリプトを使ってtd-agentをインストールする。&lt;/h3&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;大雑把に言うと、td-agentはfluentdの安定稼働版のようなもの。細かな違いは&lt;a href="http://docs.fluentd.org/articles/faq#what-is-the-difference-with-td-agent-and-fluentd"&gt;What is the difference with td-agent and Fluentd?&lt;/a&gt;を参照のこと。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo curl -L http://toolbelt.treasure-data.com/sh/install-redhat.sh | sh
+</span><span class='line'># 省略
+</span><span class='line'>Installed:
+</span><span class='line'>  td-agent.x86_64 0:1.1.15-0
+</span><span class='line'>
+</span><span class='line'>Dependency Installed:
+</span><span class='line'>  compat-libtermcap.x86_64 0:2.0.8-49.2.amzn1 compat-readline5.x86_64 0:5.2-17.3.amzn1 openssl098e.x86_64 0:0.9.8e-17.8.amzn1
+</span><span class='line'>  td-libyaml.x86_64 0:0.1.4-1
+</span><span class='line'>
+</span><span class='line'>Complete!
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;a name="L......"&gt;&lt;/a&gt;
+</span><span class='line'>&lt;h3&gt;起動&lt;/h3&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo /etc/init.d/td-agent start
+</span><span class='line'>Starting td-agent:                                         [  OK  ]
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;試しにサンプルログをPOSTしてみる。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;[ec2-user@ip-xx-xxx-xxx-xxx ~]$ curl -X POST -d 'json={"json":"message"}' http://localhost:8888/debug.test
+</span><span class='line'>[ec2-user@ip-xx-xxx-xxx-xxx ~]$ cat /var/log/td-agent/td-agent.log
+</span><span class='line'>2013-08-10 09:49:33 +0000 [info]: starting fluentd-0.10.36
+</span><span class='line'>2013-08-10 09:49:33 +0000 [info]: reading config file path="/etc/td-agent/td-agent.conf"
+</span><span class='line'>2013-08-10 09:49:33 +0000 [info]: using configuration file: &lt;ROOT&gt;
+</span><span class='line'>  &lt;match td.*.*&gt;
+</span><span class='line'>    type tdlog
+</span><span class='line'>    apikey YOUR_API_KEY
+</span><span class='line'>    auto_create_table
+</span><span class='line'>    buffer_type file
+</span><span class='line'>    buffer_path /var/log/td-agent/buffer/td
+</span><span class='line'>  &lt;/match&gt;
+</span><span class='line'>  &lt;match debug.**&gt;
+</span><span class='line'>    type stdout
+</span><span class='line'>  &lt;/match&gt;
+</span><span class='line'>  &lt;source&gt;
+</span><span class='line'>    type forward
+</span><span class='line'>  &lt;/source&gt;
+</span><span class='line'>  &lt;source&gt;
+</span><span class='line'>    type http
+</span><span class='line'>    port 8888
+</span><span class='line'>  &lt;/source&gt;
+</span><span class='line'>  &lt;source&gt;
+</span><span class='line'>    type debug_agent
+</span><span class='line'>    bind 127.0.0.1
+</span><span class='line'>    port 24230
+</span><span class='line'>  &lt;/source&gt;
+</span><span class='line'>&lt;/ROOT&gt;
+</span><span class='line'>2013-08-10 09:49:33 +0000 [info]: adding source type="forward"
+</span><span class='line'>2013-08-10 09:49:33 +0000 [info]: adding source type="http"
+</span><span class='line'>2013-08-10 09:49:33 +0000 [info]: adding source type="debug\_agent"
+</span><span class='line'>2013-08-10 09:49:33 +0000 [info]: adding match pattern="td.\*.\*" type="tdlog"
+</span><span class='line'>2013-08-10 09:49:33 +0000 [info]: adding match pattern="debug.\*\*" type="stdout"
+</span><span class='line'>2013-08-10 09:49:33 +0000 [info]: listening fluent socket on 0.0.0.0:24224
+</span><span class='line'>2013-08-10 09:49:33 +0000 [info]: listening dRuby uri="druby://127.0.0.1:24230" object="Engine"
+</span><span class='line'>2013-08-10 09:50:44 +0000 debug.test: {"json":"message"}
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;a name="Development.tools..............."&gt;&lt;/a&gt;
+</span><span class='line'>&lt;h3&gt;Development toolsを入れる。&lt;/h3&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;fluentdは自分でリポジトリを持っており、各種プラグインはそれを使ってインストールする。
+</span><span class='line'>最初にそのリポジトリをupdateするが、その際に必要となる諸々をDevelopment toolsを導入することで解決しておく。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo yum groupinstall -y "Development tools"
+</span><span class='line'>Loaded plugins: priorities, security, update-motd, upgrade-helper
+</span><span class='line'>amzn-main                                                                                                       | 2.1 kB     00:00
+</span><span class='line'>amzn-updates                                                                                                    | 2.3 kB     00:00
+</span><span class='line'>Setting up Group Process
+</span><span class='line'># 省略
+</span><span class='line'>  systemtap-client.x86\_64 0:1.8-7.14.amzn1                        systemtap-devel.x86\_64 0:1.8-7.14.amzn1
+</span><span class='line'>
+</span><span class='line'>Complete!
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;a name="fluentd.........................................."&gt;&lt;/a&gt;
+</span><span class='line'>&lt;h3&gt;fluentdのリポジトリを更新しておく。&lt;/h3&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;プラグインのインストールは必要に応じてしておけば良いので、とりあえずリポジトリを更新しておく。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;# fluentdを導入した全てのサーバで実施しておくと良い。
+</span><span class='line'>[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo /usr/lib64/fluent/ruby/bin/fluent-gem update
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;結構時間がかかる。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;ここまでと同じ作業をもう1台のサーバで行い、サーバ間でログのやり取りが出来るようにしておく。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;a name="L......1......td-agent..........................."&gt;&lt;/a&gt;
+</span><span class='line'>&lt;h2&gt;もう1つのtd-agentにログを送出する。&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;とりあえずtd-agentが正常に導入できて動作も問題無さそうので、もう1つのtd-agentにログを送出する。
+</span><span class='line'>&lt;a href="http://docs.fluentd.org/articles/high-availability"&gt;Fluentd High Availability Configuration&lt;/a&gt;を参考に設定する。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;まずは送出側の設定。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;# TCP input
+</span><span class='line'>&lt;source&gt;
+</span><span class='line'>  type forward
+</span><span class='line'>  port 24224
+</span><span class='line'>&lt;/source&gt;
+</span><span class='line'>
+</span><span class='line'># HTTP input
+</span><span class='line'>&lt;source&gt;
+</span><span class='line'>  type http
+</span><span class='line'>  port 8888
+</span><span class='line'>&lt;/source&gt;
+</span><span class='line'>
+</span><span class='line'># Log Forwarding
+</span><span class='line'>&lt;match sample.**&gt;
+</span><span class='line'>  type forward
+</span><span class='line'>
+</span><span class='line'>  # primary host
+</span><span class='line'>  &lt;server&gt;
+</span><span class='line'>    host 10.147.229.126
+</span><span class='line'>    port 24224
+</span><span class='line'>  &lt;/server&gt;
+</span><span class='line'>
+</span><span class='line'>  # use longer flush_interval to reduce CPU usage.
+</span><span class='line'>  # note that this is a trade-off against latency.
+</span><span class='line'>  flush_interval 60s
+</span><span class='line'>&lt;/match&gt;
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;次に収集側の設定。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;# Input
+</span><span class='line'>&lt;source&gt;
+</span><span class='line'>  type forward
+</span><span class='line'>  port 24224
+</span><span class='line'>  tag sample.app_log
+</span><span class='line'>&lt;/source&gt;
+</span><span class='line'>
+</span><span class='line'># Output
+</span><span class='line'>&lt;match sample.app_log&gt;
+</span><span class='line'>  type file
+</span><span class='line'>  path /var/log/fluent/sample.app_Log.log
+</span><span class='line'>  time_slice_format %Y%m%d
+</span><span class='line'>  time_slice_wait 1m
+</span><span class='line'>  # compress gzip
+</span><span class='line'>  utc
+</span><span class='line'>&lt;/match&gt;
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;設定ファイルを書き換えたら、それぞれのtd-agentを再起動する。再起動の際は&lt;code&gt;/var/log/td-agent/td-agent.log&lt;/code&gt;をtailしながら行うと、不要な設定をしている際に気づくことができる。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;送出側で先ほど試したのと同じcurlコマンドを使って、ログが収集側に来ていることを確認する。
+</span><span class='line'>また、Security Groupで予め設定したポート番号でTCPとUDPのポートを空けておくこと。
+</span><span class='line'>でないと、"no nodes are available"が発生する。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;a name="L........................S3.............................."&gt;&lt;/a&gt;
+</span><span class='line'>&lt;h2&gt;受け取ったログをS3にアップロードする。&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;受け手側でログを受け取れることを確認できたら、その受け取ったログをS3にアップロードする。
+</span><span class='line'>まずはプラグインのインストール。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;[ec2-user@ip-zz-zzz-zzz-zzz ~]$ sudo /usr/lib64/fluent/ruby/bin/fluent-gem install fluent-plugin-s3
+</span><span class='line'>Successfully installed fluent-plugin-s3-0.3.4
+</span><span class='line'>1 gem installed
+</span><span class='line'>Installing ri documentation for fluent-plugin-s3-0.3.4...
+</span><span class='line'>Installing RDoc documentation for fluent-plugin-s3-0.3.4...
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;ついでにタグを動的に扱うプラグインとプレースホルダとかディレクティブの設定に繰り返し要素を埋め込めるプラグインも入れておく。これらがあると色々捗る。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo /usr/lib64/fluent/ruby/bin/fluent-gem install fluent-plugin-forest
+</span><span class='line'>Fetching: fluent-plugin-forest-0.1.4.gem (100%)
+</span><span class='line'>Successfully installed fluent-plugin-forest-0.1.4
+</span><span class='line'>1 gem installed
+</span><span class='line'>Installing ri documentation for fluent-plugin-forest-0.1.4...
+</span><span class='line'>Installing RDoc documentation for fluent-plugin-forest-0.1.4...
+</span><span class='line'>[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo /usr/lib64/fluent/ruby/bin/fluent-gem install fluent-plugin-config-expander
+</span><span class='line'>Fetching: fluent-plugin-config-expander-0.1.3.gem (100%)
+</span><span class='line'>  Successfully installed fluent-plugin-config-expander-0.1.3
+</span><span class='line'>  1 gem installed
+</span><span class='line'>  Installing ri documentation for fluent-plugin-config-expander-0.1.3...
+</span><span class='line'>  Installing RDoc documentation for fluent-plugin-config-expander-0.1.3...
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;次に収集側の設定ファイルを以下のようにする。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;# Input
+</span><span class='line'>&lt;source&gt;
+</span><span class='line'>  type forward
+</span><span class='line'>  port 24224
+</span><span class='line'>&lt;/source&gt;
+</span><span class='line'>
+</span><span class='line'># Output
+</span><span class='line'>&lt;match sample.*&gt;
+</span><span class='line'>  type forest
+</span><span class='line'>  subtype s3
+</span><span class='line'>  &lt;template&gt; # このディレクティブによって、S3へのアップロード設定がテンプレート化される。
+</span><span class='line'>    aws_key_id XXX
+</span><span class='line'>    aws_sec_key XXX
+</span><span class='line'>    s3_bucket dev.sgyk
+</span><span class='line'>    # http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
+</span><span class='line'>    s3_endpoint s3-ap-northeast-1.amazonaws.com
+</span><span class='line'>    # Fluentd-plugin-forestによって${tag}が送出側で設定したtagの値に展開される。
+</span><span class='line'>    path ${tag}/
+</span><span class='line'>    buffer_path /var/log/td-agent/buffer/${tag}
+</span><span class='line'>    # time_slice_format %Y-%m-%d-%H-%M # To write files every minutes
+</span><span class='line'>    time_slice_format %Y-%m-%d-%H
+</span><span class='line'>    time_slice_wait 60s
+</span><span class='line'>    utc
+</span><span class='line'>  &lt;/template&gt;
+</span><span class='line'>&lt;/match&gt;
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;修正後、td-agentを再起動するとこんなログが出るようになる</span></code></pre></td></tr></table></div></figure>
+2013-08-10 17:11:19 +0000 [info]: out_forest plants new output: s3 for tag &lsquo;sample.app_log&rsquo;
+2013-08-10 17:11:21 +0000 [info]: out_forest plants new output: s3 for tag &lsquo;sample.str_log&rsquo;</p>
+
+<a name="L..........................................curl............"></a>
+<h1>ちなみに送出側で以下のようにcurlしている</h1>
+
+<a name="L..bin.bash"></a>
+<h1>!/bin/bash</h1>
+
+<p>#</p>
+
+<a name="i.0."></a>
+<h1>i=0;</h1>
+
+<a name="str..code.uuidgen...tr.-d..-...code."></a>
+<h1>str=<code>uuidgen | tr -d '-'</code></h1>
+
+<a name="while.true."></a>
+<h1>while(true)</h1>
+
+<a name="do"></a>
+<h1>do</h1>
+
+<a name="curl.-X.POST.-d..json....i..:.i....json..:....RANDOM......http:..localhost:8888.sample.app_log"></a>
+<h1>curl -X POST -d &ldquo;json={&#34;i\&rdquo;:$i, \&ldquo;json\&rdquo;:\&ldquo;${RANDOM}\&rdquo;}&ldquo; <a href="http://localhost:8888/sample.app_log">http://localhost:8888/sample.app_log</a></h1>
+
+<a name="curl.-X.POST.-d..json....i..:.i....str..:....str......http:..localhost:8888.sample.str_log"></a>
+<h1>curl -X POST -d &ldquo;json={&#34;i\&rdquo;:$i, \&ldquo;str\&rdquo;:\&ldquo;${str}\&rdquo;}&ldquo; <a href="http://localhost:8888/sample.str_log">http://localhost:8888/sample.str_log</a></h1>
+
+<a name="i..code.expr..i...1..code."></a>
+<h1>i=<code>expr $i + 1</code></h1>
+
+<a name="sleep.10"></a>
+<h1>sleep 10</h1>
+
+<a name="done"></a>
+<h1>done</h1>
+
+<p>#</p>
+
+<a name="exit.0"></a>
+<h1>exit 0</h1>
+
+<p>&#8220;`</p>
+
+<p>あとは10分ほど経ってから指定したバケットを見に行くとgz形式で出力されているのが確認できる。</p>
+]]></content>
+  </entry>
+  
+</feed>

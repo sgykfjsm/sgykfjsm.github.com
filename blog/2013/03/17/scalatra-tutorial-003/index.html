@@ -1,0 +1,590 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Scalatraでいろいろやる その３ - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="今までServlet内にベタ書きしていたHTMLを外出しする。 Scalatraの場合はScalateを導入することで以下のテンプレートエンジンを使うことができる。 Ssp (Scala Server Pages)
+VerocityとかJSPみたいな記述が可能。 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.com/blog/2013/03/17/scalatra-tutorial-003">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.com" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">Scalatraでいろいろやる その３</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2013-03-17T23:37:00+09:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>17</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>11:37 pm</span></time>
+        
+        
+          
+           | <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/edit/master/source/_posts/2013-03-17-scalatra-tutorial-003.markdown">Edit</a>
+          
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>今までServlet内にベタ書きしていたHTMLを外出しする。</p>
+
+<!-- more -->
+
+
+<p>Scalatraの場合は<a href="http://scalate.fusesource.org/index.html">Scalate</a>を導入することで<a href="http://scalate.fusesource.org/documentation/user-guide.html#Template_Languages">以下のテンプレートエンジン</a>を使うことができる。</p>
+
+<ul>
+<li><a href="http://scalate.fusesource.org/documentation/ssp-reference.html">Ssp (Scala Server Pages)</a>
+<a href="http://velocity.apache.org/">Verocity</a>とかJSPみたいな記述が可能。他のテンプレートエンジンとくらべて一番HTMLっぽい。</li>
+<li><a href="http://scalate.fusesource.org/documentation/scaml-reference.html">Scaml (Scala Markup Language)</a>
+<a href="http://haml.info/">Haml</a>のScala版。</li>
+<li><a href="http://scalate.fusesource.org/documentation/jade.html">Jade</a>
+Scamlに似てるけど変数に%シンボルがつかないのでちょっと読みやすい。</li>
+<li><a href="http://scalate.fusesource.org/documentation/mustache.html">Mustache</a>
+本家は<a href="http://mustache.github.com/">こちら</a>。実際に使ってなのでよくわかってないが、テンプレート内には制御文を入れないで、テンプレートに値を渡すServlet内でロジックを記述する形式っぽい。</li>
+</ul>
+
+
+<a name="L....................."></a>
+<h2>基本的な使い方</h2>
+
+<p>これらのテンプレートエンジンを使うためにはServletに<code>ScalatraSupport</code>をmix inする必要がある。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">class</span> <span class="nc">MyFirstScalatraServlet</span> <span class="k">extends</span> <span class="nc">ScalatraTestStack</span> <span class="k">with</span> <span class="nc">ScalateSupport</span> <span class="o">{</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>例えばsspを使いたい場合は以下のようにする。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">get</span><span class="o">(</span><span class="s">&quot;/&quot;</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>  <span class="n">contentType</span><span class="o">=</span><span class="s">&quot;text/html&quot;</span>
+</span><span class='line'>  <span class="n">ssp</span><span class="o">(</span><span class="s">&quot;index.ssp&quot;</span><span class="o">)</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>ssp(&ldquo;index.ssp&rdquo;)</code>は<code>src/main/webapp/WEB-INF/templates/views/index.ssp</code>を指している。<br>
+また、ベースのレイアウトとなるのは、<code>src/main/webapp/WEB-INF/templates/layouts/defaluts.ssp</code>となる。<br>
+レイアウトファイルではServletが返すレスポンスボディを受け取るように記述しなければならない。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="o">&lt;%@</span> <span class="k">val</span> <span class="n">body</span><span class="k">:</span> <span class="kt">String</span> <span class="kt">%&gt;</span>
+</span><span class='line'><span class="o">&lt;!</span><span class="nc">DOCTYPE</span> <span class="n">html</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">html</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">head</span><span class="o">&gt;&lt;</span><span class="n">title</span><span class="o">&gt;</span><span class="nc">Scaltra</span> <span class="nc">Sample</span><span class="o">&lt;/</span><span class="n">title</span><span class="o">&gt;&lt;/</span><span class="n">head</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">body</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="o">&lt;%=</span> <span class="n">unescape</span><span class="o">(</span><span class="n">body</span><span class="o">)</span> <span class="o">%&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">body</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">html</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>uneascape</code>は出力するHTMLをエスケープしないようにする。これをエスケープするとHTML文がそのままでるので、注意。</p>
+
+<a name="L................................."></a>
+<h2>テンプレートに値を渡す</h2>
+
+<p>Servletからテンプレートに値を渡したいことはよくあることで、Scalateでは以下のようにやれば良い。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">get</span><span class="o">(</span><span class="s">&quot;/get/:param&quot;</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>  <span class="n">contentType</span><span class="o">=</span><span class="s">&quot;text/html&quot;</span>
+</span><span class='line'>  <span class="n">ssp</span><span class="o">(</span><span class="s">&quot;get/param.ssp&quot;</span><span class="o">,</span> <span class="s">&quot;param&quot;</span> <span class="o">-&gt;</span> <span class="n">params</span><span class="o">(</span><span class="s">&quot;param&quot;</span><span class="o">))</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>第2引数以降に<code>&ldquo;テンプレート内で使う変数名&rdquo; -> &ldquo;割り当てたい値&rdquo;</code>のようにすれば良い。</p>
+
+<p>View側は以下のようになる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="err">&lt;</span>%@ val param: String %&gt;
+</span><span class='line'><span class="nt">&lt;h1&gt;</span>Scalatra POST Tutorial<span class="nt">&lt;/h1&gt;</span>
+</span><span class='line'><span class="nt">&lt;p&gt;</span>You submitted: <span class="err">&lt;</span>%= param %&gt;<span class="nt">&lt;/p&gt;</span>
+</span><span class='line'><span class="nt">&lt;hr/&gt;</span>
+</span><span class='line'><span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">&quot;/&quot;</span><span class="nt">&gt;</span>Beck To Index<span class="nt">&lt;/a&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>一行目でServletから受け取る値を宣言して、それを<code>&lt;%= 変数名 %></code>で使用する。</p>
+
+<a name="L.........................................."></a>
+<h2>コンパイルされるとどうなるか</h2>
+
+<p>テンプレートのViewファイルはコンパイルされるとどうなるかは<code>target/scala-2.10/src_managed/main/scalate/templates/views</code>を見ると良い。例えば、上記で変数を受け取ったテンプレートの場合だと以下のようになる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="cm">/* NOTE this file is autogenerated by Scalate : see http://scalate.fusesource.org/ */</span>
+</span><span class='line'><span class="k">package</span> <span class="nn">templates.views.post</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">object</span> <span class="nc">$_scalate_$param_ssp</span> <span class="o">{</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nc">$_scalate_$render</span><span class="o">(</span><span class="nc">$_scalate_$_context</span><span class="k">:</span> <span class="k">_</span><span class="kt">root_.org.fusesource.scalate.RenderContext</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+</span><span class='line'>    <span class="o">;{</span>
+</span><span class='line'>      <span class="k">val</span> <span class="n">context</span><span class="k">:</span> <span class="k">_</span><span class="kt">root_.org.fusesource.scalate.RenderContext</span> <span class="o">=</span> <span class="nc">$_scalate_$_context</span><span class="o">.</span><span class="n">attribute</span><span class="o">(</span><span class="s">&quot;context&quot;</span><span class="o">)</span>
+</span><span class='line'>      <span class="k">import</span> <span class="nn">context._</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>      <span class="o">;{</span>
+</span><span class='line'>        <span class="k">val</span> <span class="n">param</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="nc">$_scalate_$_context</span><span class="o">.</span><span class="n">attribute</span><span class="o">(</span><span class="s">&quot;param&quot;</span><span class="o">)</span>
+</span><span class='line'>        <span class="nc">$_scalate_$_context</span> <span class="o">&lt;&lt;</span> <span class="o">(</span> <span class="s">&quot;&lt;h1&gt;Scalatra POST Tutorial&lt;/h1&gt;\n&lt;p&gt;You submitted: &quot;</span> <span class="o">);</span>
+</span><span class='line'>        <span class="nc">$_scalate_$_context</span> <span class="o">&lt;&lt;&lt;</span> <span class="o">(</span>          <span class="n">param</span>
+</span><span class='line'> <span class="o">);</span>
+</span><span class='line'>        <span class="nc">$_scalate_$_context</span> <span class="o">&lt;&lt;</span> <span class="o">(</span> <span class="s">&quot;&lt;/p&gt;\n&lt;hr/&gt;\n&lt;a href=\&quot;/\&quot;&gt;Beck To Index&lt;/a&gt;\n&quot;</span> <span class="o">);</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">$_scalate_$param_ssp</span> <span class="k">extends</span> <span class="nc">_root_</span><span class="o">.</span><span class="n">org</span><span class="o">.</span><span class="n">fusesource</span><span class="o">.</span><span class="n">scalate</span><span class="o">.</span><span class="nc">Template</span> <span class="o">{</span>
+</span><span class='line'>  <span class="k">def</span> <span class="n">render</span><span class="o">(</span><span class="n">context</span><span class="k">:</span> <span class="k">_</span><span class="kt">root_.org.fusesource.scalate.RenderContext</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="nc">$_scalate_$param_ssp</span><span class="o">.</span><span class="nc">$_scalate_$render</span><span class="o">(</span><span class="n">context</span><span class="o">)</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>コンパイルされているのでちょっと見にくいが、Servletから受け取った値を<code>$_scalate_$_context.attribute(&ldquo;param&rdquo;)</code>で取り出して、あとは記述されたHTMLなどと一緒に<code>$_scalate_$_context</code>に流し込んでいる様子が見て取れる。</p>
+
+<a name="L.................."></a>
+<h2>制御文を使う</h2>
+
+<p>ここから先はSspのお話。</p>
+
+<p>Sspでは<code>${}</code>か<code>&lt;%= %></code>内に書かれたコードが評価されて出力される。加えて、Velocity形式として<code>#{}</code>による制御文もサポートしており、いわゆるifやforももちろん使えて、一般的なテンプレートエンジンと同じ使い勝手を持っている。<br>
+以下Sspと出力されるHTMLコードを比較する。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;&lt;%=</span> <span class="nc">List</span><span class="o">(</span><span class="s">&quot;hello,&quot;</span><span class="o">,</span> <span class="s">&quot;World!&quot;</span><span class="o">).</span><span class="n">mkString</span><span class="o">(</span><span class="s">&quot; &quot;</span><span class="o">)</span> <span class="o">%&gt;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;#{</span>
+</span><span class='line'>    <span class="k">import</span> <span class="nn">java.util.Date</span>
+</span><span class='line'>    <span class="k">val</span> <span class="n">now</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">Date</span>
+</span><span class='line'>    <span class="nc">List</span><span class="o">(</span><span class="s">&quot;hello,&quot;</span><span class="o">,</span> <span class="s">&quot;Ssp on Scalate!&quot;</span><span class="o">).</span><span class="n">mkString</span><span class="o">(</span><span class="s">&quot; &quot;</span><span class="o">)</span>
+</span><span class='line'><span class="o">}#&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">the</span> <span class="n">time</span> <span class="n">is</span> <span class="n">$</span><span class="o">{</span><span class="n">now</span><span class="o">}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">$</span><span class="o">{</span> <span class="s">&quot;1 + 2 =&quot;</span> <span class="o">+</span> <span class="o">(</span><span class="mi">1</span><span class="o">+</span><span class="mi">2</span><span class="o">)}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'><span class="k">&lt;%</span>
+</span><span class='line'>    <span class="k">var</span> <span class="n">foo</span> <span class="k">=</span> <span class="s">&quot;this&quot;</span>
+</span><span class='line'>    <span class="n">foo</span> <span class="o">+=</span>  <span class="s">&quot; is&quot;</span>
+</span><span class='line'>    <span class="n">foo</span> <span class="o">+=</span>  <span class="s">&quot; is a pen.&quot;</span>
+</span><span class='line'><span class="o">%&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">$</span><span class="o">{</span><span class="n">foo</span><span class="o">}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;p&gt;</span>hello, World!<span class="nt">&lt;/p&gt;</span>
+</span><span class='line'><span class="nt">&lt;p&gt;&lt;/p&gt;</span>
+</span><span class='line'><span class="nt">&lt;p&gt;</span>the time is 2013年3月17日<span class="nt">&lt;/p&gt;</span>
+</span><span class='line'><span class="nt">&lt;p&gt;</span>1 + 2 =3<span class="nt">&lt;/p&gt;</span>
+</span><span class='line'><span class="nt">&lt;p&gt;</span>this is is a pen.<span class="nt">&lt;/p&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Scalaのコードは<code>&lt;%= %></code>または<code>${}</code>あるいは<code>#{}</code>内に記述する。<br>
+しかし、出力されるHTMLをみてみると、標準出力されるものはHTMLに出力されていないことがわかる。<br>
+コンパイルされたソースを見てみよう。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">object</span> <span class="nc">$_scalate_$Ssp_ssp</span> <span class="o">{</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nc">$_scalate_$render</span><span class="o">(</span><span class="nc">$_scalate_$_context</span><span class="k">:</span> <span class="k">_</span><span class="kt">root_.org.fusesource.scalate.RenderContext</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+</span><span class='line'>    <span class="o">;{</span>
+</span><span class='line'>      <span class="k">val</span> <span class="n">context</span><span class="k">:</span> <span class="k">_</span><span class="kt">root_.org.fusesource.scalate.RenderContext</span> <span class="o">=</span> <span class="nc">$_scalate_$_context</span><span class="o">.</span><span class="n">attribute</span><span class="o">(</span><span class="s">&quot;context&quot;</span><span class="o">)</span>
+</span><span class='line'>      <span class="k">import</span> <span class="nn">context._</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>      <span class="nc">$_scalate_$_context</span> <span class="o">&lt;&lt;</span> <span class="o">(</span> <span class="s">&quot;&lt;p&gt;&quot;</span> <span class="o">);</span>
+</span><span class='line'>      <span class="nc">$_scalate_$_context</span> <span class="o">&lt;&lt;&lt;</span> <span class="o">(</span>        <span class="nc">List</span><span class="o">(</span><span class="s">&quot;hello, &quot;</span><span class="o">,</span> <span class="s">&quot;World!&quot;</span><span class="o">).</span><span class="n">mkString</span><span class="o">(</span><span class="s">&quot; &quot;</span><span class="o">)</span>
+</span><span class='line'> <span class="o">);</span>
+</span><span class='line'>      <span class="nc">$_scalate_$_context</span> <span class="o">&lt;&lt;</span> <span class="o">(</span> <span class="s">&quot;&lt;/p&gt;\n&lt;p&gt;&quot;</span> <span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">import</span> <span class="nn">java.util.Date</span>
+</span><span class='line'>    <span class="k">val</span> <span class="n">now</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">Date</span>
+</span><span class='line'>    <span class="nc">List</span><span class="o">(</span><span class="s">&quot;hello,&quot;</span><span class="o">,</span> <span class="s">&quot;Ssp on Scalate!&quot;</span><span class="o">).</span><span class="n">mkString</span><span class="o">(</span><span class="s">&quot; &quot;</span><span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>      <span class="nc">$_scalate_$_context</span> <span class="o">&lt;&lt;</span> <span class="o">(</span> <span class="s">&quot;&lt;/p&gt;\n&lt;p&gt;the time is &quot;</span> <span class="o">);</span>
+</span><span class='line'>      <span class="nc">$_scalate_$_context</span> <span class="o">&lt;&lt;&lt;</span> <span class="o">(</span>       <span class="n">now</span>
+</span><span class='line'> <span class="o">);</span>
+</span><span class='line'>      <span class="nc">$_scalate_$_context</span> <span class="o">&lt;&lt;</span> <span class="o">(</span> <span class="s">&quot;&lt;/p&gt;\n&lt;p&gt;&quot;</span> <span class="o">);</span>
+</span><span class='line'>      <span class="nc">$_scalate_$_context</span> <span class="o">&lt;&lt;&lt;</span> <span class="o">(</span>        <span class="s">&quot;1 + 2 =&quot;</span> <span class="o">+</span> <span class="o">(</span><span class="mi">1</span><span class="o">+</span><span class="mi">2</span><span class="o">)</span>
+</span><span class='line'> <span class="o">);</span>
+</span><span class='line'>      <span class="nc">$_scalate_$_context</span> <span class="o">&lt;&lt;</span> <span class="o">(</span> <span class="s">&quot;&lt;/p&gt;\n\n&quot;</span> <span class="o">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>後半は割愛しているが、<code>#{}</code>に記述したコードは<code>$_scalate_$_context</code>に流し込まれていないことがわかる。<br>
+どうやら<code>#{}</code>に記述したコードはimport文や変数の格納などに使うようだ。</p>
+
+<p>続いて、forとかif文。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="o">&lt;</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'><span class="k">#for</span><span class="o">(</span><span class="n">i</span> <span class="k">&lt;-</span> <span class="mi">1</span> <span class="n">to</span> <span class="mi">15</span><span class="o">)</span>
+</span><span class='line'>    <span class="k">#if</span> <span class="o">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">15</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;</span><span class="n">$</span><span class="o">{</span><span class="n">i</span><span class="o">}</span><span class="k">:</span> <span class="kt">FIzzBuzz&lt;/li&gt;</span>
+</span><span class='line'>    <span class="k">#</span><span class="n">elseif</span> <span class="o">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">5</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;</span><span class="n">$</span><span class="o">{</span><span class="n">i</span><span class="o">}</span><span class="k">:</span> <span class="kt">Buzz&lt;/li&gt;</span>
+</span><span class='line'>    <span class="k">#</span><span class="n">elseif</span> <span class="o">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;</span><span class="n">$</span><span class="o">{</span><span class="n">i</span><span class="o">}</span><span class="k">:</span> <span class="kt">Fizz&lt;/li&gt;</span>
+</span><span class='line'>    <span class="k">#else</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;</span><span class="n">$</span><span class="o">{</span><span class="n">i</span><span class="o">}</span><span class="k">:</span> <span class="kt">-&lt;/li&gt;</span>
+</span><span class='line'>    <span class="k">#</span><span class="n">end</span>
+</span><span class='line'><span class="k">#</span><span class="n">end</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'>    <span class="k">#for</span><span class="o">(</span><span class="n">i</span> <span class="k">&lt;-</span> <span class="mi">1</span> <span class="n">to</span> <span class="mi">5</span><span class="o">;</span> <span class="n">j</span> <span class="k">&lt;-</span> <span class="mi">1</span> <span class="n">to</span> <span class="mi">2</span><span class="o">)</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;(</span><span class="n">$</span><span class="o">{</span><span class="n">i</span><span class="o">},</span> <span class="n">$</span><span class="o">{</span><span class="n">j</span><span class="o">})&lt;/</span><span class="n">li</span><span class="o">&gt;</span>
+</span><span class='line'>    <span class="k">#</span><span class="n">end</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;ul&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;li&gt;</span>1: -<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;li&gt;</span>2: -<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;li&gt;</span>3: Fizz<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;li&gt;</span>4: -<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;li&gt;</span>5: Buzz<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;li&gt;</span>6: Fizz<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;li&gt;</span>7: -<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;li&gt;</span>8: -<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;li&gt;</span>9: Fizz<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;li&gt;</span>10: Buzz<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;li&gt;</span>11: -<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;li&gt;</span>12: Fizz<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;li&gt;</span>13: -<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;li&gt;</span>14: -<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;li&gt;</span>15: FIzzBuzz<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/ul&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;ul&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;li&gt;</span>(1, 1)<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;li&gt;</span>(1, 2)<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;li&gt;</span>(2, 1)<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;li&gt;</span>(2, 2)<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;li&gt;</span>(3, 1)<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;li&gt;</span>(3, 2)<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;li&gt;</span>(4, 1)<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;li&gt;</span>(4, 2)<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;li&gt;</span>(5, 1)<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;li&gt;</span>(5, 2)<span class="nt">&lt;/li&gt;</span>
+</span><span class='line'><span class="nt">&lt;/ul&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<hr />
+
+
+<p>ざっとだが、Scalatraでのテンプレートエンジンの使い方を概観した。<br>
+リファレンス見ながら以上を見てきたわけだが、Scalateというか、テンプレート側にもう少し機能があるかなぁとは思ったが、そんなことはなかった…。<a href="http://twig.sensiolabs.org/">Twig</a>ぐらいは機能を持ってるかと思ったんだけどなぁ。調べ方が足りなかったかな？<br>とはいえ、他のテンプレートエンジンはまた別の機能を持っているを持っていたりするので、用途に合わせて使い分けていけばいいのだろうと思う。</p>
+
+<p>まぁとりあえずということで、次はDBとの接続を試すことにする。試すならSlickかなぁ。</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2013-03-17T23:37:00+09:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>17</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>11:37 pm</span></time>
+      <span class="categories">full history <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/commit/master/source/_posts/2013-03-17-scalatra-tutorial-003.markdown">here</a></span>
+
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/scala/'>scala</a>, <a class='category' href='/blog/categories/scalatra/'>scalatra</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/03/14/rpscala-99/" title="Previous Post: Scala勉強会第99回 in 本郷に参加した。">&laquo; Scala勉強会第99回 in 本郷に参加した。</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/03/18/not-found-akka/" title="Next Post: com.typesafe.akka#akka-actor;2.0.5: not found">com.typesafe.akka#akka-actor;2.0.5: not found &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

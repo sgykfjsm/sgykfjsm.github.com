@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: 関数型プログラミング | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/guan-shu-xing-puroguramingu/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[デブサミ2013に参加した　その２]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2013/02/17/developer-summit2/"/>
+    <updated>2013-02-17T23:04:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2013/02/17/developer-summit2</id>
+    <content type="html"><![CDATA[<p><a href="http://event.shoeisha.jp/detail/1/">Developers Summit 2013</a>、いわゆる「デブサミ」に参加した。</p>
+
+<p>個人的にはこのセッションが目玉だったが、結果的には、もう少し関数型プログラミングの良さをアピールしてもらえたら、今後の社内営業に使えたのになーという印象。
+関数型言語が「こわい」と言われるのはオブジェクト指向型言語との対比だったり手続き型言語との構文の違いだと、個人的には思っているので、そういった部分を解消できたらいいのかなと思う。</p>
+
+<!-- more -->
+
+
+<a name="L...14-B-7................................."></a>
+<h2><a href="http://event.shoeisha.jp/detail/1/session/13/">【14-B-7】こわくない関数型言語</a></h2>
+
+<a name="L............"></a>
+<h3>スライド</h3>
+
+<p>公開されているのは水島さんの分だけ？</p>
+
+<iframe src="http://www.slideshare.net/slideshow/embed_code/16528433" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen webkitallowfullscreen mozallowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="http://www.slideshare.net/kmizushima/scala-16528433" title="こわくないScala" target="_blank">こわくないScala</a> </strong> from <strong><a href="http://www.slideshare.net/kmizushima" target="_blank">Kota Mizushima</a></strong> </div></p>
+
+<p>以下、メモ書き。</p>
+
+<ul>
+<li>中野先生
+
+<ul>
+<li>関数型の基準は？
+
+<ul>
+<li>高階？参照透過性？副作用の有無？型推論？→どれも違う。というか、問題の設定が間違っている。</li>
+<li>関数型とは？
+
+<ul>
+<li>プログラミングスタイルの１つ。</li>
+</ul>
+</li>
+<li>どんなスタイル？の前に、そもそも「関数」って？
+
+<ul>
+<li>プログラムでいうところの「関数」とは違う。</li>
+<li>もっと数学的
+
+<ul>
+<li>入力が決まれば出力が決まる。また、入力は引数だけではないし、出力は返り値だけではない。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>関数化の注意点
+
+<ul>
+<li>他の関数が非関数化してしまうかも？</li>
+<li>あらゆる言語に通用する定義は無理。</li>
+</ul>
+</li>
+<li>プログラミングスタイルとして「関数型」が記述しやすいことが関数型言語</li>
+</ul>
+</li>
+<li>関数型プログラミングをすると何が嬉しい？
+
+<ul>
+<li>プログラムをモジュール化しやすい。</li>
+<li>最新の研究の恩恵を受けれる。</li>
+<li>トイ・プログラマしか書けないってこと？
+
+<ul>
+<li>OCamlで出力されたC言語プログラムは実行時エラーが発生しないことが保証されているので、飛行機のプログラムに使われている。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>プログラムを関数で記述するのに理論まで理解する必要は無い。記述に必要な機能に慣れておくことが必要。</li>
+</ul>
+</li>
+<li>上野雄大さん「こわくないSML#」
+
+<ul>
+<li>SML#？
+
+<ul>
+<li>日本初のML系言語</li>
+<li><a href="http://www.pllab.riec.tohoku.ac.jp/smlsharp/ja/">http://www.pllab.riec.tohoku.ac.jp/smlsharp/ja/</a></li>
+<li>OCamlに近い、SMLファミリーの一つ</li>
+<li>実用的にしたいという目標
+
+<ul>
+<li>「現実」的なC言語と「未来」的な関数型言語のギャップを埋めたい。</li>
+</ul>
+</li>
+<li>Cとの高い相互運用性→資源の再利用</li>
+<li>OPEN GLも使えるよ</li>
+<li>CとSML#の往復も可能</li>
+<li>頭に思い浮かんだものをコードに落としてこみやすく。</li>
+<li>手続き型っぽく書きたい？→C言語でどうぞ。</li>
+<li>宣言的に書きたい→SML#でどうぞ。</li>
+<li>SML#はバイナリパッケージを<a href="http://www.pllab.riec.tohoku.ac.jp/smlsharp/ja/?Download">配布</a>している。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>水島さん
+
+<ul>
+<li>Scalaはいろんな意味で怖いといわれる。</li>
+<li>Scalaへの誤解
+
+<ul>
+<li>関数型の概念を理解する必要があるか？
+
+<ul>
+<li>理解したほうが良い。</li>
+<li>でも最初はJavaっぽく書いても良い。</li>
+<li>first class functionを使ってみたり。</li>
+</ul>
+</li>
+<li>implicitなんとかを使いこなす必要がある？
+
+<ul>
+<li>スクラッチから書くときには必要ない。</li>
+<li>Scalaのコードを読むときに知っていれば良い。</li>
+</ul>
+</li>
+<li>関数型なコードを書かないと叩かれる？
+
+<ul>
+<li>多くのScalaプログラマは普通に教えてくれる。言葉足らずなときもあるけれど…</li>
+</ul>
+</li>
+<li>ScalaZというライブラリを使わないと行けない？
+
+<ul>
+<li>そんなことは無い。</li>
+<li>一般的なプログラマには必要ない。</li>
+</ul>
+</li>
+<li>Scalaは初学者にはオススメしない。
+
+<ul>
+<li>Javaのライブラリの使い方とScalaの両方を学ぶ必要があるため。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Q&amp;A
+
+<ul>
+<li>関数型を学ぶのにオススメな書籍は？
+
+<ul>
+<li>現場レベルではなく、メタな欲求がでたときに必要になると思うので、その時まで待て。</li>
+<li><a href="http://www.amazon.co.jp/%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0%E3%81%AE%E5%9F%BA%E7%A4%8E-Computer-Science-Library-%E6%B5%85%E4%BA%95/dp/4781911609/ref=sr_1_1?ie=UTF8&amp;qid=1361111961&amp;sr=8-1">プログラミングの基礎</a>がOCamlで解説されており、結構良い。</li>
+</ul>
+</li>
+<li>どうやって布教したら良い？
+
+<ul>
+<li>いきなりすべてScalaにするのはリスキー。まずは少人数でモクモクして、そこからちょっとずつが現実的。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

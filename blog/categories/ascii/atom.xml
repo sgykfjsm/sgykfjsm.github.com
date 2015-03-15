@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: ascii | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/ascii/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[区切り文字がASCII 001なファイルを扱う]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2013/04/29/ascii-delimiter/"/>
+    <updated>2013-04-29T00:20:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2013/04/29/ascii-delimiter</id>
+    <content type="html"><![CDATA[<p>awsのhiveでS3に直接ファイルを出力すると区切り文字がASCII 001(Ctrl + A)になる。<br>
+ASCII文字なので、普通にcatしてもパッと見は区切りが無いように見えるがvimなどで開いてみると以下のように見える。<br></p>
+
+<!-- more -->
+
+
+<pre><code class="sh"># 普通にcatすると以下のように見える
+# hadoop@xxxxxxx:~$ hadoop dfs -cat s3://xxxxxxxxxx/export/20130428/000000
+# 13/04/28 15:11:56 INFO s3native.NativeS3FileSystem: Opening 's3://xxxxxxxxxx/export/20130428/000000' for reading
+# 27882858018
+# 2783112276000
+# 277864377980
+# vimで開くと以下のように見える
+278828&lt;01&gt;5801&lt;01&gt;8
+278311&lt;01&gt;227600&lt;01&gt;0
+277864&lt;01&gt;37798&lt;01&gt;0
+</code></pre>
+
+<p>これをダウンロードしてローカルで取り扱う場合は以下の様な方法がある。</p>
+
+<pre><code class="sh">[sgyk@fujishima] 13-04-29 0:19:48 /tmp
+$ awk -F"\001" '{print $1", "$2", "$3}' 000000
+278828, 5801, 8
+278311, 227600, 0
+277864, 37798, 0
+</code></pre>
+
+<p>要するにawkで区切り文字を<code>\001</code>で指定できるよ、っていうだけ。<br>
+なお、使用したawkのバージョンは以下のとおり。</p>
+
+<pre><code>[sgyk@fujishima] 13-04-29 0:36:49 /tmp
+$ awk --version
+GNU Awk 4.0.2
+Copyright (C) 1989, 1991-2012 Free Software Foundation.
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see http://www.gnu.org/licenses/.
+</code></pre>
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,847 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: docker | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/docker/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[AWS BeanstalkでDockerをカスタムAMIで使う。]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2015/03/14/custom-docker-ami-on-beanstalk/"/>
+    <updated>2015-03-14T23:11:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2015/03/14/custom-docker-ami-on-beanstalk</id>
+    <content type="html"><![CDATA[<p>既知の通り、BeanstalkでDockerを使うことができるが、通常の使い方だとインスタンスが配備される度にDocker ImageをPull、BuildしてからRunする。初期配備時は問題ないが、スケールアウトの観点で見た場合、非常にもたつくことがある。また、Docker Imageが大きい(800MB以上ぐらい？)と、devicemapper errorでBuildに失敗することが多い（ような気がする）。単にBuildに失敗しただけであれば切り離せば良いが、複数台のうちいくつかがBuildに失敗しただけでは検知が難しく、そのまま生き残ってしまうとムダなコストが発生する。</p>
+
+<p>上記のような認識でいたため、これまではBeanstalkでDockerを運用することにはあまり乗り気ではなかった。しかし、同僚からの意見で予めデプロイしておいたカスタムAMIを使うのはどうか、という意見があり、検証することにした。</p>
+
+<p>なお、結論から言うと、ここで記した方法では実運用に耐えないと思う。アレコレがんばらないで、素直に<a href="http://aws.amazon.com/jp/ecs/">Amazon EC2 Container Service</a>がGAになるのを待ったほうが良い。</p>
+
+<!-- more -->
+
+
+<a name="L1..............AMI........."></a>
+<h2>1. カスタムAMIの作成</h2>
+
+<p>まず、カスタムAMIを作成する。作成の方法はAWSのドキュメントに記載されている。</p>
+
+<ul>
+<li><a href="http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/using-features.customenv.html">Using Custom AMIs</a></li>
+</ul>
+
+
+<p>上記手順は非常に単純だが、注意点は以下の通り。</p>
+
+<ul>
+<li>Beanstalk Dockerで利用可能なAMIでインスタンスを起動する。</li>
+<li>インスタンスを起動するリージョンはBeanstalkと同じリージョンでなければならない。</li>
+<li>Beanstalkで使われているカスタムAMI IDを事前に調べておくこと。</li>
+<li>インスタンス起動時にUser dataに以下を埋め込むこと。</li>
+</ul>
+
+
+<pre><code>#cloud-config
+repo_releasever: &lt;repository version number&gt;
+repo_upgrade: none
+</code></pre>
+
+<p>User dataに埋め込むコードについての詳細は割愛するが、<code>repository version number</code>は<a href="http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html">Supported Platforms</a>に記載されている各Solution StackのAMI列を記載すること。この設定により、lock-on-launch 機能が設定され、セキュリティ更新の自動インストールの無効化がなされる。上記設定はBeanstalkでカスタムAMIを使うために必須である。また、VPC環境下でインスタンスを起動する場合はAuto-assign Public IPをenabledにすることを忘れないこと。</p>
+
+<p>上記を踏まえてCloudFormation用テンプレートを作成した。</p>
+
+<ul>
+<li><a href="https://gist.github.com/sgykfjsm/c250891a3f2ec5b65eee">sgykfjsm/custom-ami-mold.template</a></li>
+</ul>
+
+
+<p>こいつを流し込んでやれば、まずはベースとなるAMIを持つインスタンスができる。</p>
+
+<a name="L2..AMI..............."></a>
+<h2>2. AMIの初期設定</h2>
+
+<p>実際の運用次第だと思うが、最低限必要であろう設定をここで行っておく。個別アプリケーションの設定を一部含んでいるが、不要な場合は設定しなくて良い。</p>
+
+<ul>
+<li><a href="https://gist.github.com/sgykfjsm/8d6d3cf5a822dbb33e45#file-initial_setup_for_custom_ami-sh">sgykfjsm/initial_setup_for_custom_ami.sh</a></li>
+</ul>
+
+
+<p>あとはtd-agentのインストールや設定も行っておきたいが、設定のことを考えると長くなりそうなので、今回は割愛する。
+ちょっと長いけど、この辺りをやっておくと後々の運用が楽になるんじゃないかと思う。</p>
+
+<p>上記設定後、一旦インスタンスを再起動する。再起動後は以下の様にして、これまでの設定が反映されていることを確認する。</p>
+
+<pre><code>$ ulimit -n
+65536
+# pgrepの対象はmonitでなくても良い。
+$ cat /proc/$(pgrep monit)/limits | grep "Max open files"
+Max open files            65536                65536                files
+$ sudo monit status
+</code></pre>
+
+<a name="L3..Docker................................................"></a>
+<h2>3. Dockerイメージのビルドとコンテナの起動</h2>
+
+<p>次に、Dockerコンテナのデプロイを行なう。これは単純にDeckerfileを用意すれば良いが、どのようなファイルを用意すべきかはデプロイ内容による。<br>
+今回はすでに必要な設定は済んでおり、アプリケーションを取り込み済みのDockerイメージを用いるので、以下の様な内容になる。</p>
+
+<pre><code>FROM sgykfjsm/play-scala-intro:latest
+</code></pre>
+
+<p>これを元にコンテナの起動を行う。</p>
+
+<pre><code>$ sudo docker run -i -t -d -p 12812:2812 -p 80:9000 --name play-scala-intro -v /etc/localtime:/etc/localtime:ro sgykfjsm/play-scala-intro
+Unable to find image 'sgykfjsm/play-scala-intro' locally
+Pulling repository sgykfjsm/play-scala-intro
+</code></pre>
+
+<p>実際の運用では起動後に受け入れテストのようなもので簡単な動作確認を行なうべきだろう。</p>
+
+<pre><code>$ curl --silent localhost:80 -o - | grep "&lt;title&gt;Welcome to Play&lt;/title&gt;"
+        &lt;title&gt;Welcome to Play&lt;/title&gt;
+</code></pre>
+
+<a name="L4.............................................................."></a>
+<h2>4. 起動スクリプトの用意と再起動処理の上書き</h2>
+
+<p>インスタンス起動時にカスタムAMIでビルドしたDockerコンテナが起動するようにupstartスクリプトを用意する。これは後述するダミー用のデプロイアプリケーションで配布するため、<code>.ebextensions</code>の書式に従って以下の様なものを用意する。</p>
+
+<p>インスタンス初期配備時のための設定。</p>
+
+<p><figure class='code'><figcaption><span>03-run-dummy-app.config / Docker用のカスタムAMIを使うためにダミーのアプリケーションに仕込んでおく.ebextensions</span><a target='_blank' href='https://gist.github.com/c6b9a73f0cfb7b3c6df0'>link</a></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>---
+</span><span class='line'>commands:
+</span><span class='line'>
+</span><span class='line'>    01-run-dummy-app:
+</span><span class='line'>        command: |
+</span><span class='line'>            /usr/bin/docker ps -a | grep -q &#39;play-scala-intro&#39; || \
+</span><span class='line'>            /usr/bin/docker run -d \
+</span><span class='line'>                -p 22812:2812 \
+</span><span class='line'>                --name play-scala-intro \
+</span><span class='line'>                -v /etc/localtime:/etc/localtime:ro \
+</span><span class='line'>                sgykfjsm/play-scala-intro
+</span><span class='line'>        cwd: /home/ec2-user
+</span><span class='line'>        ignoreErrors: false
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>initctlに登録するための起動スクリプトの設定。</p>
+
+<p><figure class='code'><figcaption><span>01-make-upstart.config / Docker用のカスタムAMIを使うためにダミーのアプリケーションに仕込んでおく.ebextensions</span><a target='_blank' href='https://gist.github.com/c6b9a73f0cfb7b3c6df0'>link</a></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>---
+</span><span class='line'>files:
+</span><span class='line'>
+</span><span class='line'>    &quot;/etc/init/sample-docker-app.conf&quot; :
+</span><span class='line'>        mode: 755
+</span><span class='line'>        owner: root
+</span><span class='line'>        group: root
+</span><span class='line'>        content: |
+</span><span class='line'>            description &quot;Elastic Beanstalk Docker Container sample-docker-app&quot;
+</span><span class='line'>
+</span><span class='line'>            start on started docker
+</span><span class='line'>            stop on stopping docker
+</span><span class='line'>
+</span><span class='line'>            respawn
+</span><span class='line'>
+</span><span class='line'>            script
+</span><span class='line'>                # &quot;play-scala-intro&quot; is *exmaple*. This must be replaced with real container name.
+</span><span class='line'>                CONTAINER_NAME=&quot;play-scala-intro&quot;
+</span><span class='line'>
+</span><span class='line'>                # Wait for docker to finish starting up first.
+</span><span class='line'>                FILE=/var/run/docker.sock
+</span><span class='line'>                while [ ! -e ${FILE} ]; do
+</span><span class='line'>                    sleep 2
+</span><span class='line'>                done
+</span><span class='line'>
+</span><span class='line'>                DOCKER_APP_FILE=/etc/elasticbeanstalk/.aws_beanstalk.current-container-id
+</span><span class='line'>                CONTAINER_ID=$(docker ps --no-trunc -a| grep ${CONTAINER_NAME} | cut -d&quot; &quot; -f1)
+</span><span class='line'>                if ! docker ps | grep -q ${CONTAINER_ID} ; then
+</span><span class='line'>                    docker start ${CONTAINER_ID} &gt; ${DOCKER_APP_FILE}
+</span><span class='line'>                fi
+</span><span class='line'>
+</span><span class='line'>                NGINX_UPSTREAM_IP=$(docker inspect ${CONTAINER_ID} | jq &quot;.[0].NetworkSettings.IPAddress&quot; --raw-output)
+</span><span class='line'>                # &quot;9000&quot; is *example*. This must be replaced with real application settings.
+</span><span class='line'>                NGINX_UPSTREAM_PORT=9000
+</span><span class='line'>
+</span><span class='line'>                DOCKER_PORT_FILE=/etc/elasticbeanstalk/.aws_beanstalk.container-port
+</span><span class='line'>                if ! cat /etc/nginx/conf.d/elasticbeanstalk-nginx-docker-upstream.conf | grep -q $NGINX_UPSTREAM_IP; then
+</span><span class='line'>                    sed -i.$(date &#39;+%Y%m%d%H%M%S.%Z&#39;)  \
+</span><span class='line'>                        &quot;s/server.*;/server ${NGINX_UPSTREAM_IP}:${NGINX_UPSTREAM_PORT};/&quot; \
+</span><span class='line'>                        /etc/nginx/conf.d/elasticbeanstalk-nginx-docker-upstream.conf
+</span><span class='line'>                    service nginx restart
+</span><span class='line'>                fi
+</span><span class='line'>                echo ${NGINX_UPSTREAM_PORT} &gt; ${DOCKER_PORT_FILE}
+</span><span class='line'>
+</span><span class='line'>                mkdir -p /var/log/eb-docker/containers/eb-current-app
+</span><span class='line'>                docker logs -f ${CONTAINER_ID} &gt; /var/log/eb-docker/containers/eb-current-app/${CONTAINER_ID:0:12}-stdouterr.log 2&gt;&amp;1
+</span><span class='line'>
+</span><span class='line'>                exec docker wait ${CONTAINER_ID}
+</span><span class='line'>            end script
+</span><span class='line'>
+</span><span class='line'>            post-stop script
+</span><span class='line'>                CONTAINER_ID=$(docker ps --no-trunc | grep &#39;play-scala-intro&#39; | cut -f1 -d&#39; &#39;)
+</span><span class='line'>
+</span><span class='line'>                if [ -n &quot;${CONTAINER_ID}&quot; ] ; then
+</span><span class='line'>                    docker stop ${CONTAINER_ID}
+</span><span class='line'>                fi
+</span><span class='line'>            end script
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Beanstalkではインスタンスの起動やアプリケーションのデプロイなどをフックにして様々なスクリプトが起動する。それらのうち、今回はAWSの管理コンソールからアプリケーションの再起動ができるように、再起動処理のスクリプトを上書きをする。これも<code>.ebextensions</code>に仕込んでおく。</p>
+
+<p></p>
+
+<p>その他の.ebextensionsについては<a href="https://gist.github.com/sgykfjsm/c6b9a73f0cfb7b3c6df0">gist</a>を参照すること。</p>
+
+<a name="L5..Beanstalk..........................................................................."></a>
+<h2>5. Beanstalkインスタンス用のダミーアプリケーションを用意する。</h2>
+
+<p>Beanstalkのインスタンス配備時にはデプロイアプリケーションが必要だ。上記で設定した.ebextensionsたちも同梱してデプロイしたいので、適当なアプリケーションを用意する。</p>
+
+<ul>
+<li><a href="https://gist.github.com/sgykfjsm/914bbe7292f51b530bc8">dummy-apps</a></li>
+</ul>
+
+
+<p><figure class='code'><figcaption><span>Dockerfile / BeanstalkのDockerプラットフォーム向けのダミーアプリケーション</span><a target='_blank' href='https://gist.github.com/914bbe7292f51b530bc8'>link</a></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='dockerfile'><span class='line'><span class="k">FROM</span> dockerfile/python
+</span><span class='line'>
+</span><span class='line'><span class="k">ADD</span> application.py /usr/local/share/application.py
+</span><span class='line'>
+</span><span class='line'><span class="k">EXPOSE</span> <span class="m">8000</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">ENTRYPOINT</span> <span class="o">[</span><span class="s2">&quot;python&quot;</span>, <span class="s2">&quot;/usr/local/share/application.py&quot;</span><span class="o">]</span>
+</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span>Dockerrun.aws.json / BeanstalkのDockerプラットフォーム向けのダミーアプリケーション</span><a target='_blank' href='https://gist.github.com/914bbe7292f51b530bc8'>link</a></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="nt">&quot;AWSEBDockerrunVersion&quot;</span><span class="p">:</span> <span class="s2">&quot;1&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nt">&quot;Logging&quot;</span><span class="p">:</span> <span class="s2">&quot;/var/log/dummy-application&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nt">&quot;Image&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span class='line'>  	<span class="nt">&quot;Update&quot;</span><span class="p">:</span> <span class="s2">&quot;false&quot;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span>application.py / BeanstalkのDockerプラットフォーム向けのダミーアプリケーション</span><a target='_blank' href='https://gist.github.com/914bbe7292f51b530bc8'>link</a></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">#!/usr/bin/env python</span>
+</span><span class='line'><span class="c"># vim:fenc=utf-8</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">wsgiref.simple_server</span> <span class="kn">import</span> <span class="n">make_server</span><span class="p">,</span> <span class="n">WSGIServer</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">SocketServer</span> <span class="kn">import</span> <span class="n">ThreadingMixIn</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">application</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">start_response</span><span class="p">(</span><span class="s">&#39;200 OK&#39;</span><span class="p">,</span> <span class="p">[(</span><span class="s">&#39;Content-type&#39;</span><span class="p">,</span> <span class="s">&#39;text/html&#39;</span><span class="p">)])</span>
+</span><span class='line'>    <span class="k">return</span> <span class="p">[</span><span class="s">&#39;ok&#39;</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">ThreadingWSGIServer</span><span class="p">(</span><span class="n">ThreadingMixIn</span><span class="p">,</span> <span class="n">WSGIServer</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">pass</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">httpd</span> <span class="o">=</span> <span class="n">make_server</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="mi">8000</span><span class="p">,</span> <span class="n">application</span><span class="p">,</span> <span class="n">ThreadingWSGIServer</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">httpd</span><span class="o">.</span><span class="n">serve_forever</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<a name="L6..............AMI............Beanstalk........................"></a>
+<h2>6. カスタムAMIを使ったBeanstalk環境を構築する。</h2>
+
+<p>管理コンソールからBeanstalk環境を構築すると、カスタムAMIを指定することができないため、環境を構築した後にConfigurationからカスタムAMIを変更する必要がある。これだと１時間分のムダな課金が発生するし、自動化が面倒である。なので、ここでもCloudFormationを使ってBeanstalk環境を構築する。</p>
+
+<ul>
+<li><a href="https://gist.github.com/sgykfjsm/33bb85bc03110e973dea">sample-docker-with-custom-ami.template</a></li>
+</ul>
+
+
+<p><figure class='code'><figcaption><span>sample-docker-with-custom-ami.template / BeanstalkでカスタムAMIを使ったDocker環境を構築するCloudFormationテンプレート</span><a target='_blank' href='https://gist.github.com/33bb85bc03110e973dea'>link</a></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+<span class='line-number'>157</span>
+<span class='line-number'>158</span>
+<span class='line-number'>159</span>
+<span class='line-number'>160</span>
+<span class='line-number'>161</span>
+<span class='line-number'>162</span>
+<span class='line-number'>163</span>
+<span class='line-number'>164</span>
+<span class='line-number'>165</span>
+<span class='line-number'>166</span>
+<span class='line-number'>167</span>
+<span class='line-number'>168</span>
+<span class='line-number'>169</span>
+<span class='line-number'>170</span>
+<span class='line-number'>171</span>
+<span class='line-number'>172</span>
+<span class='line-number'>173</span>
+<span class='line-number'>174</span>
+<span class='line-number'>175</span>
+<span class='line-number'>176</span>
+<span class='line-number'>177</span>
+<span class='line-number'>178</span>
+<span class='line-number'>179</span>
+<span class='line-number'>180</span>
+<span class='line-number'>181</span>
+<span class='line-number'>182</span>
+<span class='line-number'>183</span>
+<span class='line-number'>184</span>
+<span class='line-number'>185</span>
+<span class='line-number'>186</span>
+<span class='line-number'>187</span>
+<span class='line-number'>188</span>
+<span class='line-number'>189</span>
+<span class='line-number'>190</span>
+<span class='line-number'>191</span>
+<span class='line-number'>192</span>
+<span class='line-number'>193</span>
+<span class='line-number'>194</span>
+<span class='line-number'>195</span>
+<span class='line-number'>196</span>
+<span class='line-number'>197</span>
+<span class='line-number'>198</span>
+<span class='line-number'>199</span>
+<span class='line-number'>200</span>
+<span class='line-number'>201</span>
+<span class='line-number'>202</span>
+<span class='line-number'>203</span>
+<span class='line-number'>204</span>
+<span class='line-number'>205</span>
+<span class='line-number'>206</span>
+<span class='line-number'>207</span>
+<span class='line-number'>208</span>
+<span class='line-number'>209</span>
+<span class='line-number'>210</span>
+<span class='line-number'>211</span>
+<span class='line-number'>212</span>
+<span class='line-number'>213</span>
+<span class='line-number'>214</span>
+<span class='line-number'>215</span>
+<span class='line-number'>216</span>
+<span class='line-number'>217</span>
+<span class='line-number'>218</span>
+<span class='line-number'>219</span>
+<span class='line-number'>220</span>
+<span class='line-number'>221</span>
+<span class='line-number'>222</span>
+<span class='line-number'>223</span>
+<span class='line-number'>224</span>
+<span class='line-number'>225</span>
+<span class='line-number'>226</span>
+<span class='line-number'>227</span>
+<span class='line-number'>228</span>
+<span class='line-number'>229</span>
+<span class='line-number'>230</span>
+<span class='line-number'>231</span>
+<span class='line-number'>232</span>
+<span class='line-number'>233</span>
+<span class='line-number'>234</span>
+<span class='line-number'>235</span>
+<span class='line-number'>236</span>
+<span class='line-number'>237</span>
+<span class='line-number'>238</span>
+<span class='line-number'>239</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>{
+</span><span class='line'>    &quot;AWSTemplateFormatVersion&quot;: &quot;2010-09-09&quot;,
+</span><span class='line'>    &quot;Description&quot;: &quot;ApparelCloud MediaAPI Template on elastic beanstalk for Non-VPC&quot;,
+</span><span class='line'>    &quot;Parameters&quot;: {
+</span><span class='line'>        &quot;ApplicationName&quot;: {
+</span><span class='line'>            &quot;Description&quot;: &quot;Beanstalk Application Name&quot;,
+</span><span class='line'>            &quot;Type&quot;: &quot;String&quot;
+</span><span class='line'>        },
+</span><span class='line'>        &quot;BeanstalkInstanceType&quot;: {
+</span><span class='line'>            &quot;AllowedValues&quot;: [
+</span><span class='line'>                &quot;t2.micro&quot;,
+</span><span class='line'>                &quot;t2.small&quot;,
+</span><span class='line'>                &quot;t2.medium&quot;,
+</span><span class='line'>                &quot;m3.medium&quot;,
+</span><span class='line'>                &quot;m3.large&quot;,
+</span><span class='line'>                &quot;m3.xlarge&quot;,
+</span><span class='line'>                &quot;m3.2xlarge&quot;,
+</span><span class='line'>                &quot;c3.large&quot;,
+</span><span class='line'>                &quot;c3.xlarge&quot;,
+</span><span class='line'>                &quot;c3.2xlarge&quot;,
+</span><span class='line'>                &quot;c3.4xlarge&quot;,
+</span><span class='line'>                &quot;c3.8xlarge&quot;,
+</span><span class='line'>                &quot;r3.large&quot;,
+</span><span class='line'>                &quot;r3.xlarge&quot;,
+</span><span class='line'>                &quot;r3.2xlarge&quot;,
+</span><span class='line'>                &quot;r3.4xlarge&quot;,
+</span><span class='line'>                &quot;r3.8xlarge&quot;
+</span><span class='line'>            ],
+</span><span class='line'>            &quot;ConstraintDescription&quot;: &quot;must be a valid EC2 instance type.&quot;,
+</span><span class='line'>            &quot;Description&quot;: &quot;Bastion Host EC2 instance type&quot;,
+</span><span class='line'>            &quot;Type&quot;: &quot;String&quot;
+</span><span class='line'>        },
+</span><span class='line'>        &quot;BeanstalkSecurityGroup&quot;: {
+</span><span class='line'>            &quot;Description&quot;: &quot;Security Group Id for BeanstalkInstace&quot;,
+</span><span class='line'>            &quot;Type&quot;: &quot;String&quot;
+</span><span class='line'>        },
+</span><span class='line'>        &quot;CustomAmiId&quot;: {
+</span><span class='line'>            &quot;Description&quot;: &quot;You can override the default Amazon Machine Image (AMI) by specifying your own custom AMI ID.&quot;,
+</span><span class='line'>            &quot;Type&quot;: &quot;String&quot;
+</span><span class='line'>        },
+</span><span class='line'>        &quot;CNAMEPrefix&quot;: {
+</span><span class='line'>            &quot;Description&quot;: &quot;Endpoint prefix for environment&quot;,
+</span><span class='line'>            &quot;Type&quot;: &quot;String&quot;
+</span><span class='line'>        },
+</span><span class='line'>        &quot;EnvironmentName&quot;: {
+</span><span class='line'>            &quot;Description&quot;: &quot;Environment Name on This Application&quot;,
+</span><span class='line'>            &quot;Type&quot;: &quot;String&quot;
+</span><span class='line'>        },
+</span><span class='line'>        &quot;HostName&quot;: {
+</span><span class='line'>            &quot;Description&quot;: &quot;The URL name for bastion instance&quot;,
+</span><span class='line'>            &quot;Type&quot;: &quot;String&quot;
+</span><span class='line'>        },
+</span><span class='line'>        &quot;HostedZone&quot;: {
+</span><span class='line'>            &quot;Description&quot;: &quot;The DNS name of an existing Amazon Route 53 hosted zone&quot;,
+</span><span class='line'>            &quot;Type&quot;: &quot;String&quot;
+</span><span class='line'>        },
+</span><span class='line'>        &quot;KeyName&quot;: {
+</span><span class='line'>            &quot;AllowedPattern&quot;: &quot;[\\x20-\\x7E]*&quot;,
+</span><span class='line'>            &quot;ConstraintDescription&quot;: &quot;can contain only ASCII characters.&quot;,
+</span><span class='line'>            &quot;Description&quot;: &quot;Name of an existing EC2 KeyPair to enable SSH access to the Elastic Beanstalk hosts&quot;,
+</span><span class='line'>            &quot;MaxLength&quot;: &quot;255&quot;,
+</span><span class='line'>            &quot;MinLength&quot;: &quot;1&quot;,
+</span><span class='line'>            &quot;Type&quot;: &quot;String&quot;
+</span><span class='line'>        },
+</span><span class='line'>        &quot;PrivateSubnet&quot;: {
+</span><span class='line'>            &quot;Description&quot;: &quot;logical private subnet id existing vpc&quot;,
+</span><span class='line'>            &quot;Type&quot;: &quot;String&quot;
+</span><span class='line'>        },
+</span><span class='line'>        &quot;SSHSecurityGroup&quot;: {
+</span><span class='line'>            &quot;Description&quot;: &quot;Bastion Security Group Id&quot;,
+</span><span class='line'>            &quot;Type&quot;: &quot;String&quot;
+</span><span class='line'>        },
+</span><span class='line'>        &quot;SolutionStackName&quot;: {
+</span><span class='line'>            &quot;Description&quot;: &quot;Application Platform(http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html)&quot;,
+</span><span class='line'>            &quot;Type&quot;: &quot;String&quot;
+</span><span class='line'>        },
+</span><span class='line'>        &quot;VPC&quot;: {
+</span><span class='line'>            &quot;Description&quot;: &quot;logical VPC id&quot;,
+</span><span class='line'>            &quot;Type&quot;: &quot;String&quot;
+</span><span class='line'>        },
+</span><span class='line'>        &quot;VPCDefaultSecurityGroup&quot;: {
+</span><span class='line'>            &quot;Description&quot;: &quot;VPC Default Security Group Id&quot;,
+</span><span class='line'>            &quot;Type&quot;: &quot;String&quot;
+</span><span class='line'>        }
+</span><span class='line'>    },
+</span><span class='line'>    &quot;Resources&quot;: {
+</span><span class='line'>        &quot;SampleDocker2Environment&quot;: {
+</span><span class='line'>            &quot;Properties&quot;: {
+</span><span class='line'>                &quot;ApplicationName&quot;: {
+</span><span class='line'>                    &quot;Ref&quot;: &quot;ApplicationName&quot;
+</span><span class='line'>                },
+</span><span class='line'>                &quot;CNAMEPrefix&quot;: {
+</span><span class='line'>                    &quot;Ref&quot;: &quot;CNAMEPrefix&quot;
+</span><span class='line'>                },
+</span><span class='line'>                &quot;Description&quot;: &quot;&quot;,
+</span><span class='line'>                &quot;EnvironmentName&quot;: {
+</span><span class='line'>                    &quot;Ref&quot;: &quot;EnvironmentName&quot;
+</span><span class='line'>                },
+</span><span class='line'>                &quot;OptionSettings&quot;: [
+</span><span class='line'>                    {
+</span><span class='line'>                        &quot;Namespace&quot;: &quot;aws:ec2:vpc&quot;,
+</span><span class='line'>                        &quot;OptionName&quot;: &quot;AssociatePublicIpAddress&quot;,
+</span><span class='line'>                        &quot;Value&quot;: &quot;true&quot;
+</span><span class='line'>                    },
+</span><span class='line'>                    {
+</span><span class='line'>                        &quot;Namespace&quot;: &quot;aws:autoscaling:launchconfiguration&quot;,
+</span><span class='line'>                        &quot;OptionName&quot;: &quot;ImageId&quot;,
+</span><span class='line'>                        &quot;Value&quot;: {&quot;Ref&quot;: &quot;CustomAmiId&quot;}
+</span><span class='line'>                    },
+</span><span class='line'>                    {
+</span><span class='line'>                        &quot;Namespace&quot;: &quot;aws:elasticbeanstalk:environment&quot;,
+</span><span class='line'>                        &quot;OptionName&quot;: &quot;EnvironmentType&quot;,
+</span><span class='line'>                        &quot;Value&quot;: &quot;SingleInstance&quot;
+</span><span class='line'>                    },
+</span><span class='line'>                    {
+</span><span class='line'>                        &quot;Namespace&quot;: &quot;aws:autoscaling:launchconfiguration&quot;,
+</span><span class='line'>                        &quot;OptionName&quot;: &quot;SSHSourceRestriction&quot;,
+</span><span class='line'>                        &quot;Value&quot;: {
+</span><span class='line'>                            &quot;Fn::Join&quot;: [
+</span><span class='line'>                                &quot;&quot;,
+</span><span class='line'>                                [
+</span><span class='line'>                                    &quot;tcp,22,22,&quot;,
+</span><span class='line'>                                    {
+</span><span class='line'>                                        &quot;Ref&quot;: &quot;SSHSecurityGroup&quot;
+</span><span class='line'>                                    }
+</span><span class='line'>                                ]
+</span><span class='line'>                            ]
+</span><span class='line'>                        }
+</span><span class='line'>                    },
+</span><span class='line'>                    {
+</span><span class='line'>                        &quot;Namespace&quot;: &quot;aws:autoscaling:launchconfiguration&quot;,
+</span><span class='line'>                        &quot;OptionName&quot;: &quot;IamInstanceProfile&quot;,
+</span><span class='line'>                        &quot;Value&quot;: &quot;aws-elasticbeanstalk-ec2-role&quot;
+</span><span class='line'>                    },
+</span><span class='line'>                    {
+</span><span class='line'>                        &quot;Namespace&quot;: &quot;aws:autoscaling:launchconfiguration&quot;,
+</span><span class='line'>                        &quot;OptionName&quot;: &quot;SecurityGroups&quot;,
+</span><span class='line'>                        &quot;Value&quot;: {
+</span><span class='line'>                            &quot;Ref&quot;: &quot;BeanstalkSecurityGroup&quot;
+</span><span class='line'>                        }
+</span><span class='line'>                    },
+</span><span class='line'>                    {
+</span><span class='line'>                        &quot;Namespace&quot;: &quot;aws:autoscaling:launchconfiguration&quot;,
+</span><span class='line'>                        &quot;OptionName&quot;: &quot;SecurityGroups&quot;,
+</span><span class='line'>                        &quot;Value&quot;: {
+</span><span class='line'>                            &quot;Ref&quot;: &quot;VPCDefaultSecurityGroup&quot;
+</span><span class='line'>                        }
+</span><span class='line'>                    },
+</span><span class='line'>                    {
+</span><span class='line'>                        &quot;Namespace&quot;: &quot;aws:autoscaling:launchconfiguration&quot;,
+</span><span class='line'>                        &quot;OptionName&quot;: &quot;EC2KeyName&quot;,
+</span><span class='line'>                        &quot;Value&quot;: {
+</span><span class='line'>                            &quot;Ref&quot;: &quot;KeyName&quot;
+</span><span class='line'>                        }
+</span><span class='line'>                    },
+</span><span class='line'>                    {
+</span><span class='line'>                        &quot;Namespace&quot;: &quot;aws:autoscaling:launchconfiguration&quot;,
+</span><span class='line'>                        &quot;OptionName&quot;: &quot;InstanceType&quot;,
+</span><span class='line'>                        &quot;Value&quot;: {
+</span><span class='line'>                            &quot;Ref&quot;: &quot;BeanstalkInstanceType&quot;
+</span><span class='line'>                        }
+</span><span class='line'>                    },
+</span><span class='line'>                    {
+</span><span class='line'>                        &quot;Namespace&quot;: &quot;aws:ec2:vpc&quot;,
+</span><span class='line'>                        &quot;OptionName&quot;: &quot;VPCId&quot;,
+</span><span class='line'>                        &quot;Value&quot;: {
+</span><span class='line'>                            &quot;Ref&quot;: &quot;VPC&quot;
+</span><span class='line'>                        }
+</span><span class='line'>                    },
+</span><span class='line'>                    {
+</span><span class='line'>                        &quot;Namespace&quot;: &quot;aws:ec2:vpc&quot;,
+</span><span class='line'>                        &quot;OptionName&quot;: &quot;Subnets&quot;,
+</span><span class='line'>                        &quot;Value&quot;: {
+</span><span class='line'>                            &quot;Ref&quot;: &quot;PrivateSubnet&quot;
+</span><span class='line'>                        }
+</span><span class='line'>                    }
+</span><span class='line'>                ],
+</span><span class='line'>                &quot;SolutionStackName&quot;: {
+</span><span class='line'>                    &quot;Ref&quot;: &quot;SolutionStackName&quot;
+</span><span class='line'>                },
+</span><span class='line'>                &quot;Tier&quot;: {
+</span><span class='line'>                    &quot;Name&quot;: &quot;WebServer&quot;,
+</span><span class='line'>                    &quot;Type&quot;: &quot;Standard&quot;,
+</span><span class='line'>                    &quot;Version&quot;: &quot;1.0&quot;
+</span><span class='line'>                }
+</span><span class='line'>            },
+</span><span class='line'>            &quot;Type&quot;: &quot;AWS::ElasticBeanstalk::Environment&quot;
+</span><span class='line'>        },
+</span><span class='line'>        &quot;SampleDocker2InstanceDNSRecord&quot;: {
+</span><span class='line'>            &quot;Properties&quot;: {
+</span><span class='line'>                &quot;Comment&quot;: &quot;A record for ac-media instance.&quot;,
+</span><span class='line'>                &quot;HostedZoneName&quot;: {
+</span><span class='line'>                    &quot;Fn::Join&quot;: [
+</span><span class='line'>                        &quot;&quot;,
+</span><span class='line'>                        [
+</span><span class='line'>                            {
+</span><span class='line'>                                &quot;Ref&quot;: &quot;HostedZone&quot;
+</span><span class='line'>                            },
+</span><span class='line'>                            &quot;.&quot;
+</span><span class='line'>                        ]
+</span><span class='line'>                    ]
+</span><span class='line'>                },
+</span><span class='line'>                &quot;Name&quot;: {
+</span><span class='line'>                    &quot;Fn::Join&quot;: [
+</span><span class='line'>                        &quot;&quot;,
+</span><span class='line'>                        [
+</span><span class='line'>                            {
+</span><span class='line'>                                &quot;Ref&quot;: &quot;HostName&quot;
+</span><span class='line'>                            },
+</span><span class='line'>                            &quot;.&quot;,
+</span><span class='line'>                            {
+</span><span class='line'>                                &quot;Ref&quot;: &quot;HostedZone&quot;
+</span><span class='line'>                            },
+</span><span class='line'>                            &quot;.&quot;
+</span><span class='line'>                        ]
+</span><span class='line'>                    ]
+</span><span class='line'>                },
+</span><span class='line'>                &quot;ResourceRecords&quot;: [
+</span><span class='line'>                    {
+</span><span class='line'>                        &quot;Fn::Join&quot;: [
+</span><span class='line'>                            &quot;&quot;,
+</span><span class='line'>                            [
+</span><span class='line'>                                {
+</span><span class='line'>                                    &quot;Ref&quot;: &quot;CNAMEPrefix&quot;
+</span><span class='line'>                                },
+</span><span class='line'>                                &quot;.&quot;,
+</span><span class='line'>                                &quot;elasticbeanstalk.com&quot;,
+</span><span class='line'>                                &quot;.&quot;
+</span><span class='line'>                            ]
+</span><span class='line'>                        ]
+</span><span class='line'>                    }
+</span><span class='line'>                ],
+</span><span class='line'>                &quot;TTL&quot;: &quot;300&quot;,
+</span><span class='line'>                &quot;Type&quot;: &quot;CNAME&quot;
+</span><span class='line'>            },
+</span><span class='line'>            &quot;Type&quot;: &quot;AWS::Route53::RecordSet&quot;
+</span><span class='line'>        }
+</span><span class='line'>    }
+</span><span class='line'>}
+</span></code></pre></td></tr></table></div></figure></p>
+
+<a name="L........."></a>
+<h2>まとめ</h2>
+
+<p>ここまで長々と書いたが、見ての通り、それなりに独自スクリプトを用意したり既存のhooksスクリプトを上書きするなどの対応が必要である。また、上記ではConfig Deployへの対応をしていないし、スケールアウトの安定性の検証は未確認である(ちょっと試した感じだと早いが、実業務で使うような巨大イメージではまだ試していない)。管理コンソールのEventsに表示されるコンテナIDはeb-dockerのままなので、書き換えたスクリプトやnginxの設定ファイルの監視も追加したほうが良いだろう。</p>
+
+<p>結局のところ、既存の設定書き換えやコンテナの停止は割とリスキーである。なぜならAMI（Platform）のバージョン間で同じ設定ないしは同じスクリプトが使われているとは限らないし、以前のバージョンには無かったスクリプトの追加、あるいはスクリプトの仕様変更があるかもしれないからだ。そのため、AMIのバージョンを変える時は<code>/opt/elasticbeanstalk</code>配下のスクリプトを充分に把握しておく必要がある。</p>
+
+<p>敢えてポジティブなことを言えば、カスタムAMIを作りこむことでDocker Wayに則ったシングルインスタンス・マルチサービスが可能になるし、かつ運用に堪えるような設定を施すことができれば、Beanstalkの便利機能（柔軟なスケールアウトやRolling Update、メトリクス管理）を使えるので、かなり嬉しいと思う。とは言え、やはりリスキーには変わりないので、今のところだと、このようなやり方では実運用に耐えないと思う。</p>
+
+<hr />
+
+<p>色々試行錯誤した割に、こう言う結果になって残念…</p>
+]]></content>
+  </entry>
+  
+</feed>

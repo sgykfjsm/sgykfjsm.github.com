@@ -1,0 +1,815 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: hadoop | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/hadoop/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[mesos上にHadoopをインストールする]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2014/01/10/install-hadoop-on-mesos/"/>
+    <updated>2014-01-10T00:51:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2014/01/10/install-hadoop-on-mesos</id>
+    <content type="html"><![CDATA[<p>前回、mesosをDEBパッケージを使ってインストールする方法を示した。これを前提としてmesosが動いているクラスタにHadoopをインストールし、wordcountをchrnosを通じて動かすところまでの手順を示す。</p>
+
+<p>ちなみに見てくれている人の時間をムダにしないために言うと、一部を除けば普通の手順(Clouderaのチュートリアルとか)でやれば大抵は普通に動くはず。なのでHadoopに詳しい人は、<a href="https://www.google.co.jp/search?q=hadoop+mesos&amp;oq=hadoop+mesos&amp;aqs=chrome..69i57j69i60l3j0l2.2556j0j7&amp;sourceid=chrome&amp;espv=210&amp;es_sm=91&amp;ie=UTF-8">「Hadoop mesos」でググったほう</a>が良いと思う。ここではSparkの利用を見越しての設定を行なうのと、とHadoopもmesosもあまり詳しくない人向けに記述する。Chronosについては、まぁついでにというレベルだし、実際非常に導入が楽なので、<a href="http://airbnb.github.io/chronos/#Quick%20Start">公式のQuick Start</a>でも見たほうが良い。</p>
+
+<!-- more -->
+
+
+<a name="Hadoop........."></a>
+<h2>Hadoopの準備</h2>
+
+<p>Hadoopの作業場所を用意してあげる。実際は諸々インストールした後にmapred(hdfs？)ユーザのホームディレクトリに用意するのが正しい作法なのだろうと後から気づいた。</p>
+
+<pre><code>vagrant@master1:/tmp$ mkdir -p /home/vagrant/hadoop_home
+</code></pre>
+
+<p>1-click installerのダウンロードとインストール、リポジトリキーのインストールを行なう。</p>
+
+<pre><code>vagrant@master1:/tmp$ wget http://archive.cloudera.com/cdh4/one-click-install/precise/amd64/cdh4-repository_1.0_all.deb
+--2014-01-01 08:51:10--  http://archive.cloudera.com/cdh4/one-click-install/precise/amd64/cdh4-repository_1.0_all.deb
+Resolving archive.cloudera.com (archive.cloudera.com)... 184.73.217.71
+Connecting to archive.cloudera.com (archive.cloudera.com)|184.73.217.71|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 3304 (3.2K) [application/x-debian-package]
+Saving to: `cdh4-repository_1.0_all.deb'
+
+100%[============================================================&gt;] 3,304       --.-K/s   in 0.001s
+
+2014-01-01 08:51:12 (4.34 MB/s) - `cdh4-repository_1.0_all.deb' saved [3304/3304]
+
+vagrant@master1:/tmp$ sudo dpkg -i cdh4-repository_1.0_all.deb
+(Reading database ... 72497 files and directories currently installed.)
+Preparing to replace cdh4-repository 1.0 (using cdh4-repository_1.0_all.deb) ...
+Unpacking replacement cdh4-repository ...
+Setting up cdh4-repository (1.0) ...
+gpg: keyring `/etc/apt/trusted.gpg.d/cloudera-cdh4.gpg' created
+gpg: key 02A818DD: public key "Cloudera Apt Repository" imported
+gpg: Total number processed: 1
+gpg:               imported: 1
+vagrant@master1:/tmp$ curl -s http://archive.cloudera.com/cdh4/ubuntu/precise/amd64/cdh/archive.key | sudo apt-key add -
+OK
+</code></pre>
+
+<p>CDH4 with MRv1をインストールする。</p>
+
+<pre><code># マスターノードのみ(jobtrackerはいらないかも？というか、多分いらない)
+vagrant@master1:/tmp$ sudo apt-get -y install hadoop-0.20-mapreduce-jobtracker hadoop-hdfs-namenode hadoop-client
+# マスターノードとスレーブノードの両方
+vagrant@master1:/tmp$ sudo apt-get -y install hadoop-0.20-mapreduce-tasktracker hadoop-hdfs-datanode hadoop-client
+</code></pre>
+
+<p>設定ファイルを修正する。細かい点については多々不適切というかチューニングの余地があると思うけど、とりあえず動かすならこの設定で大丈夫だと思う。</p>
+
+<p><figure class='code'><figcaption><span>core-site.xml / </span><a target='_blank' href='https://gist.github.com/8346265'>link</a></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="cp">&lt;?xml version=&quot;1.0&quot;?&gt;</span>
+</span><span class='line'><span class="cp">&lt;?xml-stylesheet type=&quot;text/xsl&quot; href=&quot;configuration.xsl&quot;?&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;configuration&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;name&gt;</span>fs.defaultFS<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;value&gt;</span>hdfs://master1:8020/<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;name&gt;</span>hadoop.tmp.dir<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;value&gt;</span>/tmp/hadoop<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;name&gt;</span>hadoop.security.group.mapping<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;value&gt;</span>org.apache.hadoop.security.ShellBasedUnixGroupsMapping<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'><span class="nt">&lt;/configuration&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span>hdfs-site.xml / </span><a target='_blank' href='https://gist.github.com/8346335'>link</a></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="cp">&lt;?xml version=&quot;1.0&quot;?&gt;</span>
+</span><span class='line'><span class="cp">&lt;?xml-stylesheet type=&quot;text/xsl&quot; href=&quot;configuration.xsl&quot;?&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;configuration&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>     <span class="nt">&lt;name&gt;</span>dfs.name.dir<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>     <span class="nt">&lt;value&gt;</span>/var/lib/hadoop-hdfs/cache/hdfs/dfs/name<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;name&gt;</span>dfs.permissions.superusergroup<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;value&gt;</span>hadoop<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;name&gt;</span>dfs.name.dir<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;value&gt;</span>/home/vagrant/hadoop_home/data/1/dfs/nn<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;name&gt;</span>dfs.webhdfs.enabled<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;value&gt;</span>true<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;name&gt;</span>dfs.datanode.data.dir<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;value&gt;</span>/home/vagrant/hadoop_home/data/1/dfs/dn,/home/vagrant/hadoop_home/data/2/dfs/dn,/home/vagrant/hadoop_home/data/3/dfs/dn<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'><span class="nt">&lt;/configuration&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span>mapred-site.xml / </span><a target='_blank' href='https://gist.github.com/8346355'>link</a></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+<span class='line-number'>157</span>
+<span class='line-number'>158</span>
+<span class='line-number'>159</span>
+<span class='line-number'>160</span>
+<span class='line-number'>161</span>
+<span class='line-number'>162</span>
+<span class='line-number'>163</span>
+<span class='line-number'>164</span>
+<span class='line-number'>165</span>
+<span class='line-number'>166</span>
+<span class='line-number'>167</span>
+<span class='line-number'>168</span>
+<span class='line-number'>169</span>
+<span class='line-number'>170</span>
+<span class='line-number'>171</span>
+<span class='line-number'>172</span>
+<span class='line-number'>173</span>
+<span class='line-number'>174</span>
+<span class='line-number'>175</span>
+<span class='line-number'>176</span>
+<span class='line-number'>177</span>
+<span class='line-number'>178</span>
+<span class='line-number'>179</span>
+<span class='line-number'>180</span>
+<span class='line-number'>181</span>
+<span class='line-number'>182</span>
+<span class='line-number'>183</span>
+<span class='line-number'>184</span>
+<span class='line-number'>185</span>
+<span class='line-number'>186</span>
+<span class='line-number'>187</span>
+<span class='line-number'>188</span>
+<span class='line-number'>189</span>
+<span class='line-number'>190</span>
+<span class='line-number'>191</span>
+<span class='line-number'>192</span>
+<span class='line-number'>193</span>
+<span class='line-number'>194</span>
+<span class='line-number'>195</span>
+<span class='line-number'>196</span>
+<span class='line-number'>197</span>
+<span class='line-number'>198</span>
+<span class='line-number'>199</span>
+<span class='line-number'>200</span>
+<span class='line-number'>201</span>
+<span class='line-number'>202</span>
+<span class='line-number'>203</span>
+<span class='line-number'>204</span>
+<span class='line-number'>205</span>
+<span class='line-number'>206</span>
+<span class='line-number'>207</span>
+<span class='line-number'>208</span>
+<span class='line-number'>209</span>
+<span class='line-number'>210</span>
+<span class='line-number'>211</span>
+<span class='line-number'>212</span>
+<span class='line-number'>213</span>
+<span class='line-number'>214</span>
+<span class='line-number'>215</span>
+<span class='line-number'>216</span>
+<span class='line-number'>217</span>
+<span class='line-number'>218</span>
+<span class='line-number'>219</span>
+<span class='line-number'>220</span>
+<span class='line-number'>221</span>
+<span class='line-number'>222</span>
+<span class='line-number'>223</span>
+<span class='line-number'>224</span>
+<span class='line-number'>225</span>
+<span class='line-number'>226</span>
+<span class='line-number'>227</span>
+<span class='line-number'>228</span>
+<span class='line-number'>229</span>
+<span class='line-number'>230</span>
+<span class='line-number'>231</span>
+<span class='line-number'>232</span>
+<span class='line-number'>233</span>
+<span class='line-number'>234</span>
+<span class='line-number'>235</span>
+<span class='line-number'>236</span>
+<span class='line-number'>237</span>
+<span class='line-number'>238</span>
+<span class='line-number'>239</span>
+<span class='line-number'>240</span>
+<span class='line-number'>241</span>
+<span class='line-number'>242</span>
+<span class='line-number'>243</span>
+<span class='line-number'>244</span>
+<span class='line-number'>245</span>
+<span class='line-number'>246</span>
+<span class='line-number'>247</span>
+<span class='line-number'>248</span>
+<span class='line-number'>249</span>
+<span class='line-number'>250</span>
+<span class='line-number'>251</span>
+<span class='line-number'>252</span>
+<span class='line-number'>253</span>
+<span class='line-number'>254</span>
+<span class='line-number'>255</span>
+<span class='line-number'>256</span>
+<span class='line-number'>257</span>
+<span class='line-number'>258</span>
+<span class='line-number'>259</span>
+<span class='line-number'>260</span>
+<span class='line-number'>261</span>
+<span class='line-number'>262</span>
+<span class='line-number'>263</span>
+<span class='line-number'>264</span>
+<span class='line-number'>265</span>
+<span class='line-number'>266</span>
+<span class='line-number'>267</span>
+<span class='line-number'>268</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="cp">&lt;?xml version=&quot;1.0&quot;?&gt;</span>
+</span><span class='line'><span class="cp">&lt;?xml-stylesheet type=&quot;text/xsl&quot; href=&quot;configuration.xsl&quot;?&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;configuration&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>   <span class="nt">&lt;name&gt;</span>mapred.job.tracker<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>   <span class="nt">&lt;value&gt;</span>master1:8021<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>   <span class="nt">&lt;name&gt;</span>mapred.local.dir<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>   <span class="nt">&lt;value&gt;</span>/home/vagrant/hadoop_home/data/1/mapred/local,/home/vagrant/hadoop_home/data/2/mapred/local,/home/vagrant/hadoop_home/data/3/mapred/local<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>   <span class="nt">&lt;name&gt;</span>mapreduce.jobtracker.restart.recover<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>   <span class="nt">&lt;value&gt;</span>true<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>  <span class="c">&lt;!-- The web UI will bind --&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;name&gt;</span>mapred.job.tracker.http.address<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;value&gt;&lt;/value&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c">&lt;!-- This identifies the mesos-master. E.g. zk://1.1.1.1:2181,2.2.2.2:2181,3.3.3.3:2181/mesos --&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;name&gt;</span>mapred.mesos.master<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;value&gt;</span>zk://master1:2181,slave1:2181,slave2:2181/mesos<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="c">&lt;!--</span>
+</span><span class='line'><span class="c">      This property identifies the location of the modified hadoop distribution containing this XML file.</span>
+</span><span class='line'><span class="c">      The mesos slave will download this distribution if a hadoop job is launched, extract the file and use the hadoop binary</span>
+</span><span class='line'><span class="c">      to start the task tracker.</span>
+</span><span class='line'><span class="c">      Sample hdfs://&lt;hdfs-namenode-host &amp; optional port&gt;/hadoop-2.0.0-mr1-cdh4.2.1.tgz -&gt; hdfs://namenode.mesosphere.io:9000/hadoop-2.0.0-mr1-cdh4.2.1.tgz</span>
+</span><span class='line'><span class="c">    --&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.mesos.executor.uri<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>hdfs://master1/hadoop-2.0.0-mr1-cdh4.2.1.tgz<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="c">&lt;!--</span>
+</span><span class='line'><span class="c">      The remaining properties do not require adjustment, but for running production jobs it&#39;s recommended to modify them</span>
+</span><span class='line'><span class="c">      to optimize for different cluster &amp; machine sizes.</span>
+</span><span class='line'><span class="c">    --&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.mesos.slot.cpus<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>0.20<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.mesos.slot.disk<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="c">&lt;!-- The value is in MB. --&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>512<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.mesos.slot.mem<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="c">&lt;!-- Note that this is the total memory required for</span>
+</span><span class='line'><span class="c">         JVM overhead (256 MB) and the heap (-Xmx) of the task.</span>
+</span><span class='line'><span class="c">         The value is in MB. --&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>368<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.mesos.tasktracker.mem<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>368<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.mesos.total.map.slots.minimum<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>1<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.mesos.total.reduce.slots.minimum<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>1<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="c">&lt;!-- The values below should work out of the box but you might want to optimize some of them for running production jobs --&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.jobtracker.taskScheduler<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>org.apache.hadoop.mapred.MesosScheduler<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.mesos.taskScheduler<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>org.apache.hadoop.mapred.JobQueueTaskScheduler<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="c">&lt;!-- The MesosScheduler will record some stats in this file --&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.mesos.state.file<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>/tmp/jobtracker-state<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="c">&lt;!-- This is only relevant if a fixed slot policy is used --&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.tasktracker.map.tasks.maximum<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>10<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="c">&lt;!-- This is only relevant if a fixed slot policy is used --&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.tasktracker.reduce.tasks.maximum<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>10<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.jobtracker.expire.trackers.interval<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>60000<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.tasktracker.expiry.interval<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>60000<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.jobtracker.restart.recover<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>true<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.child.java.opts<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>-XX:+UseParallelGC -Xmx256m<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.tasktracker.dns.interface<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>eth0<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="c">&lt;!-- The reduce tasks start when 60% of the maps are done --&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.job.reduce.slowstart.completedmaps<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>0.60<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.reduce.slowstart.completed.maps<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>0.60<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="c">&lt;!-- This is important when the tasktracker serves tons of maps, TODO(*) templetize --&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.tasktracker.http.threads<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>8<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>tasktracker.http.threads<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>8<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.reduce.shuffle.parallelcopies<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>20<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.reduce.parallel.copies<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>20<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.jobtracker.handler.count<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>70<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.job.tracker.handler.count<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>70<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.reduce.shuffle.retry-delay.max.ms<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>10000<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.reduce.shuffle.connect.timeout<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>10000<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.reduce.shuffle.read.timeout<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>10000<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.reduce.shuffle.maxfetchfailures<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>4<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.reduce.shuffle.notify.readerror<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>true<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.map.output.compress<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>true<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.task.io.sort.mb<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>30<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>io.sort.mb<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>30<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.task.io.sort.factor<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>10<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>io.sort.factor<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>10<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.job.jvm.numtasks<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>-1<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.job.reuse.jvm.num.tasks<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>-1<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.job.ubertask.enable<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>true<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.job.speculative.speculativecap<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>0.01<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>webinterface.private.actions<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>true<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.jobtracker.webinterface.trusted<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>true<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.reduce.max.attempts<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>6<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.map.max.attempts<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>6<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.map.maxattempts<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>6<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.reduce.maxattempts<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>6<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.max.tracker.failures<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>6<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.job.maxtaskfailures.per.tracker<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>6<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.reduce.merge.memtomem.enabled<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>true<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.skip.map.max.skip.records<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>10<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.map.skip.maxrecords<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>10<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.reduce.skip.maxgroups<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>2<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.skip.reduce.max.skip.groups<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>2<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapreduce.fileoutputcommitter.marksuccessfuljobs<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>false<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;property&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;name&gt;</span>mapred.mesos.tasktracker.cpus<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>        <span class="c">&lt;!-- This is the number of CPUs reserved for the container.--&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;value&gt;</span>0.15<span class="nt">&lt;/value&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/property&gt;</span>
+</span><span class='line'><span class="nt">&lt;/configuration&gt;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>この設定について、nameノード1台、taskノード2台で試す場合</p>
+
+<pre><code>&lt;property&gt;
+    &lt;name&gt;mapred.mesos.total.map.slots.minimum&lt;/name&gt;
+    &lt;value&gt;1&lt;/value&gt;
+&lt;/property&gt;
+&lt;property&gt;
+    &lt;name&gt;mapred.mesos.total.reduce.slots.minimum&lt;/name&gt;
+    &lt;value&gt;1&lt;/value&gt;
+&lt;/property&gt;
+</code></pre>
+
+<p>デフォルトだと、それぞれvalueはゼロとなっているが、その設定のままだと、例えばこの後に何らかのJobを動かしてMapperが2つ動いてしまい、Reducerが動かなくなってしまう(Mapper 100%, Reducer 0%でPendingしてしまう)。なので、それぞれ(Reducerだけでいいかもしれない)のminimumを1にしておく必要がある。</p>
+
+<p>設定ファイルの修正が済んだら、必要なディレクトリを用意する。</p>
+
+<pre><code>vagrant@master1:/tmp$ sudo mkdir -p /home/vagrant/hadoop_home/data/{1,2,3}/mapred/local
+vagrant@master1:/tmp$ sudo chown -R mapred:hadoop /home/vagrant/hadoop_home
+</code></pre>
+
+<p>ここまでが通常のHadoopの準備。設定ファイルは全ノードにばらまいてdatanodeを再起動しておく。もちろんマスターノードはnamenodeも再起動しておく。</p>
+
+<pre><code>vagrat:master1:~/hadoop_home$ for x in `cd /etc/init.d/; ls hadoop-*`;do sudo service ${x} restart ;done
+</code></pre>
+
+<p>次がHadoop on mesosの準備。</p>
+
+<a name="Hadoop.on.mesos...................................."></a>
+<h2>Hadoop on mesosとは？（自分なりの理解）</h2>
+
+<p>ここで改めてHadoop on mesosと先ほど準備したHadoopとの違い(?)について、自分なりに理解のおさらいをする。<br>mesosって要は散在しているマシンリソースを束ねてクラスタ化する、みたいなイメージなんだけど、そこにHadoopが乗っかることでスケーラビリティだったり、バッチ処理における耐障害性の向上をもたらすことができるようになる。<br>もう少し整理して言うと、Hadoopのマスターノードがスレーブノードにjobtrackerを通じて仕事を渡して、スレーブノードはtasktrackerを通じて成果を返す。Hadoopのバッチ処理の肝はここにあると思っていて、ばら撒いた仕事がちゃんと期待した成果として戻ってくることを保証してくれることにある。なので、渡した仕事が返ってこなかったり、仕事中にスレーブノードが死んだりしたときに、その仕事を別のスレーブノードに適切に渡してあげないといけないし、マスターノードが死んでた時には新しいマスターノードがちゃんとこれまでの成果を引き継いでおいて、スレーブノードは新しいマスターノードに成果を渡せるようになっておかないといけない。つまり、jobtrackerとtasktrackerの間のコミュケーションを適切に維持していく必要がある。mesosはこの点を強化させていくことができる、のだと思う…。あまり自信がない…。まぁ大筋では外していないと思う。</p>
+
+<a name="Hadoop.on.mesos....................."></a>
+<h2>Hadoop on mesosの設定をする。</h2>
+
+<p>なので、Hadoopのjobtrackerやtasktrackerをうまくmesosと融合というか連携というか、アレする必要があるので以下のようにする。以降の手順は<a href="http://mesosphere.io/learn/run-hadoop-on-mesos/#step-0">mesosphereのRun Apache Hadoop on Apache Mesos</a>を踏襲しているので、そちらも参考にされたし。</p>
+
+<pre><code>vagrat:master1:~/hadoop_home$ wget http://downloads.mesosphere.io/dcc/apps/hadoop/distros/mr1-2.0.0-mr1-cdh4.2.1.tar.gz
+vagrat:master1:~/hadoop_home$ tar xzf mr1-2.0.0-mr1-cdh4.2.1.tar.gz
+vagrat:master1:~/hadoop_home$ cd hadoop-2.0.0-mr1-cdh4.2.1
+vagrat:master1:~/hadoop_home/hadoop-2.0.0-mr1-cdh4.2.1 $ wget -O lib/ http://downloads.mesosphere.io/dcc/apps/hadoop/hadoop-mesos/hadoop-mesos-0.0.3.jar
+vagrat:master1:~/hadoop_home/hadoop-2.0.0-mr1-cdh4.2.1 $ wget -O lib/ wget http://downloads.mesosphere.io/maven/org/apache/mesos/mesos/0.14.0-rc4/mesos-0.14.0-rc4.jar
+</code></pre>
+
+<p>ここで取得した2つのjarをHadoopのlibディレクトリに配置して、それをtarで梱包したら出来上がり。あとはこの梱包したmesos用Hadoopの実行モジュールをスレーブノードが使えるようにHDFS上にアップする。試してはいないけど、これって多分何らかの方法で実行モジュールが取得できればいいと思うので、S3とかにアップロードしてもいいんじゃないかと思う。もちろんその場合は、<code>mapred.mesos.executor.uri</code>のvalueをS3のURLにしておく必要がある。はず。</p>
+
+<pre><code>vagrat:master1:~/hadoop_home/hadoop-2.0.0-mr1-cdh4.2.1 $ cd ../
+vagrat:master1:~/hadoop_home$ tar czf hadoop-2.0.0-mr1-cdh4.2.1.tar.gz hadoop-2.0.0-mr1-cdh4.2.1
+vagrat:master1:~/hadoop_home$ sudo -u mapred /usr/bin/hadoop dfs -copyFromLocal ./hadoop-2.0.0-mr1-cdh4.2.1.tgz /
+</code></pre>
+
+<p>これでおおよその準備は整った。で、バッチ処理を走らせるにあたってjobtrackerを起動させるわけだけど、先ほど触れたようにmesosがjobtrackerやtasktrackerをよろしくやってくれる（と思っている）ので、これらはHDFS上にアップした実行モジュールのjobtrackerを用いる。マスターノードで起動させるので、梱包前のディレクトリに移動し、以下の様な感じで起動させれば良い。</p>
+
+<p><figure class='code'><figcaption><span>launch_hadoop_jobtracker.sh / </span><a target='_blank' href='https://gist.github.com/8357410'>link</a></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="c">#!/bin/bash</span>
+</span><span class='line'>
+</span><span class='line'>sudo -u mapred -g hadoop <span class="se">\</span>
+</span><span class='line'>env <span class="nv">JAVA_HOME</span><span class="o">=</span>/usr/lib/jvm/java-1.7.0-openjdk-amd64 <span class="se">\</span>
+</span><span class='line'><span class="nv">HADOOP_HOME</span><span class="o">=</span><span class="sb">`</span><span class="nb">pwd</span><span class="sb">`</span>/hadoop-2.0.0-mr1-cdh4.2.1 <span class="se">\</span>
+</span><span class='line'><span class="nv">HADOOP_CONF_DIR</span><span class="o">=</span>/etc/hadoop/conf <span class="se">\</span>
+</span><span class='line'><span class="nv">JAVA_LIBRARY_PATH</span><span class="o">=</span>/usr/local/lib/ <span class="se">\</span>
+</span><span class='line'><span class="sb">`</span><span class="nb">pwd</span><span class="sb">`</span>/hadoop-2.0.0-mr1-cdh4.2.1/bin/hadoop jobtracker
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>上記のスクリプトで起動されるjobtrackerはserviceスクリプトみたいにデーモン化はされなくて、そのままコンソール上にログを垂れ流す。止めたい場合は<code>Ctrl + C</code>とすると、でjobtrackerがシャットダウンされる。デーモン化させたい場合は、<code>${HADOOP_HOME}/bin/hadoop_daemon.sh</code>とかに渡してあげればいいんじゃないかと。試してないけど。あと、上記スクリプトは<code>sudo bash launch_hadoop_jobtracker.sh</code>としてあげてください。</p>
+
+<p>実際に起動してみると、以下の様なログが出て、ジョブ待ちの状態となる。</p>
+
+<pre><code>14/01/10 16:38:00 INFO mapred.ResourcePolicy: JobTracker Status
+      Pending Map Tasks: 0
+   Pending Reduce Tasks: 0
+      Running Map Tasks: 0
+   Running Reduce Tasks: 0
+         Idle Map Slots: 1
+      Idle Reduce Slots: 1
+     Inactive Map Slots: 0 (launched but no hearbeat yet)
+  Inactive Reduce Slots: 0 (launched but no hearbeat yet)
+       Needed Map Slots: 0
+    Needed Reduce Slots: 0
+     Unhealthy Trackers: 0
+14/01/10 16:38:00 INFO mapred.ResourcePolicy: Satisfied map and reduce slots needed.
+</code></pre>
+
+<p>これだけみてもつまらないのだけど、この状態でmesosのWebUIにアクセスしてみるとActive Frameworksとして起動中のjobtrackerが登録されているのがわかる。</p>
+
+<p><img src="/images/2014-01-11T01.44.51.png"></p>
+
+<p>ここからIDのリンクをクリックすると、以下の画面が出てスレーブノードでtasktrackerが起動していることがわかる。</p>
+
+<p><img src="/images/2014-01-11T01.56.37.png"></p>
+
+<p>さらにTask_Tracker_1のリンクをクリックしたところ。</p>
+
+<p><img src="/images/2014-01-11T1.59.59.png"></p>
+
+<p>そしてSandboxのリンクをクリックしたところ。HDFS上にアップした実行モジュールがダウンロードされて展開されていることがわかる。ちなみにこのリンクはローカルで名前解決できるようにしておかないと見れないので注意。</p>
+
+<p><img src="/images/2014-01-11T2.02.44.png"></p>
+
+<p>ちなみにjobtrackerを終わらせるとTerminated Frameworksに移動する。</p>
+
+<p><img src="/images/2014-01-11T2.51.43.png"></p>
+
+<p>これらのことから、HadoopのjobtrackerとtasktrackerはFrameworkとしてmesosに管理されていることがわかる。つまり、mesosのリソースとしてスレーブノードが管理されることでその上で走るjobtrackerなりtasktrackerも同様に管理されることになる？という理解でいいのだろうか？mesosを利用することでDCをまたいだHadoopジョブが可能になったりしてスケーラビリティが向上するとかの効用もきっとあるのだと思う。</p>
+
+<p>んーでもこのへんの理解はちゃんとmesosの論文を読むなりアーキテクチャの理解を深めないとダメだ。</p>
+
+<p>で。結構長くなったのでChronosを用いたHadoopジョブの実行は次回に持ち越し。</p>
+]]></content>
+  </entry>
+  
+</feed>

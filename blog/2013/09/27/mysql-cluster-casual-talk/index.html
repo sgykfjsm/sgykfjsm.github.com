@@ -1,0 +1,639 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>MySQL Cluster Casual Talksに行ってきた - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="MySQL Casual Talkと勘違いしてたけど、とても勉強になった。
+以下はメモ。 MySQL Cluster大地に立つ！ 「5.6とは違うのだよ、5.6とは！」 @RKajiyamaさん MySQLクラスタとは MySQL Cluster 独立した製品 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.com/blog/2013/09/27/mysql-cluster-casual-talk">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.com" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">MySQL Cluster Casual Talksに行ってきた</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2013-09-27T05:04:00+09:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>27</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>5:04 am</span></time>
+        
+        
+          
+           | <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/edit/master/source/_posts/2013-09-27-mysql-cluster-casual-talk.markdown">Edit</a>
+          
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>MySQL Casual Talkと勘違いしてたけど、とても勉強になった。
+以下はメモ。</p>
+
+<!--more-->
+
+
+<a name="MySQL.Cluster......................5.6........................5.6............"></a>
+<h3>MySQL Cluster大地に立つ！ 「5.6とは違うのだよ、5.6とは！」</h3>
+
+<p>@RKajiyamaさん</p>
+
+<p>MySQLクラスタとは</p>
+
+<ul>
+<li>MySQL Cluster
+
+<ul>
+<li>独立した製品</li>
+<li>MySQLのクラスタリングのことではない</li>
+<li>v7.3
+
+<ul>
+<li>MySQL Serverとは違う。共通点はあるけど。</li>
+</ul>
+</li>
+<li>MySQL Serverとの最大の違いは分散型DBであること。
+
+<ul>
+<li>共有ディスクはいらない</li>
+<li>メモリが豊富で性能の優れたディスクを持つサーバ</li>
+</ul>
+</li>
+<li>全ノードがアクティブ</li>
+<li>シェアードナッシング
+
+<ul>
+<li>共有ディスクは不要</li>
+</ul>
+</li>
+<li>全オード多重化</li>
+<li>ノードを増やすことで負荷分散と多重化を図ることが可能
+
+<ul>
+<li>多重化はRAID0と同じ</li>
+</ul>
+</li>
+<li>アプリケーションレイヤから見るとACID KVSとして利用可能
+
+<ul>
+<li>MySQL Serverを経由せずにアプリケーションから直接Clusterにアクセスできる。</li>
+<li>ACIDを維持しても20M updates sec</li>
+</ul>
+</li>
+<li>主要な利用企業はzynga, NEC, at&amp;t, paypal, ericsson, cisco, vodafon, US Navyなど
+
+<ul>
+<li>PayPalは基盤をすべてMySQLで構築しているらしい</li>
+</ul>
+</li>
+<li>NoSQLとしてのMySQL
+
+<ul>
+<li>アプリケーションからはNoSQLのように見えるが、内部的にはコンテナテーブルによりデータがテーブルや絡むとマッピングされて、内部的にはRDBとして動作する。</li>
+</ul>
+</li>
+<li>Apps -> JPA -> Cluster JPA -> Cluster J -> JNI -> NDB API -> データレイヤがJavaのアクセス経路
+
+<ul>
+<li>ただしJOINなどの場合は自動的にJDBCに振り分けがされる。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="MySQL.Cluster.........................................."></a>
+<h3>MySQL Clusterをカジュアルに使ってみよう！</h3>
+
+<p>@nippondanjiさん</p>
+
+<p>MySQL Clusterとは！</p>
+
+<ul>
+<li>MySQLのストレージエンジンとして使える
+
+<ul>
+<li>create table hoge (&hellip;) engnie ndb;</li>
+</ul>
+</li>
+<li>トランザクション対応</li>
+<li>並列分散型のDB</li>
+<li>HA機能</li>
+<li>ハイパフォーマンス</li>
+<li>コミュニティ版はGPLv2</li>
+<li>アプリケーションとデータノードの間にSQLノードをぶら下げる
+
+<ul>
+<li>255ノードまでぶら下げることが可能</li>
+<li>データノードは最大48ノード</li>
+</ul>
+</li>
+<li>速いか？
+
+<ul>
+<li>１台の性能ではInnoDBのほうが↑
+
+<ul>
+<li>NDB APIは爆速</li>
+</ul>
+</li>
+<li>ノードを並べてナンボ
+
+<ul>
+<li>データノード
+
+<ul>
+<li>負荷分散</li>
+<li>データ量の増加</li>
+</ul>
+</li>
+<li>SQLノード
+
+<ul>
+<li>SQL解析の負荷分散</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>ちょっとしか参照しない処理ではノードを増やしても性能は上がらない</li>
+</ul>
+</li>
+<li>高可用性
+
+<ul>
+<li>SPOFの排除</li>
+<li>HA機能搭載</li>
+<li>遠隔地へのレプリケーション</li>
+</ul>
+</li>
+<li>コモディティなハードウェアでも搭載可能</li>
+<li>ノードは３種類
+
+<ul>
+<li>管理ノード</li>
+<li>データノード</li>
+<li>SQLノード/APIノード</li>
+</ul>
+</li>
+<li>シェアードナッシング
+
+<ul>
+<li>同じノードグループ内でミラーリングし合う</li>
+<li>ミラーの相手側が落ちたとしても相手のプライマリや自分の中にレプリケーションデータを作成する</li>
+</ul>
+</li>
+<li>インストールのデモ
+
+<ul>
+<li>確かにカジュアルに使えそうにみえるが…</li>
+</ul>
+</li>
+<li>パフォーマンス・チューニング
+
+<ul>
+<li>最新バージョンを使う！</li>
+<li>バージョンが上がるほど高速化している</li>
+<li>v6.2 → SQLノードからデータノードへの接続を複数可</li>
+<li>V6.3 → スレッドのバインディング、TC選択のロジックを改善</li>
+<li>v7.0 → データノードがマルチスレッド化、メッセージ通信の改善、データノードのオンライン拡張</li>
+<li>v7.1 → ndbinfo, BLOBへのアクセス高速化</li>
+<li>v7.2 → MySQL5.5、pushdown join、memcachedの追加</li>
+<li>v7.3 → MysQL5.6 外部キー、NDB APIのボトルネック解消、Semi Joinの最適化</li>
+</ul>
+</li>
+<li>データノード数は最大48台
+
+<ul>
+<li>主キーを使った検索は速い、スケールする</li>
+<li>範囲検索（スキャン）は苦手、スケールしない（しづらい）
+
+<ul>
+<li>フェッチするレコード数が少ないと遅い</li>
+<li>フェッチするレコード数が多いとデータノードで並列処理がされるので、思ったより速い</li>
+</ul>
+</li>
+<li>ユーザ定義パーティションによりスキャンを克服する
+
+<ul>
+<li>外部キーを設定するイメージ</li>
+<li>スキャンがスケール</li>
+<li>特定のデータノードに問い合わせれば良くなるためJOINもスケールする</li>
+</ul>
+</li>
+<li>レプリケーションによるスケールアウト
+
+<ul>
+<li>レプリケーション先をInnoDBとすることでスキャンもスケールさせることができる</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>MySQL Clusterはインメモリデータベースだけれども
+
+<ul>
+<li>データの永続性のために沢山のI/Oが発生する
+
+<ul>
+<li>REDOログ</li>
+<li>LCP(local check point)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>ディスク型テーブル
+
+<ul>
+<li>ディスクの性能に大きく影響する</li>
+<li>ベンチマーク上はHDDを利用するとスケールしなくなる</li>
+<li>インメモリ型だとCPUが貧弱でもスケールする</li>
+</ul>
+</li>
+<li>BLOBは苦手
+
+<ul>
+<li>内部的にBLOB用のテーブルが作成される
+
+<ul>
+<li>JOINが増えるのと同じ</li>
+<li>varcharで頑張ってみる。でもなるべく使わないほうが良い</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>NoSQLインターフェース
+
+<ul>
+<li>SQLよりも数段速い
+
+<ul>
+<li>NDB API</li>
+<li>Cluster J</li>
+<li>memcached</li>
+<li>java用のバインディング</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>MySQL Clusterは以下の場合に向いている
+
+<ul>
+<li>更新をスケールしたい</li>
+<li>HA機能が欲しい</li>
+<li>超絶高速なJOINが欲しい</li>
+<li>得意、不得意を踏まえて適切なスケールアウト戦略を選ぶべし</li>
+<li>NoSQL APIが豊富</li>
+</ul>
+</li>
+<li>管理ノードはSPOF？
+
+<ul>
+<li>管理ノードは２つ用意することが出来ない</li>
+<li>管理ノードは落ちても動作には影響しない</li>
+<li>SQLノードが管理ノードの代わりを果たす？←ちゃんと聞き取れなかった&hellip;</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="MySQL.Cluster.....................................................................Version.7.3..............................................................."></a>
+<h3>MySQL Clusterと丸４年の付き合いを振り返ってのよもやま話と、Version 7.3への期待（もっとユーザが増えるといいな～）</h3>
+
+<p>@tsakuradaさん</p>
+
+<iframe src="http://www.slideshare.net/slideshow/embed_code/26575773" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="https://www.slideshare.net/TakeshiSakurada/mcct20130926-tsakuradac" title="MCCT20130926 tsakuradac" target="_blank">MCCT20130926 tsakuradac</a> </strong> from <strong><a href="http://www.slideshare.net/TakeshiSakurada" target="_blank">Takeshi Sakurada</a></strong> </div></p>
+
+<p>なぜMySQL Clusterを使うか？</p>
+
+<ul>
+<li>インメモリ型であること
+
+<ul>
+<li>確かに速いがioDrive + InnoDBの組み合わせでかなり高い性能がでるので、優位性は揺らぎつつ有るかも？</li>
+</ul>
+</li>
+<li>コモディティなサーバでもOK
+
+<ul>
+<li>結局メモリが必要なので安価でOKとは限らない</li>
+<li>スケールアウトが難しいケースはやはりある</li>
+</ul>
+</li>
+<li>高可用性
+
+<ul>
+<li>今でも優位性を保っているが、ポイントを押さえておかないと無意味になる。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>改めて主張したい優位点</p>
+
+<ul>
+<li>GPLv2</li>
+<li>MySQL(InnoDB)との互換性がv7.3以降でかなり向上した</li>
+</ul>
+
+
+<p>導入 - どう使うか</p>
+
+<ul>
+<li>SQLノード、MGMノード、データノードの構成が設計のキモ</li>
+<li>それぞれを単体にしても動くけど、SPOFを排除するためには各ノードを複数配置するのが普通</li>
+<li>データ量が増えた
+
+<ul>
+<li>データノードのメモリを増やすか、データノードの数を増やす</li>
+<li>スケールアウトを考えてデータノードを増やすようにしたほうが良い</li>
+</ul>
+</li>
+<li>アクセス増えた
+
+<ul>
+<li>SQLノードを増やす</li>
+</ul>
+</li>
+<li>高可用性を活かすためには
+
+<ul>
+<li>ハードウェア構成上SPOFが無い様に２重化する</li>
+<li>多重化障害にどこまで対応するかは悩ましい</li>
+<li>実行中のクエリをキャンセルされた時には、エラーをキャッチして後続処理を適切に作りこむ必要がある
+
+<ul>
+<li>条件に応じた適切な処理をアプリケーションに実装するのがキモ</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>InnoDBと同じ感覚でテーブル設計していいのか？
+
+<ul>
+<li>やってみるのが一番</li>
+<li>いろんなかたちでベンチマークを取ってみる</li>
+</ul>
+</li>
+<li>バッチ処理のことも考えてInnoDBと組み合わせたい
+
+<ul>
+<li>高潰瘍性のレベルがInnoDB側に引っ張られることになる</li>
+<li>NDBとInnoDBはトランザクションの分離レベルが違うので、その点でも注意する必要がある。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>運用 - 何が起きるか</p>
+
+<p>ハマりどころ</p>
+
+<ul>
+<li>GCP Stop!
+
+<ul>
+<li>Global check point</li>
+<li>これが無いと永続性が保たれなくなる</li>
+<li>これが何らかの理由で停止されるとデータノードがシャットダウンされてしまう</li>
+<li>一度のコミットにかかる時間が一定のしきい値を超過した場合にGCP Stopが発生してしまう。</li>
+<li>アプリ側でコミットにかかる時間を把握してクエリを発行する必要がある</li>
+<li>最新バージョンではこの閾値を無制限に指定できるので、それで逃げる必要がある。ただ、本当に以上が発生した場合にはDBが固まってしまうので、リスクとのトレードオフ。</li>
+</ul>
+</li>
+<li>ローリングリスタート
+
+<ul>
+<li>NDBのパラメータ変更を反映するためにデータノードの再起動が必要になる場合がある。</li>
+<li>再起動中にミラーリング相手が落ちてしまうと障害が発生してしまう。</li>
+<li>データノードが保有するデータ量が多いと再起動に時間がかかるため、多重障害の発生確率が高まってしまう。</li>
+<li>オンラインでのローリングリスタートはやはり怖い</li>
+<li>リスタート中はDDL文が発行できないなどの仕様上の制約がある。</li>
+<li>最新のバージョンでは起動も拘束しているが、メモリ上にデータを展開してインデックスの構築に時間がかかる。</li>
+</ul>
+</li>
+<li>ボトルネックが見えづらい
+
+<ul>
+<li>vmstatやiostatでは見えないところでボトルネックが発生していることがある。</li>
+<li>Slowログに主キーでのselectが出てくることがある。</li>
+<li>見えづらいというよりかは、確認ポイントが多い
+
+<ul>
+<li>データノードは？</li>
+<li>SQLノードは？</li>
+<li>NWは？</li>
+<li>ndbinfoは？</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>データのライフサイクルをどうするか？
+
+<ul>
+<li>メモリの節約のためにDELETE文を発行する必要があるが、DELETE文はやはりオソい</li>
+<li>DELETE文で空いた領域はデータノードを再起動しない限りは同じテーブル内でしか再利用できない。DROP TABLEしちゃえば良いらしい。</li>
+</ul>
+</li>
+<li>バックアップは良いけどリストアが…
+
+<ul>
+<li>NDBには専用のオンライン・バックアップ機能がある</li>
+<li>100GBぐらいをリストアすると半日以上かかる</li>
+</ul>
+</li>
+</ul>
+
+
+<p>まとめ</p>
+
+<ul>
+<li>高可用性システムを構築する上でMysQL Clusterはいい選択</li>
+<li>ただ色々考慮するポイントがある</li>
+</ul>
+
+
+<p>MySQL Cluster Auto Installerのデモ</p>
+
+<ul>
+<li>GUIでセットアップする Auto Installerがv7.3が付属するようになった</li>
+<li>マルチホストサポート</li>
+</ul>
+
+
+<hr />
+
+<p>うっかり間違えて参加したけど、とても勉強になるいい回だった。発表者はプレゼンなれしてるなーって感じでわかりやすかったし。<br>
+MySQL Clusterは話を聞いてると確かにCasualに使えそうだけど、改めてCasualをアピールしてるってことは実際には結構運用が大変なんだろーなーということは想像がつく。けど、面白そうだしこうゆう製品を扱う経験はエンジニアなら一度はしたいところ。</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2013-09-27T05:04:00+09:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>27</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>5:04 am</span></time>
+      <span class="categories">full history <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/commit/master/source/_posts/2013-09-27-mysql-cluster-casual-talk.markdown">here</a></span>
+
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/mysql/'>mysql</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/09/10/html5-with-java-meetup/" title="Previous Post: 業務システムエンジニアのためのHTML5勉強会#04に参加した">&laquo; 業務システムエンジニアのためのHTML5勉強会#04に参加した</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/11/13/td-agent_with_monit/" title="Next Post: td-agentの監視・復旧の仕組みを整える">td-agentの監視・復旧の仕組みを整える &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

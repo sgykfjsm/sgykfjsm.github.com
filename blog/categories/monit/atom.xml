@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: monit | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/monit/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[td-agentの監視・復旧の仕組みを整える]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2013/11/13/td-agent_with_monit/"/>
+    <updated>2013-11-13T21:26:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2013/11/13/td-agent_with_monit</id>
+    <content type="html"><![CDATA[<p>ここで紹介されている仕組みを自分のところにも導入したくなったのでやってみる。</p>
+
+<iframe src="http://www.slideshare.net/slideshow/embed_code/14046820" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="https://www.slideshare.net/GedowFather/fluentd-meetup-2-fluentd" title="Fluentd Meetup #2 @外道父 Fluentdを優しく見守る監視事例" target="_blank">Fluentd Meetup #2 @外道父 Fluentdを優しく見守る監視事例</a> </strong> from <strong><a href="http://www.slideshare.net/GedowFather" target="_blank">外道 父</a></strong> </div></p>
+
+<!-- more -->
+
+
+<a name="L............"></a>
+<h2>事前準備</h2>
+
+<p>EC2インスタンスを適当に2つ用意する。今回はmicroを2つ用意した。<br>インスタンスを立ち上げる時には必要なポートの開放を忘れずにしておく。大体は22(SSH), 80(TCP), 8888(TCP), 24220(TCP/UDP), 24224(TCP/UDP)とかを空けとけば大丈夫。<br>インスタンスが立ち上がったら、ログインしてとりあえずgitをインストールする。</p>
+
+<pre><code>[ec2-user@localhost ~]$ which git
+/usr/bin/which: no git in (/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/opt/aws/bin:/home/ec2-user/bin)
+[ec2-user@localhost ~]$ sudo yum install -y git
+インストール:
+  git.x86_64 0:1.8.3.1-1.28.amzn1
+
+依存性関連をインストールしました:
+  perl-Error.noarch 1:0.17015-4.6.amzn1                 perl-Git.noarch 0:1.8.3.1-1.28.amzn1
+  perl-TermReadKey.x86_64 0:2.30-13.5.amzn1
+
+完了しました!
+</code></pre>
+
+<p>事前に用意しておいたセットアップスクリプトをcloneして実行する。</p>
+
+<pre><code>[ec2-user@localhost ~]$ git clone https://gist.github.com/7429430.git
+Cloning into '7429430'...
+remote: Counting objects: 6, done.
+remote: Compressing objects: 100% (4/4), done.
+remote: Total 6 (delta 2), reused 0 (delta 0)
+Unpacking objects: 100% (6/6), done.
+[ec2-user@localhost ~]$ cd 7429430/
+[ec2-user@localhost 7429430]$ ls
+setup_td_agent.sh
+[ec2-user@localhost 7429430]$ bash setup_td_agent.sh
+</code></pre>
+
+<p>インスタンスが再起動するので、一旦接続が切れる。しばらくしたら再ログインして設定状況を確認する。</p>
+
+<pre><code>[ec2-user@localhost ~]$ ulimit -n
+65536
+[ec2-user@localhost ~]$ chkconfig --list | grep td-agent
+td-agent        0:off   1:off   2:on    3:on    4:on    5:on    6:off
+[ec2-user@localhost ~]$ ps w -C ruby -C td-agent --no-heading
+ 1207 ?        Sl     0:00 /usr/lib64/fluent/ruby/bin/ruby /usr/sbin/td-agent --group td-agent --log /var/log/td-agent/td-agent.log
+ 1210 ?        Sl     0:00 /usr/lib64/fluent/ruby/bin/ruby /usr/sbin/td-agent --group td-agent --log /var/log/td-agent/td-agent.log
+</code></pre>
+
+<p>大丈夫っぽい。</p>
+
+<p>ログを送る側を以下のように設定する。相手先にforwardするだけ。</p>
+
+<pre><code>[ec2-user@localhost td-agent]$ diff td-agent.conf td-agent.conf.20131112115946
+78,88c78,85
+&lt; &lt;match system.**&gt;
+&lt;   type forward
+&lt;   &lt;server&gt;
+&lt;     host ec2-54-235-51-40.compute-1.amazonaws.com
+&lt;     port 24224
+&lt;   &lt;/server&gt;
+&lt;   # secondary host is optional
+&lt;   # &lt;secondary&gt;
+&lt;   #   host 192.168.0.12
+&lt;   # &lt;/secondary&gt;
+&lt; &lt;/match&gt;
+---
+&gt; #&lt;match system.**&gt;
+&gt; #  type forward
+&gt; #  host 192.168.0.11
+&gt; #  # secondary host is optional
+&gt; #  &lt;secondary&gt;
+&gt; #    host 192.168.0.12
+&gt; #  &lt;/secondary&gt;
+&gt; #&lt;/match&gt;
+</code></pre>
+
+<p>受け取る方は適当に標準出力させておく。</p>
+
+<pre><code>[ec2-user@localhost td-agent]$ diff td-agent.conf td-agent.conf.20131112120135
+21c21
+&lt; &lt;match system.**&gt;
+---
+&gt; &lt;match debug.**&gt;
+</code></pre>
+
+<p><code>curl -X POST -d &lsquo;json={&ldquo;json&rdquo;:&ldquo;message&rdquo;}&rsquo; <a href="http://localhost:8888/system.test">http://localhost:8888/system.test</a></code>とかやって、送り側でログを受け取ったことを確認したら、これまた適当にcurlし続けるようにしておく。</p>
+
+<pre><code>[ec2-user@localhost td-agent]$ while(true);do curl -X POST -d 'json={"json":"message"}' http://local
+host:8888/system.debug; sleep 10;done &amp;
+</code></pre>
+
+<p>こうしておけばとりあえずはそれっぽくログを連携する形になる。</p>
+
+<a name="L......"></a>
+<h2>監視</h2>
+
+<p><a href="http://www.slideshare.net/GedowFather/fluentd-meetup-2-fluentd">Fluentd Meetup #2 @外道父 Fluentdを優しく見守る監視事例</a>にある内容を雑にまとめると以下のようになる。</p>
+
+<ul>
+<li>ローカルの監視には<a href="http://mmonit.com/monit/">monit</a>を使う。</li>
+<li>td-agent基本プロセス監視(受け取る側はLISTEN 24224であることも監視する)</li>
+<li>td-agent重複デーモン対策</li>
+<li>flowcounterで転送状態監視</li>
+</ul>
+
+
+<p>これを一つ一つ作業してみる。</p>
+
+<a name="td-agent....................."></a>
+<h3>td-agentのプロセス監視</h3>
+
+<p>monitに以下のような設定を追加する。<a href="http://mmonit.com/monit/documentation/monit.html#configuration_examples">monitの設定例のページ</a>が参考になる。</p>
+
+<pre><code>[ec2-user@localhost monit.d]$ cat /etc/monit.d/td-agent.conf
+check process td-agent with pidfile /var/run/td-agent/td-agent.pid
+  start program = "/etc/init.d/td-agent start"
+  stop program = "/etc/init.d/td-agent stop"
+  if failed port 24224 type udp then restart
+  if failed port 24224 type tcp then restart
+  if 5 restarts within 5 cycles then alert
+</code></pre>
+
+<p><code>alert</code>は、アラートメールを出すためのコマンド。アラートメールの設定については<a href="http://mmonit.com/monit/documentation/monit.html#setting_a_global_alert_statement">Setting a global alert statement</a>を見ると良い。</p>
+
+<p>td-agentをstopしてmonitが検知すると、以下の様なログが出てきて復旧を行っていることがわかる。</p>
+
+<pre><code>[UTC Nov 12 13:02:02] error    : 'td-agent' process is not running
+[UTC Nov 12 13:02:02] info     : 'td-agent' trying to restart
+[UTC Nov 12 13:02:02] info     : 'td-agent' start: /etc/init.d/td-agent
+[UTC Nov 12 13:03:03] info     : 'td-agent' process is running with pid 19221
+</code></pre>
+
+<p>何度か試した感じだと最長で検知に1分ぐらいかかる。というか1分がデフォルト？<br>秒単位でのポーリング間隔指定ができるけど、まぁ大抵は1分でいいんじゃないでしょうか。</p>
+
+<a name="td-agent..........................."></a>
+<h3>td-agentの重複デーモン対策</h3>
+
+<p>スライドにもあるようにデーモンの正常性は確認する必要がある。td-agentでは多重起動のバグが修正されているけど、td-agentを停止してもうまくプロセスが消えないことがあり、それに気づかないままtd-agentを立ち上げると障害の原因になってしまう（これは実際に経験した）。
+スライドではmonitでどのように設定しているかの具体例までは無いが、確認すべき事柄が非常に丁寧に示されているので、やるべきことは大体想像がつく。
+多分、こんなスクリプトを用意して、それをmonitに監視させれば良いんじゃないかなぁ。</p>
+
+<pre><code class="bash">#!/bin/bash
+# check_td_process.sh
+TD_AGENT="/usr/lib64/fluent/ruby/bin/ruby /usr/sbin/td-agent"
+RETVAL=1
+
+# プロセス数の確認
+TD_PROCESS_NUM=$(ps w -C ruby -C td-agent --no-heading | grep "${TD_AGENT}" | grep -v "\]$ " | wc -l)
+
+if [ ${TD_PROCESS_NUM} -eq 2 ]; then
+  RETVAL=0
+else
+  echo td-agent process is ${TD_PROCESS_NUM} process. 1&gt;&amp;2
+  echo execute /usr/bin/td_restarter.sh 1&gt;&amp;2
+  RETVAL=1
+fi
+
+[ ${RETVAL} == 1 ] &amp;&amp; exit ${RETVAL}
+
+# run/pidのプロセス番号で動いていることを確認する
+TD_PID_FILE=/var/run/td-agent/td-agent.pid
+TD_PID=$(cat ${TD_PID_FILE})
+TD_REAL_PID=$(ps l --ppid=1 | grep "${TD_AGENT}" | grep -v "\]$ " | awk '{print $3}')
+
+if [ "${TD_PID}" != "${TD_REAL_PID}" ]; then
+  echo ${TD_PID_FILE} is ${TD_PID} 1&gt;&amp;2
+  echo but real pid is ${TD_REAL_PID} 1&gt;&amp;2
+  echo execute /usr/bin/td_restarter.sh 1&gt;&amp;2
+  RETVAL=1
+fi
+
+[ ${RETVAL} == 1 ] &amp;&amp; exit ${RETVAL}
+
+# fluentdが固まってないことを確認する
+# system.testというタグはtd-agentの設定ファイルでnullに吐き出すようにしておけば良い
+curl --connect-timeout 300 --max-time 300 --silent -X POST -d 'json={"json":"message"}' http://localhost:8888/system.test
+
+if [ $? -ne 0 ]; then
+  echo failed to execute curl check 1&gt;&amp;2
+  echo execute /usr/bin/td_restarter.sh 1&gt;&amp;2
+  RETVAL=1
+fi
+
+[ ${RETVAL} == 1 ] &amp;&amp; exit ${RETVAL}
+
+#
+# configure here as you like...
+#
+exit ${RETVAL}
+</code></pre>
+
+<p>このへんのスクリプトをmonitに実行させて返り値が1だったら、こんなスクリプト（といってもスライドから丸パクリ）を実行させれば良さそう。</p>
+
+<pre><code class="bash">#!/bin/bash
+# td_restarter.sh
+TD_AGENT="/usr/lib64/fluent/ruby/bin/ruby /usr/sbin/td-agent"
+RETVAL=0
+
+/etc/init.d/td-agent stop
+pkill -KILL -f "${TD_AGENT}"
+/etc/init.d/td-agent start
+
+if [ $? -ne 0 ]; then
+  echo "Serious Error is occured($0)." 1&gt;&amp;2
+  RETVAL=1
+fi
+
+exit ${RETVAL}
+</code></pre>
+
+<a name="flowcounter....................."></a>
+<h3>flowcounterで転送状態監視</h3>
+
+<p>何はともあれflowcounterをインストールする。</p>
+
+<pre><code>[ec2-user@ip-10-147-141-104 td-agent]$ sudo /usr/lib64/fluent/ruby/bin/fluent-gem install fluent-plugin-flowcounter
+Fetching: fluent-plugin-flowcounter-0.1.9.gem (100%)
+Successfully installed fluent-plugin-flowcounter-0.1.9
+1 gem installed
+Installing ri documentation for fluent-plugin-flowcounter-0.1.9...
+Installing RDoc documentation for fluent-plugin-flowcounter-0.1.9...
+</code></pre>
+
+<p>詳しい設定はgithubをみる。<a href="https://github.com/tagomoris/fluent-plugin-flowcounter">tagomoris / fluent-plugin-flowcounter</a><br>とは言え、そんなに設定する項目は多くないので、今回の場合だとシンプルになる。</p>
+
+<pre><code>&lt;match system.**&gt;
+  type copy
+  &lt;store&gt;
+    type stdout
+  &lt;/store&gt;
+  &lt;store&gt;
+    type flowcounter
+    count_keys *
+  &lt;/store&gt;
+&lt;/match&gt;
+
+&lt;match flowcount&gt;
+  type file
+  path /var/log/td-agent/flowcount/flowcount.log
+  time_slice_format %Y%m%
+&lt;/match&gt;
+</code></pre>
+
+<p>大体こんな感じだけど、実際の本番運用ではrewrite_tag_filterでタグを付け替えながら集計対象のタグを選別して…みたいな設定をする必要があるかもしれない。</p>
+
+<p>つぎに出力されたログの最新2行（tail -2）を見て、カウント数から障害かどうかを判定するわけだけど、スライドだと障害だと判定した場合に「原因を出力」とある。この「原因」って何を指してるんだろ？送る側で検知した場合はAPIがローカルに吐いているエラーログ、受取側で検知した場合は検知対象となったタグの情報とかを添えて標準エラー出力して、メールで通知ということかなぁ？今回は受取側なので、とりあえずはこんな感じ？</p>
+
+<pre><code class="bash">#!/bin/bash
+# check_flowcounter.sh
+
+RETVAL=0
+CHECK_NUM=2
+FLOW_REFERENCE_VALUE=10
+FLOWCOUNTER_LOG=$(ls -tr /var/log/td-agent/flowcount/flowcount.log* | tail -1)
+for i in $(seq 1 ${CHECK_NUM})
+do
+  FLOWCOUNTER_LOG_LINE=$(tail -${CHECK_NUM} ${FLOWCOUNTER_LOG} | awk 'NR=='${i}'{print $3}')
+  FLOW_COUNT=$(echo ${FLOWCOUNTER_LOG_LINE} | sed -e 's/{".*_count":\([0-9]\+\).*}$/\1/')
+  if [ ${FLOW_COUNT} -lt ${FLOW_REFERENCE_VALUE} ]; then
+    echo flow count is under ${FLOW_REFERENCE_VALUE} 1&gt;&amp;2
+    echo $0 count : ${FLOW_COUNT} 1&gt;&amp;2
+    echo ${FLOWCOUNTER_LOG_LINE} 1&gt;&amp;2
+    RETVAL=1
+  fi
+done
+
+exit ${RETVAL}
+</code></pre>
+
+<p>で、ここまで用意したスクリプトを監視させるためのmonitの設定は以下のようになる。<br>monitのドキュメントだと<a href="http://mmonit.com/monit/documentation/monit.html#program_status_testing">ここ</a>を見れば良い。<code>td-agent.conf</code>って名前で<code>/etc/monit.d/</code>とかに置いておく。</p>
+
+<pre><code>set logfile /var/log/monit.log
+set alert shigeyuki.fujishima@gmail.com with mail-format { from: shigeyuki.fujishima@gmail.com }
+
+set mailserver email-smtp.us-east-1.amazonaws.com port 465
+# set mailserver localhost port 25
+    username "xxxxx"  password "yyyyy"
+    using sslv3 with timeout 15 seconds
+    # using tlsv1 with timeout 15 seconds
+
+check process td-agent with pidfile /var/run/td-agent/td-agent.pid
+    start program = "/etc/init.d/td-agent start"
+    stop program = "/etc/init.d/td-agent stop"
+    # if failed port 24224 type udp then restart
+    # if failed port 24224 type tcp then restart
+    if failed port 24224 type udp then alert
+    if failed port 24224 type tcp then alert
+    if 5 restarts within 5 cycles then alert
+
+check program check_td_process with path "/usr/local/bin/check_td_process.sh"
+    if status != 0 then exec "/usr/local/bin/td_restarter.sh"
+
+check program check_flowcounter with path "/usr/local/bin/check_flowcounter.sh"
+    if status != 0 then alert
+</code></pre>
+
+<a name="L........."></a>
+<h2>番外編</h2>
+
+<p>エラーメールの通知にAmazon SESを使おうとしたけど、以下のエラーが出てうまく行かなかった。</p>
+
+<pre><code>[UTC Nov 12 14:24:02] error    : monit: Openssl engine error: error:1408F10B:SSL routines:func(143):reason(267)
+[UTC Nov 12 14:24:02] error    : Cannot open a connection to the mailserver 'email-smtp.us-east-1.amazonaws.com:25' -- Success
+[UTC Nov 12 14:24:02] error    : No mail servers are available
+[UTC Nov 12 14:24:02] error    : Aborting event
+</code></pre>
+
+<p>冷静に見ると、portが25でsslv3っておかしい？気がする。</p>
+
+<p>以下のようにすればOK。<code>set mailserver</code>より先にSESに登録したアドレスを書いておいて、portは465を指定する。<br>あとは<code>using sslv3 with timeout 15 seconds</code>とかしておけばmonitさんからバンバンメールが飛ぶようになる。</p>
+
+<pre><code>set alert foo.bar@baz.com with mail-format { from: foo.bar@baz.com}
+
+set mailserver email-smtp.us-east-1.amazonaws.com port 465
+# set mailserver localhost port 25
+    username "xxxxx"  password "yyyyy"
+    using sslv3 with timeout 15 seconds
+</code></pre>
+
+<p>ちなみに、適当なアドレスだと以下のエラーログが出てくる。</p>
+
+<pre><code>[UTC Nov 13 05:39:19] error    : Sendmail error: 554 Message rejected: Email address is not verified.
+</code></pre>
+]]></content>
+  </entry>
+  
+</feed>

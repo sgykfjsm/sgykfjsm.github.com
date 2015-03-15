@@ -1,0 +1,314 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>MyNA(日本MySQLユーザ会)会 2013年3月に参加した - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="勉強会中にとったメモが消えたので、各セッションのトピックのみを記載する。 チューニンガソン5の復習 MySQL 5.6 新機能編 スライド チューニンガソンでどのように取り組んだか、という話
+MySQL Proxyを使うといろいろと捗るらしいが、それを使わらないようにした。 MySQL &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.com/blog/2013/03/20/mysql-jp">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.com" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">MyNA(日本MySQLユーザ会)会 2013年3月に参加した</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2013-03-20T21:20:00+09:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>20</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>9:20 pm</span></time>
+        
+        
+          
+           | <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/edit/master/source/_posts/2013-03-20-mysql-jp.markdown">Edit</a>
+          
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>勉強会中にとったメモが消えたので、各セッションのトピックのみを記載する。</p>
+
+<!-- more -->
+
+
+<a name="L........................5..........MySQL.5.6............."></a>
+<h2>チューニンガソン5の復習 MySQL 5.6 新機能編</h2>
+
+<p><a href="http://dbstudy.info/files/20130318/tuningathon5_mysql56.pdf">スライド</a></p>
+
+<ul>
+<li>チューニンガソンでどのように取り組んだか、という話</li>
+<li><a href="http://dev.mysql.com/doc/refman/5.6/en/mysql-proxy.html">MySQL Proxy</a>を使うといろいろと捗るらしいが、それを使わらないようにした。
+
+<ul>
+<li>MySQL Proxyについては以下のリンクが参考になるかもしれない。</li>
+<li><a href="http://php.net/manual/ja/mysqlnd.plugin.mysql-proxy.php">mysqlndプラグイン と MySQL Proxyの比較</a></li>
+<li><a href="http://blogs.ricollab.jp/webtech/2010/04/mysql_proxy/">MySQL Proxyでできること、できないことAdd Star</a></li>
+<li><a href="http://blog.livedoor.jp/techblog/archives/64655991.html">MySQL Proxy を試してみました</a></li>
+</ul>
+</li>
+<li>MySQL5.6はPerfomance Schemaがデフォルトで有効であることと、メタデータのロックの仕組みにCPUスケーラビリティが無いため、性能的にアレらしい。
+
+<ul>
+<li><a href="https://www.facebook.com/notes/mysql-at-facebook/my-mysql-is-faster-than-your-mysql/101512504025709333">My MySQL is faster than your MySQL</a></li>
+<li><a href="http://www.mysqlperformanceblog.com/2013/02/18/is-mysql-5-6-slower-than-mysql-5-5/">Is MySQL 5.6 slower than MySQL 5.5?</a></li>
+</ul>
+</li>
+</ul>
+
+
+<p>チューニンガソンそのものについては割愛。ここではチューニングについて、どのような視点で取り組むかについてを取り上げる。</p>
+
+<ul>
+<li>SQL実行計画を見て、どのようにレコードアクセスされているかの候補を絞り、各パターンに応じたインデックスを貼ってパフォーマンスを計測する。(<a href="http://dbstudy.info/files/20130318/tuningathon5_mysql56.pdf#14">スライドはこの辺</a>)</li>
+<li>パフォーマンスが改善しない場合はEXPLAINをとって、貼り付けたインデックスが使われているかどうかを調べる。</li>
+<li>Optimizer Traceを使う。(<a href="http://dbstudy.info/files/20130318/tuningathon5_mysql56.pdf#22">スライドはこの辺</a>)
+
+<ul>
+<li>SQLオプティマイザの内部動作を調べるMySQL5.6の新機能。</li>
+<li>マニュアルが無いので、出力内容とソースコードを見比べながら調べる必要がある。</li>
+</ul>
+</li>
+<li>Optimizer Traceでの解析により、レコード数の見積もりコストの精度が甘いことが判明
+
+<ul>
+<li>パラメータでは変更できないので、MySQL本体を改造。</li>
+</ul>
+</li>
+<li>MySQLではこちらの指定したインデックスをどうしても使うことができない場合がある。(<a href="http://dbstudy.info/files/20130318/tuningathon5_mysql56.pdf#38">スライドはこの辺</a>)
+
+<ul>
+<li>STRAIGHT_JOINやFORCE INDEXなどのヒント句をクエリに与えてインデックスの使用を強制する。</li>
+<li>GROUP BY句で集約されるカラムをインデックスの先頭に配置する<a href="http://dev.mysql.com/doc/refman/5.1/ja/loose-index-scan.html">Loose Index Scan</a>と呼ばれるテクニックを使うことで、集約の際のソート処理を省略することができる。</li>
+<li>この効果はEXPLAINでは確認できないので、Optimizer Traceで確認すること。</li>
+<li>ORDER BY句の処理でディスクソートが発生しないように、sort_buffer_sizeを増やす(MySQL5.6から減らされているので注意)。</li>
+</ul>
+</li>
+<li>GROUP BY句にファンクションが使われている場合には、ファンクションをFROM句のサブクエリに囲い込んで中間テーブルを作成するマテリアライゼーションが有効な場合がある（が、バッドノウハウなので非推奨）。(<a href="http://dbstudy.info/files/20130318/tuningathon5_mysql56.pdf#44">スライドはこの辺</a>)
+
+<ul>
+<li>マテリアライゼーションはMEMORYストレージエンジンが用いられるが、メモリからあふれる(tmp_table_sizeを超える)とMyISAMに切り替わるため、tmp_table_sizeの値を増やす必要がある。また、同時にmax_heap_table_sizeも増やしておく(tmp_table_size &lt; max_heap_table_sizeでなければならないため)。</li>
+</ul>
+</li>
+<li>大量のレコードを処理する分析系のクエリではテーブルの非正規化をしたほうが効果的な場合がある。</li>
+</ul>
+
+
+<a name="L........."></a>
+<h3>まとめ</h3>
+
+<ul>
+<li>MySQLのチューニングは如何に前提条件を覆せるか。不要な処理はなるべく省略できるようにすることが大事。</li>
+<li>ソースコードを読み解く必要はあるものの、Optimizer Traceは役に立つ。</li>
+<li>MySQLのオプティマイザはあまり賢くないので、O/Rマッパを使う場合はヒント句を差し込んだりクエリの書き換えが可能となる手段を残しておく必要がある。　</li>
+</ul>
+
+
+<a name="L......"></a>
+<h3>所感</h3>
+
+<p>非常に実践的な内容で臨場感のセッションだった。<br>
+SQLのチューニングはパラメータいじったり、EXPLAINみながらぐぬぬとなるようなことばかりだったが、紹介されたOptimizer Traceはなかなか便利そうだった。また、クエリをどのように見ていけば良いかという点も大変参考になった。</p>
+
+<a name="L....................................mysqld.........5.6........."></a>
+<h2>意外と話題に上がらない、mysqld以外の5.6新機能</h2>
+
+<p>MySQLの周辺ツールに関する話題。この辺は説明がどうこうというよりかは自分で触ったほうが早そう。</p>
+
+<iframe src="http://www.slideshare.net/slideshow/embed_code/17227164" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen webkitallowfullscreen mozallowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="http://www.slideshare.net/yoku0825/mysql-clients" title="MySQL clients" target="_blank">MySQL clients</a> </strong> from <strong><a href="http://www.slideshare.net/yoku0825" target="_blank">yoku0825</a></strong> </div></p>
+
+<a name="MySQL.5.6..............."></a>
+<h2>MySQL 5.6 新機能(熱)</h2>
+
+<p>いつもブログを拝見していた奥野さんを生で見れて、テンションが上がったが、ドライバとプロジェクタの相性が悪かったらしく、セッションやデモが不完全燃焼だった。残念。<br>
+いずれは奥野さんのブログやYoutube上でのデモが上がるらしいので、今のところは以下を見て慰めとしよう。<br>
+<a href="http://mysqlsandbox.net/">MySQL sandbox</a>は面白そうだと思いました(コナミ感)</p>
+
+<ul>
+<li><a href="http://nippondanji.blogspot.jp/2013/02/mysql-56-mysql56.html">MySQL 5.6正式リリース！！ #mysql56</a></li>
+</ul>
+
+
+<iframe src="http://www.slideshare.net/slideshow/embed_code/14801476" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen webkitallowfullscreen mozallowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="http://www.slideshare.net/nippondanji/mysql-56dbtechshowcase2012" title="MySQL 5.6新機能解説@dbtechshowcase2012" target="_blank">MySQL 5.6新機能解説@dbtechshowcase2012</a> </strong> from <strong><a href="http://www.slideshare.net/nippondanji" target="_blank">Mikiya Okuno</a></strong> </div></p>
+
+<hr/>
+
+
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2013-03-20T21:20:00+09:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>20</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>9:20 pm</span></time>
+      <span class="categories">full history <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/commit/master/source/_posts/2013-03-20-mysql-jp.markdown">here</a></span>
+
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/mysql/'>mysql</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/03/18/not-found-akka/" title="Previous Post: com.typesafe.akka#akka-actor;2.0.5: not found">&laquo; com.typesafe.akka#akka-actor;2.0.5: not found</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/03/31/twitter-hosebird/" title="Next Post: Hosebird Clientを試す">Hosebird Clientを試す &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

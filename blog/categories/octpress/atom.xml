@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: octpress | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/octpress/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[githubとoctpressでブログを構築する]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2013/02/04/first-post/"/>
+    <updated>2013-02-04T05:43:23+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2013/02/04/first-post</id>
+    <content type="html"><![CDATA[<p>ここのとおりに作業を進める</p>
+
+<ul>
+<li><a href="http://shogo82148.github.com/blog/2012/03/21/test/">GitHubにブログを設置してみたよ</a></li>
+</ul>
+
+
+<!-- more -->
+
+
+<a name="L.................."></a>
+<h2>詰まったこと</h2>
+
+<a name="bundle.install............"></a>
+<h3>bundle installでエラー</h3>
+
+<p>こんなエラーがでた。</p>
+
+<pre>env: ruby_bundler_wrapper: No such file or directory</pre>
+
+
+<p><a href="http://www.qnm.co/articles/ruby-bundler-wrapper.html">ここ</a>によると、.gemrcにある<code>custom_shebang directive</code>を削除すればOKとあったので、そのとおりにし、もう一度<code>gem install bundler</code>をからやり直したらうまく行った。</p>
+
+<a name="rake.install............"></a>
+<h3>rake installでエラー</h3>
+
+<pre>
+$ rake install
+env: ruby_bundler_wrapper: No such file or directory
+</pre>
+
+
+<p>おなじ事象やんけ…。</p>
+
+<p>もうすこし調べてみると、<a href="https://github.com/mpapis/rubygems-bundler/issues/3#issuecomment-1859556">ここ</a> がみつかる。
+  どうやら<code>bundle install</code>したあとは<code>gem regenerate_binstubs</code>をしたほうが良いらしい。</p>
+
+<p>実際にためしてみるとうまく行った。</p>
+
+<a name="L...................................."></a>
+<h3>デプロイの前にプレビュー</h3>
+
+<p>このコマンドでコンテンツ生成してプレビューのためのサーバ立ち上げまでやってくれる。</p>
+
+<pre>
+rake generate && rake preview
+</pre>
+
+
+<a name="L............................................."></a>
+<h3>デプロイするときにエラーがでる</h3>
+
+<p>こんなエラーがでたり</p>
+
+<pre>
+## Generating Site with Jekyll
+  1 require "rubygems"
+unchanged sass/screen.scss
+Configuration from /Users/sgyk/local/octopress/_config.yml
+Building site: source -> public
+Successfully generated site: source -> public
+## Deploying website via Rsync
+ssh: Could not resolve hostname sgykfjsm: nodename nor servname provided, or not known
+rsync: connection unexpectedly closed (0 bytes received so far) [sender]
+rsync error: unexplained error (pre 255) at /SourceCache/rsync/rsync-42/rsync/io.c(452) [sender=2.6.9]
+FAILED
+</pre>
+
+
+<p>ちょっとssh変えてもダメだった</p>
+
+<pre>
+## Generating Site with Jekyll
+unchanged sass/screen.scss
+Configuration from /Users/sgyk/local/octopress/_config.yml
+Building site: source -> public
+Successfully generated site: source -> public
+## Deploying website via Rsync
+Permission denied (publickey).
+rsync: connection unexpectedly closed (0 bytes received so far) [sender]
+rsync error: unexplained error (pre 255) at /SourceCache/rsync/rsync-42/rsync/io.c(452) [sender=2.6.9]
+FAILED
+</pre>
+
+
+<p>そういえば最初に登録したリポジトリURLがhttpsだったことを思い出し、<code>rake setup_github_pages</code>をgitプロトコルのほうに変更するところからやり直した。</p>
+
+<p>そんなこんなでできた</p>
+
+<a name="L....................."></a>
+<h2>テーマをかえる</h2>
+
+<p>Octopressをgithubに設定するため、色々ググったが、その際に気づいたのが、多くのOctopressユーザはデフォルトのテーマでやっているということ。
+そうでないユーザもチラホラいたが、なんとなくテーマを変えたくなったので、以下でテーマを探した。</p>
+
+<ul>
+<li><a href="https://github.com/imathis/octopress/wiki/3rd-Party-Octopress-Themes">3rd Party Octopress Themes</a></li>
+</ul>
+
+
+<p>今回は<a href="https://github.com/gehaxelt/CSS-WhiteLake">White Lake Octopress Theme</a>を選択した。
+あとは<code>_config.yml</code>でTwitterアカウントやgithubアカウントを設定したり。そんなところです。</p>
+
+<p>Octopressは色々とプラグインが充実しているらしいが、今回はこのへんで終了。</p>
+]]></content>
+  </entry>
+  
+</feed>

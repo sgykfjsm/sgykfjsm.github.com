@@ -1,0 +1,565 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>jenkinsでのテスト自動化いろいろ - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="jenkins上でテストを実行したい、自動化したいというリクエストが来たので、その設定方法をまとめた。 今回はplay2.2.1のscalaをサンプルプロジェクトととした。 環境の基本情報 今回はこんな設定で試した。setup.shは結構長いけど、簡単に言うとjdkを入れて、jenkins、 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.com/blog/2014/01/13/auto-test-on-jenkins">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.com" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">jenkinsでのテスト自動化いろいろ</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-01-13T12:28:00+09:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>12:28 pm</span></time>
+        
+        
+          
+           | <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/edit/master/source/_posts/2014-01-13-auto-test-on-jenkins.markdown">Edit</a>
+          
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>jenkins上でテストを実行したい、自動化したいというリクエストが来たので、その設定方法をまとめた。</p>
+
+<p>今回はplay2.2.1のscalaをサンプルプロジェクトととした。</p>
+
+<!-- more -->
+
+
+<a name="L....................."></a>
+<h2>環境の基本情報</h2>
+
+<p>今回はこんな設定で試した。setup.shは結構長いけど、簡単に言うとjdkを入れて、jenkins、apache2とscala2.10のインストール、apache2がjenkinsのフロントエンドとなるように設定しているだけ。</p>
+
+<figure class='code'><figcaption><span>Vagrant / vagrantでubuntuを入れて、jenkins,apapcheをセットアップ。</span><a target='_blank' href='https://gist.github.com/8394448'>link</a></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># -*- mode: ruby -*-</span>
+</span><span class='line'><span class="c1"># vi: set ft=ruby :</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># Vagrantfile API/syntax version. Don&#39;t touch unless you know what you&#39;re doing!</span>
+</span><span class='line'><span class="no">VAGRANTFILE_API_VERSION</span> <span class="o">=</span> <span class="s2">&quot;2&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="no">Vagrant</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="no">VAGRANTFILE_API_VERSION</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">config</span><span class="o">|</span>
+</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">box</span> <span class="o">=</span> <span class="s2">&quot;precise&quot;</span>
+</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">box_url</span> <span class="o">=</span> <span class="s2">&quot;/Users/sgyk/local/vagrant/box/precise-server-cloudimg-amd64-vagrant-disk1.box&quot;</span>
+</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">auto_detect</span> <span class="o">=</span> <span class="kp">true</span>
+</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">define</span> <span class="ss">:presice</span> <span class="k">do</span> <span class="o">|</span><span class="n">presice</span><span class="o">|</span>
+</span><span class='line'>    <span class="n">presice</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">hostname</span> <span class="o">=</span> <span class="s2">&quot;precise&quot;</span>
+</span><span class='line'>    <span class="n">presice</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">network</span> <span class="ss">:private_network</span><span class="p">,</span> <span class="ss">ip</span><span class="p">:</span> <span class="s2">&quot;192.168.56.100&quot;</span>
+</span><span class='line'>    <span class="n">presice</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">provider</span> <span class="s2">&quot;virtualbox&quot;</span> <span class="k">do</span> <span class="o">|</span><span class="n">v</span><span class="o">|</span>
+</span><span class='line'>      <span class="n">v</span><span class="o">.</span><span class="n">customize</span> <span class="o">[</span><span class="s2">&quot;modifyvm&quot;</span><span class="p">,</span> <span class="ss">:id</span><span class="p">,</span> <span class="s2">&quot;--memory&quot;</span><span class="p">,</span> <span class="mi">2048</span><span class="o">]</span>
+</span><span class='line'>      <span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;jenkins_presice&quot;</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>    <span class="n">presice</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">synced_folder</span> <span class="s2">&quot;data1&quot;</span><span class="p">,</span> <span class="s2">&quot;/vagrant_data&quot;</span>
+</span><span class='line'>    <span class="n">presice</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">provision</span> <span class="ss">:shell</span><span class="p">,</span> <span class="ss">:path</span> <span class="o">=&gt;</span> <span class="s2">&quot;./setup.sh&quot;</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<figure class='code'><figcaption><span>setup.sh / vagrantでubuntuを入れて、jenkins,apapcheをセットアップ。</span><a target='_blank' href='https://gist.github.com/8394448'>link</a></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="c">#!/bin/bash</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># ssh setting</span>
+</span><span class='line'>su - vagrant -c <span class="s1">&#39;</span>
+</span><span class='line'><span class="s1">  mkdir -p ${HOME}/.ssh</span>
+</span><span class='line'><span class="s1">  ## for more secure</span>
+</span><span class='line'><span class="s1">  # ssh-keygen -t rsa -q -P &quot;&quot; -f ~/.ssh/id_dsa</span>
+</span><span class='line'>
+</span><span class='line'><span class="s1">  ## sandbox setting</span>
+</span><span class='line'><span class="s1">  wget -q -O ${HOME}/.ssh/id_dsa https://raw.github.com/mitchellh/vagrant/master/keys/vagrant</span>
+</span><span class='line'><span class="s1">  wget -q -O ${HOME}/.ssh/id_dsa.pub https://raw.github.com/mitchellh/vagrant/master/keys/vagrant.pub</span>
+</span><span class='line'>
+</span><span class='line'><span class="s1">  cat $HOME/.ssh/id_dsa.pub &gt;&gt; $HOME/.ssh/authorized_keys</span>
+</span><span class='line'>
+</span><span class='line'><span class="s1">  chmod 700 ${HOME}/.ssh</span>
+</span><span class='line'><span class="s1">  chmod 600 ${HOME}/.ssh/id_dsa*</span>
+</span><span class='line'><span class="s1">&#39;</span>
+</span><span class='line'><span class="c"># ssh speed up</span>
+</span><span class='line'><span class="nb">echo </span>UseDNS no &gt;&gt; /etc/ssh/sshd_config
+</span><span class='line'>
+</span><span class='line'><span class="nb">cd</span> /tmp
+</span><span class='line'>wget -q -O - http://pkg.jenkins-ci.org/debian/jenkins-ci.org.key <span class="p">|</span> sudo apt-key add -
+</span><span class='line'>sudo sh -c <span class="s1">&#39;echo deb http://pkg.jenkins-ci.org/debian binary/ &gt; /etc/apt/sources.list.d/jenkins.list&#39;</span>
+</span><span class='line'>sudo apt-get -fy update
+</span><span class='line'>sudo apt-get -y install git openjdk-7-jdk apache2 jenkins zip unzip
+</span><span class='line'>
+</span><span class='line'><span class="c"># Setting up an Apache Proxy for port 80 -&gt; 8080</span>
+</span><span class='line'>sudo a2enmod proxy
+</span><span class='line'>sudo a2enmod proxy_http
+</span><span class='line'>sudo a2dissite default
+</span><span class='line'>sudo cat <span class="s">&lt;&lt;EOF &gt; /etc/apache2/sites-available/jenkins</span>
+</span><span class='line'><span class="s">&lt;VirtualHost *:80&gt;</span>
+</span><span class='line'><span class="s">    ServerAdmin webmaster@localhost</span>
+</span><span class='line'><span class="s">    ServerName ci.presice.com</span>
+</span><span class='line'><span class="s">    ServerAlias ci</span>
+</span><span class='line'><span class="s">    ProxyRequests Off</span>
+</span><span class='line'><span class="s">    &lt;Proxy *&gt;</span>
+</span><span class='line'><span class="s">        Order deny,allow</span>
+</span><span class='line'><span class="s">        Allow from all</span>
+</span><span class='line'><span class="s">    &lt;/Proxy&gt;</span>
+</span><span class='line'><span class="s">    ProxyPreserveHost on</span>
+</span><span class='line'><span class="s">    ProxyPass / http://localhost:8080/</span>
+</span><span class='line'><span class="s">&lt;/VirtualHost&gt;</span>
+</span><span class='line'><span class="s">EOF</span>
+</span><span class='line'>
+</span><span class='line'>sudo a2ensite jenkins
+</span><span class='line'>sudo apache2ctl restart
+</span><span class='line'>
+</span><span class='line'><span class="c"># scala</span>
+</span><span class='line'><span class="nv">DOWNLOAD_URL</span><span class="o">=</span>http://www.scala-lang.org/files/archive/scala-2.10.3.tgz
+</span><span class='line'><span class="nv">SCALA_TGZ</span><span class="o">=</span><span class="sb">`</span>basename <span class="k">${</span><span class="nv">DOWNLOAD_URL</span><span class="k">}</span><span class="sb">`</span>
+</span><span class='line'><span class="nv">SCALA_DIR</span><span class="o">=</span><span class="sb">`</span>basename <span class="k">${</span><span class="nv">SCALA_TGZ</span><span class="k">}</span> .tgz<span class="sb">`</span>
+</span><span class='line'>wget -q -O /tmp/<span class="k">${</span><span class="nv">SCALA_TGZ</span><span class="k">}</span> <span class="k">${</span><span class="nv">DOWNLOAD_URL</span><span class="k">}</span>
+</span><span class='line'>sudo tar zxf /tmp/<span class="k">${</span><span class="nv">SCALA_TGZ</span><span class="k">}</span> -C /usr/local/
+</span><span class='line'>sudo ln -s /usr/local/<span class="k">${</span><span class="nv">SCALA_DIR</span><span class="k">}</span> /usr/local/scala
+</span><span class='line'>
+</span><span class='line'><span class="c"># setting environment</span>
+</span><span class='line'><span class="nv">SETTING_FILE</span><span class="o">=</span>/etc/profile.d/append_environment_values.sh
+</span><span class='line'><span class="nb">echo</span> <span class="s1">&#39;#!/bin/bash&#39;</span> <span class="p">|</span> sudo tee -a <span class="k">${</span><span class="nv">SETTING_FILE</span><span class="k">}</span>
+</span><span class='line'><span class="nb">echo</span> <span class="s1">&#39;# added by vagrant setup.sh&#39;</span> <span class="p">|</span> sudo tee -a <span class="k">${</span><span class="nv">SETTING_FILE</span><span class="k">}</span>
+</span><span class='line'><span class="nb">echo</span> <span class="p">|</span> sudo tee -a <span class="k">${</span><span class="nv">SETTING_FILE</span><span class="k">}</span>
+</span><span class='line'><span class="nb">echo</span> <span class="s1">&#39;export JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-amd64&#39;</span> <span class="p">|</span> sudo tee -a <span class="k">${</span><span class="nv">SETTING_FILE</span><span class="k">}</span>
+</span><span class='line'><span class="nb">echo</span> <span class="s1">&#39;export SCALA_HOME=/usr/local/scala&#39;</span> <span class="p">|</span> sudo tee -a <span class="k">${</span><span class="nv">SETTING_FILE</span><span class="k">}</span>
+</span><span class='line'><span class="nb">echo</span> <span class="s1">&#39;export PATH=${SCALA_HOME}/bin:${JAVA_HOME}/bin:${PATH}&#39;</span> <span class="p">|</span> sudo tee -a <span class="k">${</span><span class="nv">SETTING_FILE</span><span class="k">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">exit </span>0
+</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="L.................................git......"></a>
+<h2>サンプルプロジェクトのgit設定</h2>
+
+<p>サンプルプロジェクトはPlayframeworkなので、jenkinsがplayコマンドを使えるようにする。</p>
+
+<pre><code>vagrant@precise:~$ wget http://downloads.typesafe.com/play/2.2.1/play-2.2.1.zip
+vagrant@precise:~$ unzip play-2.2.1.zip &gt; /dev/null
+vagrant@precise:~$ cd play-2.2.1/
+vagrant@precise:~/play-2.2.1$ sudo chmod +x play
+vagrant@precise:~/play-2.2.1$ sudo chmod -R a+w framework/
+vagrant@precise:~/play-2.2.1$ sudo chmod -R a+w repository/
+vagrant@precise:~/play-2.2.1$ cd framework/
+vagrant@precise:~/play-2.2.1/framework$ find . -maxdepth 1 -type f | grep -v '.bat' | xargs sudo chmod a+x
+</code></pre>
+
+<p>サンプルプロジェクト用のgitディレクトリを用意する。</p>
+
+<pre><code>vagrant@precise:~$ mkdir git
+vagrant@precise:~$ cd git
+vagrant@precise:~/git$ mkdir play_sample.git
+vagrant@precise:~/git$ cd play_sample.git/
+vagrant@precise:~/git/play_sample.git$ git --bare init
+</code></pre>
+
+<p>このへんぐらいはまではsetup.shに盛り込んでよかったかも。</p>
+
+<p>以下はサンプルプロジェクトの開発場所にて。</p>
+
+<pre><code>[sgyk@fujishima] 14-01-13 4:01:54 ~/local/script/scala/play_sample
+$ git init
+[sgyk@fujishima] 14-01-13 4:01:59 ~/local/script/scala/play_sample (git)-[master] {?}
+$ git add .
+[sgyk@fujishima] 14-01-13 4:02:04 ~/local/script/scala/play_sample (git)-[master] {?}
+$ git commit -m "initial commit"
+[master (root-commit) d3458d3] initial commit
+[sgyk@fujishima] 14-01-13 4:11:23 ~/local/script/scala/play_sample (git)-[master] {?}
+$ git remote add origin ssh://vagrant@presice/home/vagrant/git/play_sample.git
+[sgyk@fujishima] 14-01-13 4:11:24 ~/local/script/scala/play_sample (git)-[master] {?}
+$ git push origin master
+Counting objects: 32, done.
+Delta compression using up to 4 threads.
+Compressing objects: 100% (23/23), done.
+Writing objects: 100% (32/32), 38.22 KiB, done.
+Total 32 (delta 0), reused 0 (delta 0)
+To ssh://vagrant@presice/home/vagrant/git/play_sample.git
+ * [new branch]      master -&gt; master
+</code></pre>
+
+<p>これでgitの準備は完了</p>
+
+<p>ちなみに、通常のsshコマンドでvagrantのVMにアクセスする場合は以下のようにしてsshのconfigに追加しておくと楽。</p>
+
+<pre><code>vagrant ssh-config --host presice &gt;&gt; ~/.ssh/config
+</code></pre>
+
+<p>今回はsshでgitにpushするようにしたので、このように設定しておくとハマりにくくなる。と思う。</p>
+
+<a name="jenkins........."></a>
+<h2>jenkinsの設定</h2>
+
+<p>最初にjenkinsからGitを扱えるようにプラグインをインストールする。左メニュー「Jenkinsの管理」から「プラグインの管理」にアクセスし、「利用可能」タブから「Jenkins GIT plugin」を選択し、「ダウンロードして再起動後にインストール」を押下する。その後、jenkinsを再起動する。</p>
+
+<p>左メニュー「新規ジョブの作成」をクリック。<br>
+ジョブ名を入力、「フリースタイル・プロジェクトのビルド」を選択して、OKを押下する。「ソースコード管理」でGitを選択し、Repository URLを入力する。「適用」、「保存」の順番に押下する。</p>
+
+<p>これでjenkinsへのリポジトリ登録が完了。</p>
+
+<p>ビルドの設定を行う。リストボックスの「ビルド手順の追加」から、「シェルの実行」を選択し、以下の様なシェルを入力する。</p>
+
+<pre><code>#!/bin/bash
+play=/home/vagrant/play-2.2.1/play
+cd ${WORKSPACE}
+
+${play} clean compile test
+
+exit 0
+</code></pre>
+
+<p>jenkinsにはPlayframeworkのプラグインがあるのだけど、うまく実行できなかったので上記のようにシェル実行するようにした。</p>
+
+<p>テスト結果は<code>${PLAY_HOME}/target/test-reports/{ApplicationSpec,IntegrationSpec}.xml</code>に出力されているので、「ビルド後の処理」に「JUnitテスト結果の集計」を追加して、<code>**/target/test-reports/*.xml</code>と入力すればOK。</p>
+
+<p>この設定により、ビルド後、左メニューの「テスト結果」からテスト結果のレポートを見ることができる。</p>
+
+<a name="jenkins............................................................"></a>
+<h3>jenkins上で任意のタイミングでテストを実行する。</h3>
+
+<p><a href="http://yuroyoro.hatenablog.com/entry/2012/12/20/175205">Jenkinsで外部パラメータで与えたブランチを対象にビルドできるようにしておくと凄惨性あがって墓ドル</a>を参考に設定する。</p>
+
+<p>設定画面にて、「ビルドのパラメータ化」にチェックを入れる。「パラメータの追加」というリストボックスで「文字列」を選択し、「名前」、「デフォルト値」、「説明」を適宜入力する。入力を終えたら、とりあえず「適用」をクリックする。</p>
+
+<p>「ソースコード管理」の項目にある「Branches to build」で、「Branch Specifier」の欄を<code>$branch</code>に変更する。</p>
+
+<p>「適用」、「保存」の順にクリックする。</p>
+
+<p>GUIからビルドを実行したい場合は、左メニュー「パラメータ付きビルド」をクリックして、ビルドしたいブランチを設定して、ビルドをクリックする。<br>
+CLIから実行したい場合は、以下のようにcurlを投げると良い。</p>
+
+<pre><code>vagrant@precise:~/local/script$ cat jenkins_build.sh
+#!/bin/bash
+
+JENKINS_JOB_URL=http://192.168.56.100/job/play_sample/buildWithParameters?branch=origin/feature/add_plugin_scct
+
+curl ${JENKINS_JOB_URL}
+
+exit 0
+</code></pre>
+
+<a name="jenkins............................................."></a>
+<h3>jenkins上で定期的にテストを実行する。</h3>
+
+<p>これは簡単で、プロジェクトごとの設定画面から、ビルド・トリガに「定期的に実行」を選択して、cronっぽく設定すればOK。<br>
+ただし、これは固定的な設定なので任意のブランチを選択することはできない。</p>
+
+<a name="L..................push............jenkins................................."></a>
+<h3>リポジトリにpushする度にjenkins上でテストを実行する。</h3>
+
+<p>リポジトリ側の<code>hook/post-receive</code>に以下のようなスクリプトを用意すればOK。微妙にハマったのが、post-receiveに渡される引数は<code>$1</code>, <code>$2</code>のようなコマンドライン引数ではなくて標準入力だということ。で、その標準入力をどう捉えればいいのかが、よくわからなかった。</p>
+
+<pre><code>#!/bin/bash
+while read oldrev newrev refname
+do
+    branch=$(git rev-parse --symbolic --abbrev-ref $refname)
+    echo branch is ${branch}
+    JENKINS_JOB_URL=http://192.168.56.100/job/play_sample/buildWithParameters?branch=origin/${branch}
+    curl ${JENKINS_JOB_URL}
+done
+
+exit 0
+</code></pre>
+
+<p>参考：<a href="http://stackoverflow.com/questions/7351551/writing-a-git-post-receive-hook-to-deal-with-a-specific-branch">Writing a git post-receive hook to deal with a specific branch</a>の<a href="http://stackoverflow.com/a/13057643">http://stackoverflow.com/a/13057643</a>より。</p>
+
+<a name="L........."></a>
+<h2>おまけ</h2>
+
+<p>jenkinsからテストを実行しようとしたら、以下のようなエラーが発生した。</p>
+
+<pre><code>java.io.IOException: No such file or directory
+    at java.io.UnixFileSystem.createFileExclusively(Native Method)
+    at java.io.File.createNewFile(File.java:947)
+    at xsbt.boot.Locks$.apply0(Locks.scala:35)
+    at xsbt.boot.Locks$.apply(Locks.scala:28)
+    at xsbt.boot.Launch.locked(Launch.scala:178)
+    at xsbt.boot.Launch.app(Launch.scala:93)
+    at xsbt.boot.Launch.app(Launch.scala:91)
+    at xsbt.boot.Launch$.run(Launch.scala:51)
+    at xsbt.boot.Launch$$anonfun$explicit$1.apply(Launch.scala:45)
+    at xsbt.boot.Launch$.launch(Launch.scala:65)
+    at xsbt.boot.Launch$.apply(Launch.scala:16)
+    at xsbt.boot.Boot$.runImpl(Boot.scala:32)
+    at xsbt.boot.Boot$.main(Boot.scala:21)
+    at xsbt.boot.Boot.main(Boot.scala)
+Error during sbt execution: java.io.IOException: No such file or directory
+</code></pre>
+
+<p>エラー発生箇所: <a href="https://github.com/harrah/xsbt/blob/0.13/launch/src/main/scala/xsbt/boot/Locks.scala#L35">https://github.com/harrah/xsbt/blob/0.13/launch/src/main/scala/xsbt/boot/Locks.scala#L35</a><br>解説は<a href="http://stackoverflow.com/a/8105883">http://stackoverflow.com/a/8105883</a>を参照。<br>要は、playコマンドがあるディレクトリにファイルとかをつくろうとしたけど、ダメでした、というエラー。なので、以下のように対応すればOK。</p>
+
+<pre><code>vagrant@precise:~/play-2.2.1$ sudo chmod a+x play
+vagrant@precise:~/play-2.2.1$ sudo chmod -R a+w framework/
+vagrant@precise:~/play-2.2.1$ sudo chmod -R a+w repository/
+vagrant@precise:~/play-2.2.1$ cd framework/
+vagrant@precise:~/play-2.2.1/framework$ find . -maxdepth 1 -type f | grep -v '.bat' | xargs sudo chmod a+x
+</code></pre>
+
+<p>また、以下のようなエラーが出る場合がある。</p>
+
+<pre><code>java.io.FileNotFoundException: /var/lib/jenkins/jobs/play_sample/workspace/target/resolution-cache/play_sample/play_sample_2.10/1.0-SNAPSHOT/resolved.xml.xml
+</code></pre>
+
+<p>workspaceを一旦クリアして再ビルドすればOK</p>
+
+<hr />
+
+<p>以上で、任意 / 定期 / push後 のタイミングで自動テストをjenkins上で行なうことが可能となった。また、任意およびpush後のテストは任意のブランチに対して行なうことができるので、サーバ上でバシバシテストを回していくことができるんじゃないかなーと思う。</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2014-01-13T12:28:00+09:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>12:28 pm</span></time>
+      <span class="categories">full history <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/commit/master/source/_posts/2014-01-13-auto-test-on-jenkins.markdown">here</a></span>
+
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/jenkins/'>jenkins</a>, <a class='category' href='/blog/categories/play/'>play</a>, <a class='category' href='/blog/categories/scala/'>scala</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2014/01/10/install-hadoop-on-mesos/" title="Previous Post: mesos上にHadoopをインストールする">&laquo; mesos上にHadoopをインストールする</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2014/01/26/online-maintenance-on-rds-mysql/" title="Next Post: Amazon RDSのMySQLでオンラインメンテをどうやればいいかを調べた">Amazon RDSのMySQLでオンラインメンテをどうやればいいかを調べた &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

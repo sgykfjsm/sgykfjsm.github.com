@@ -1,0 +1,315 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Beanstalk管理下のインスタンスを安全に再起動する - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="現在のBeanstalkでインスタンスが再起動する場合は主に以下の３つがある。 アプリケーションをデプロイするとき
+Configuration(JVMのパラメータとか)をデプロイするとき
+Management ConsoleなどでRestart Appsを実行した時 しかし、 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.com/blog/2015/02/13/dereg-instance-under-beanstalk">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.com" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">Beanstalk管理下のインスタンスを安全に再起動する</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-02-13T18:40:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>6:40 pm</span></time>
+        
+        
+          
+           | <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/edit/master/source/_posts/2015-02-13-dereg-instance-under-beanstalk.markdown">Edit</a>
+          
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>現在のBeanstalkでインスタンスが再起動する場合は主に以下の３つがある。</p>
+
+<ul>
+<li>アプリケーションをデプロイするとき</li>
+<li>Configuration(JVMのパラメータとか)をデプロイするとき</li>
+<li>Management ConsoleなどでRestart Appsを実行した時</li>
+</ul>
+
+
+<p>しかし、運用の中では特定のインスタンスのみを再起動したい場合がある。また、再起動を行う場合、インスタンスを再起動すると自動的にTerminateしてしまうし、インスタンス内部のアプリケーションサーバを再起動すると、ELBからリクエストが来てしまう。ここではこういった点を考慮した安全な再起動の手順を確認する。</p>
+
+<!-- more -->
+
+
+<a name="L.................."></a>
+<h2>大まかな流れ</h2>
+
+<ol>
+<li>Auto ScalingのTerminate処理をSuspendにする。</li>
+<li>ELBから対象のインスタンスを切り離す。</li>
+<li>対象のインスタンス、またはインスタンス内部のアプリケーションサーバを再起動する。</li>
+<li>ELBへ対象のインスタンスを再登録する。
+
+<ul>
+<li>インスタンスの再起動を行った場合、インスタンスの状態（Auto ScalingでのHealth State)はUnhealthyとなってしまうので、事前にAuto ScalingのSetInstanceHealthで対象のインスタンスをHealthyにしておくこと。</li>
+</ul>
+</li>
+<li>Auto ScalingのTerminate処理をResumeにする。</li>
+</ol>
+
+
+<a name="L..............."></a>
+<h3>自動化する</h3>
+
+<p>上述した大まかな流れを自動化する。</p>
+
+<ol>
+<li>対象のインスタンスのinstance-idを取得する
+
+<ul>
+<li>例えば対象のインスタンスにsshログインして<code>curl <a href="http://169.254.169.254/latest/meta-data/instance-id/">http://169.254.169.254/latest/meta-data/instance-id/</a></code></li>
+</ul>
+</li>
+<li>取得したinstance-idを元に、そのインスタンスが所属するAuto Scaling Groupを特定する。
+
+<ul>
+<li><code>aws autoscaling describe-auto-scaling-instances &ndash;instance-ids ${instance_id} | jq &ldquo;.AutoScalingInstances[]|.AutoScalingGroupName&rdquo; -r</code></li>
+</ul>
+</li>
+<li>取得したAuto Scaling GroupをキーにTerminate処理をSuspendにする。
+
+<ul>
+<li><code>aws autoscaling suspend-processes &ndash;auto-scaling-group-name ${auto_scaling_group_name} &ndash;scaling-processes Terminate</code></li>
+</ul>
+</li>
+<li>対象のインスタンスが所属するELBのLoadBalancerNameを特定する。
+
+<ul>
+<li><code>aws autoscaling describe-auto-scaling-groups &ndash;auto-scaling-group-name ${auto_scaling_group_name} | jq &ldquo;.AutoScalingGroups[]|.LoadBalancerNames[]&rdquo; -r</code></li>
+<li>上記のコマンドの返り値を配列などで受け取って、instance-idでフィルタリングする。</li>
+<li><code>aws elb describe-instance-health &ndash;load-balancer-name ${load_balancer_name} &ndash;instances ${instance_id}</code></li>
+</ul>
+</li>
+<li>対象のインスタンスをLBから切り離す。
+
+<ul>
+<li><code>aws elb deregister-instances-from-load-balancer &ndash;load-balancer-name ${load_balancer_name} &ndash;instances ${instance_id}</code></li>
+</ul>
+</li>
+<li>対象のインスタンスにて再起動処理を実行する。</li>
+<li>（アプリケーションサーバではなく）インスタンスの再起動を行った場合はHealthyに変更する。
+
+<ul>
+<li><code>aws autoscaling set-instance-health &ndash;instance-id ${instance_id} &ndash;health-status Healthy</code></li>
+</ul>
+</li>
+<li>ELBへ対象のインスタンスを再登録する。
+
+<ul>
+<li><code>aws elb register-instances-with-load-balancer &ndash;load-balancer-name ${load_balancer_name} &ndash;instances ${instance_id}</code></li>
+</ul>
+</li>
+<li>取得したAuto Scaling GroupをキーにTerminate処理をResumeにする。
+
+<ul>
+<li><code>aws autoscaling resume-processes &ndash;auto-scaling-group-name ${auto_scaling_group_name} &ndash;scaling-processes Terminate</code></li>
+</ul>
+</li>
+</ol>
+
+
+<a name="L........."></a>
+<h2>その他</h2>
+
+<p>今回の手順を整理していく中できづいたこと。</p>
+
+<ul>
+<li>ELBからインスタンスを切り離してInService状態のインスタンスがbeanstalk環境に設定している最低稼働台数を下回っても、インスタンスが自動的に追加されることは無い。これはbeanstalkでデフォルトに設定されるAuto ScalingのHealth Check TypeがEC2モードであるためだと思われる。
+
+<ul>
+<li>なので、アプリケーションサーバを再起動するだけならAuto ScalingのTerminate処理に対する操作は不要と言える。</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="L......"></a>
+<h3>余談</h3>
+
+<p>てっきりbeanstalkでのインスタンス死活監視はELB管理下のインスタンスがInServiceになっている数で判断されているものと思い込んでた…</p>
+
+<a name="L....................."></a>
+<h3>参考にした記事</h3>
+
+<p><a href="http://qiita.com/MasaoDX/items/07e46186c450799c6350">Auto ScalingのSuspend/Resumeを使って、Elastic BeanstalkインスタンスをTerminateしないで停止・再起動する</a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2015-02-13T18:40:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>6:40 pm</span></time>
+      <span class="categories">full history <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/commit/master/source/_posts/2015-02-13-dereg-instance-under-beanstalk.markdown">here</a></span>
+
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/aws/'>aws</a>, <a class='category' href='/blog/categories/ops/'>ops</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2015/02/13/how-to-analysis-unlaunched-instance/" title="Previous Post: 起動に失敗したインスタンスを調査する例">&laquo; 起動に失敗したインスタンスを調査する例</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2015/02/15/pass-params-to-sbt-on-cli/" title="Next Post: sbtから起動させる処理にコマンドラインから引数を渡す">sbtから起動させる処理にコマンドラインから引数を渡す &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

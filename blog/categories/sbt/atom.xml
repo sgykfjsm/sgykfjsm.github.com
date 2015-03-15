@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: sbt | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/sbt/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[sbtから起動させる処理にコマンドラインから引数を渡す]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2015/02/15/pass-params-to-sbt-on-cli/"/>
+    <updated>2015-02-15T02:02:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2015/02/15/pass-params-to-sbt-on-cli</id>
+    <content type="html"><![CDATA[<p>以下はskinny frameworkをつかって処理を書いているが、sbtからの起動させる際にはskinny frameworkを使ってるかどうかは関係ないはず。</p>
+
+<!-- more -->
+
+
+<p>こんな処理を書いたとする。</p>
+
+<pre><code class="scala">package batch
+
+object MyBatch extends skinny.logging.Logging with App {
+  def runMain(params:List[String]): Unit = {
+    logger.info("start")
+    params foreach println
+    logger.info("end")
+  }
+
+  runMain(args.toList)
+}
+</code></pre>
+
+<p>その場合、以下の様に起動させれば良い。</p>
+
+<pre><code>$ ./sbt "run-main batch.MyBatch foo bar"
+[info] Loading project definition from /Users/sgyk/local/script/scala/skinny-blank-app/project
+[info] Set current project to skinny-blank-app-dev (in build file:/Users/sgyk/local/script/scala/skinny-blank-app/)
+[info] Generating /Users/sgyk/local/script/scala/skinny-blank-app/target/dev/scala-2.11/resource_managed/main/rebel.xml.
+[info] Running batch.MyBatch foo bar
+2014-11-14 18:43:44.985  INFO   --- [     run-main-0] batch.MyBatch$                           : start
+foo
+bar
+2014-11-14 18:43:45.005  INFO   --- [     run-main-0] batch.MyBatch$                           : end
+[success] Total time: 1 s, completed 2014/11/14 18:43:45
+</code></pre>
+
+<p><code>run-main ${package-name}.${class-name} arg1 arg2 &hellip;</code>といった感じ。</p>
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: db | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/db/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Play!のDB設定について]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2014/04/09/about-db-configuration-in-play/"/>
+    <updated>2014-04-09T00:27:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2014/04/09/about-db-configuration-in-play</id>
+    <content type="html"><![CDATA[<p>自分が開発したわけでもないのだけれど、APIのパフォーマンスをどうにかしろ、チューニングしろと言われた。チューニング対象のAPIは<a href="http://www.playframework.com/">Play!</a>を利用しており、DBのI/Oにパフォーマンスが強く依存するので、まずはDB周りのパラメータをしらべて改善していくことにした。</p>
+
+<!-- more -->
+
+
+<p>DBの接続周りを改善していくにあたって、Thread Poolへの理解は欠かせないのだけれど、Play!の<a href="http://www.playframework.com/documentation/2.2.x/ThreadPools">ドキュメント</a>だとAkkaとかが出てきて、もう少し基本的な部分からおさらいしたいなーと思ったので、ソースから調べることにした。</p>
+
+<ul>
+<li><a href="http://www.playframework.com/documentation/2.2.x/ThreadPools">play-jdbc/src/main/scala/play/api/db/DB.scala</a></li>
+</ul>
+
+
+<p>DB.scalaはPlayのDB接続周りを管理している。<a href="https://github.com/playframework/playframework/blob/master/framework/src/play-jdbc/src/main/scala/play/api/db/DB.scala#L202">class BoneCPPlugin</a>でconfigファイルからDBの設定を取得している。この辺に注目していけばよさそう。このあたりに書かれている設定に関して言えば、基本は言語やフレームワークに依存しない部分なはずなのでこれまでの経験とか勘が活かせるかなーと思った次第。</p>
+
+<p>ということで、今回はこのソースに書かれている設定を整理する。</p>
+
+<a name="L......"></a>
+<h3>接続</h3>
+
+<p>ラベルのプレフィクスには<code>db.<em>dbName</em>.</code>がつく。</p>
+
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">ラベル        </th>
+<th style="text-align:left;"> 設定値の型     </th>
+<th style="text-align:left;"> 概要           </th>
+<th style="text-align:left;"> メモ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">driver</td>
+<td style="text-align:left;">string</td>
+<td style="text-align:left;">DBドライバ名</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left;">autocommit</td>
+<td style="text-align:left;">Boolean</td>
+<td style="text-align:left;">autocommitを有効にするかどうか</td>
+<td style="text-align:left;"> defaultはtrue</td>
+</tr>
+<tr>
+<td style="text-align:left;">isolation</td>
+<td style="text-align:left;">string</td>
+<td style="text-align:left;">NONE / READ_COMMITTED / READ_UNCOMMITTED / REPEATABLE_READ / SERIALIZABLE</td>
+<td style="text-align:left;">大文字</td>
+</tr>
+<tr>
+<td style="text-align:left;">defaultCatalog</td>
+<td style="text-align:left;">string</td>
+<td style="text-align:left;">デフォルトのDBカタログ名</td>
+<td style="text-align:left;">Postgresqlなど?DB2かも？</td>
+</tr>
+<tr>
+<td style="text-align:left;">readOnly</td>
+<td style="text-align:left;">Boolean</td>
+<td style="text-align:left;">読み取り専用アクセスとするか否か</td>
+<td style="text-align:left;">defaultはfalse</td>
+</tr>
+<tr>
+<td style="text-align:left;">url</td>
+<td style="text-align:left;">string</td>
+<td style="text-align:left;">DBの接続文字列</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left;">user</td>
+<td style="text-align:left;">string</td>
+<td style="text-align:left;">DBの接続ユーザ</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left;">pass</td>
+<td style="text-align:left;">string</td>
+<td style="text-align:left;">DBの接続パスワード</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left;">password</td>
+<td style="text-align:left;">string</td>
+<td style="text-align:left;">DBの接続パスワード</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+
+<a name="Pool.configuration"></a>
+<h3>Pool configuration</h3>
+
+<p>ここの設定項目はBoneCPの設定とほぼ同一だが、初期値の設定が異なっている。<br>
+BoneCPの接続数を計算する場合は<code>maxConnectionsPerPartition * partitionCount</code>となることを押さえておけばよさそう。</p>
+
+<p>ラベルのプレフィクスには<code>db.<em>dbName</em>.</code>がつく。</p>
+
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">ラベル        </th>
+<th style="text-align:left;"> 設定値の型     </th>
+<th style="text-align:left;"> 概要           </th>
+<th style="text-align:left;"> メモ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">partitionCount</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">スレッドプール単体での同時接続数</td>
+<td style="text-align:left;">defaultは1。CPUのコア数と揃えたほうが良い。<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></td>
+</tr>
+<tr>
+<td style="text-align:left;">maxConnectionsPerPartition</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">partitionごとに作られる最大同時接続数</td>
+<td style="text-align:left;">defaultは30。</td>
+</tr>
+<tr>
+<td style="text-align:left;">minConnectionsPerPartition</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">partitionごとに同時接続開始数</td>
+<td style="text-align:left;">defaultは5</td>
+</tr>
+<tr>
+<td style="text-align:left;">acquireIncrement</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">接続が切れそうになるとBoneCPが接続を新たに生成する数。partiticonごとに作用する。</td>
+<td style="text-align:left;">defaultは1</td>
+</tr>
+<tr>
+<td style="text-align:left;">acquireRetryAttempts</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">接続試行回数</td>
+<td style="text-align:left;">defaultは10</td>
+</tr>
+<tr>
+<td style="text-align:left;">acquireRetryDelay</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">接続に失敗して次の試行までの待ち時間</td>
+<td style="text-align:left;">defaultは1000。単位はMillSeconds</td>
+</tr>
+<tr>
+<td style="text-align:left;">connectionTimeout</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">getConnetionを呼び出してからタイムアウトするまでの待ち時間</td>
+<td style="text-align:left;">defaultは1000。単位はMillSeconds</td>
+</tr>
+<tr>
+<td style="text-align:left;">idleMaxAge</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">接続が閉じられるまで使われていない接続を維持する時間。</td>
+<td style="text-align:left;">defaultは1000 * 60 * 10。単位はMillSeconds。つまりdefaultはアイドル時間が10分。</td>
+</tr>
+<tr>
+<td style="text-align:left;">maxConnectionAge</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">接続を強制的に閉じるための判断に使う時間。ここで指定された時間を超えて存在する接続はアイドルであるか否かを問わず閉じられる。プールに戻されるまでは使用中の接続には影響しない</td>
+<td style="text-align:left;">defaultは1000 * 60 * 60。単位はMillSeconds。つまりdefaultでは生成から60分を超えた接続は閉じられる。</td>
+</tr>
+<tr>
+<td style="text-align:left;">disableJMX</td>
+<td style="text-align:left;">Boolean</td>
+<td style="text-align:left;">JMXを有効に<strong>しない</strong>かどうか</td>
+<td style="text-align:left;">defaultはtrue。つまり有効にしない。</td>
+</tr>
+<tr>
+<td style="text-align:left;">statisticsEnabled</td>
+<td style="text-align:left;">Boolean</td>
+<td style="text-align:left;">統計情報の出力を有効にするかどうか(？)</td>
+<td style="text-align:left;">defaultはfalse</td>
+</tr>
+<tr>
+<td style="text-align:left;">idleConnectionTestPeriod</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">DBにテストクエリを送出するまで接続のアイドルを維持する時間。</td>
+<td style="text-align:left;">defaultは1000 * 60。単位はMillSeconds。つまりdefaultは1分。</td>
+</tr>
+<tr>
+<td style="text-align:left;">disableConnectionTracking</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">connection trackingを有効に<strong>しないか</strong>どうか</td>
+<td style="text-align:left;">defaultはtrue</td>
+</tr>
+<tr>
+<td style="text-align:left;">queryExecuteTimeLimit</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">クエリをロギングするかどうかの基準となる時間。この指定時間を超えたクエリはロギングされる。</td>
+<td style="text-align:left;">defaultはゼロ。つまりどれだけ時間がかかってもロギングしない。単位はMillSeconds</td>
+</tr>
+</tbody>
+</table>
+
+
+<a name="L.................."></a>
+<h3>その他の設定</h3>
+
+<p>初期値が設定されていないが、それはおそらくドライバ依存だからだと思う。</p>
+
+<p>ラベルのプレフィクスには<code>db.<em>dbName</em>.</code>がつく。</p>
+
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">ラベル        </th>
+<th style="text-align:left;"> 設定値の型     </th>
+<th style="text-align:left;"> 概要           </th>
+<th style="text-align:left;"> メモ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">initSQL</td>
+<td style="text-align:left;">String</td>
+<td style="text-align:left;">接続が確立されるときに一度だけ実行されるSQL。これは接続ごとに実行される。</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left;">logStatements</td>
+<td style="text-align:left;">Boolean</td>
+<td style="text-align:left;">SQLをロギングするかどうか</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left;">connectionTestStatement</td>
+<td style="text-align:left;">String</td>
+<td style="text-align:left;">接続テストのために実行されるクエリ</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left;">jndiName</td>
+<td style="text-align:left;">String</td>
+<td style="text-align:left;">JNDIネームスペースの指定</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+
+<a name="L........."></a>
+<h2>おまけ</h2>
+
+<p>DB接続文字列の正規表現</p>
+
+<pre><code class="scala">val PostgresFullUrl = "^postgres://([a-zA-Z0-9_]+):([^@]+)@([^/]+)/([^\\s]+)$".r
+val MysqlFullUrl = "^mysql://([a-zA-Z0-9_]+):([^@]+)@([^/]+)/([^\\s]+)$".r
+val MysqlCustomProperties = ".*\\?(.*)".r
+val H2DefaultUrl = "^jdbc:h2:mem:.+".r
+</code></pre>
+
+<p><a href="https://github.com/playframework/playframework/blob/master/framework/src/play-jdbc/src/main/scala/play/api/db/DB.scala#L344-L347">ここで使われている</a></p>
+
+<p>MySQLの場合は以下が自動的に付与される</p>
+
+<pre><code>?useUnicode=yes&amp;characterEncoding=UTF-8&amp;connectionCollation=utf8_general_ci
+</code></pre>
+<div class="footnotes">
+<hr/>
+<ol>
+<li id="fn:1">
+<p><a href="http://stackoverflow.com/questions/14445129/a-better-explanation-for-partitioncount-in-bonecp">A better explanation for partitionCount in BoneCP</a><a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
+</ol>
+</div>
+
+]]></content>
+  </entry>
+  
+</feed>

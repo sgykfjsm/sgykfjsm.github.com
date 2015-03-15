@@ -1,0 +1,294 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>区切り文字がASCII 001なファイルを扱う - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="awsのhiveでS3に直接ファイルを出力すると区切り文字がASCII 001(Ctrl + A)になる。
+ASCII文字なので、普通にcatしてもパッと見は区切りが無いように見えるがvimなどで開いてみると以下のように見える。 1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+# &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.com/blog/2013/04/29/ascii-delimiter">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.com" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">区切り文字がASCII 001なファイルを扱う</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2013-04-29T00:20:00+09:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>29</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>12:20 am</span></time>
+        
+        
+          
+           | <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/edit/master/source/_posts/2013-04-29-ascii-delimiter.markdown">Edit</a>
+          
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>awsのhiveでS3に直接ファイルを出力すると区切り文字がASCII 001(Ctrl + A)になる。<br>
+ASCII文字なので、普通にcatしてもパッと見は区切りが無いように見えるがvimなどで開いてみると以下のように見える。<br></p>
+
+<!-- more -->
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="c"># 普通にcatすると以下のように見える</span>
+</span><span class='line'><span class="c"># hadoop@xxxxxxx:~$ hadoop dfs -cat s3://xxxxxxxxxx/export/20130428/000000</span>
+</span><span class='line'><span class="c"># 13/04/28 15:11:56 INFO s3native.NativeS3FileSystem: Opening &#39;s3://xxxxxxxxxx/export/20130428/000000&#39; for reading</span>
+</span><span class='line'><span class="c"># 27882858018</span>
+</span><span class='line'><span class="c"># 2783112276000</span>
+</span><span class='line'><span class="c"># 277864377980</span>
+</span><span class='line'><span class="c"># vimで開くと以下のように見える</span>
+</span><span class='line'>278828&lt;01&gt;5801&lt;01&gt;8
+</span><span class='line'>278311&lt;01&gt;227600&lt;01&gt;0
+</span><span class='line'>277864&lt;01&gt;37798&lt;01&gt;0
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>これをダウンロードしてローカルで取り扱う場合は以下の様な方法がある。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="o">[</span>sgyk@fujishima<span class="o">]</span> 13-04-29 0:19:48 /tmp
+</span><span class='line'><span class="nv">$ </span>awk -F<span class="s2">&quot;\001&quot;</span> <span class="s1">&#39;{print $1&quot;, &quot;$2&quot;, &quot;$3}&#39;</span> 000000
+</span><span class='line'>278828, 5801, 8
+</span><span class='line'>278311, 227600, 0
+</span><span class='line'>277864, 37798, 0
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>要するにawkで区切り文字を<code>\001</code>で指定できるよ、っていうだけ。<br>
+なお、使用したawkのバージョンは以下のとおり。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="o">[</span>sgyk@fujishima<span class="o">]</span> 13-04-29 0:36:49 /tmp
+</span><span class='line'><span class="nv">$ </span>awk --version
+</span><span class='line'>GNU Awk 4.0.2
+</span><span class='line'>Copyright <span class="o">(</span>C<span class="o">)</span> 1989, 1991-2012 Free Software Foundation.
+</span><span class='line'>
+</span><span class='line'>This program is free software<span class="p">;</span> you can redistribute it and/or modify
+</span><span class='line'>it under the terms of the GNU General Public License as published by
+</span><span class='line'>the Free Software Foundation<span class="p">;</span> either version <span class="m">3</span> of the License, or
+</span><span class='line'><span class="o">(</span>at your option<span class="o">)</span> any later version.
+</span><span class='line'>
+</span><span class='line'>This program is distributed in the hope that it will be useful,
+</span><span class='line'>but WITHOUT ANY WARRANTY<span class="p">;</span> without even the implied warranty of
+</span><span class='line'>MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+</span><span class='line'>GNU General Public License <span class="k">for</span> more details.
+</span><span class='line'>
+</span><span class='line'>You should have received a copy of the GNU General Public License
+</span><span class='line'>along with this program. If not, see http://www.gnu.org/licenses/.
+</span></code></pre></td></tr></table></div></figure>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2013-04-29T00:20:00+09:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>29</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>12:20 am</span></time>
+      <span class="categories">full history <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/commit/master/source/_posts/2013-04-29-ascii-delimiter.markdown">here</a></span>
+
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/ascii/'>ascii</a>, <a class='category' href='/blog/categories/awk/'>awk</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/04/15/lean-analytics/" title="Previous Post: リーン・アナリティクス入門に行ってきた">&laquo; リーン・アナリティクス入門に行ってきた</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/05/21/install-gitflow-to-equals-windows/" title="Next Post: windowsにgit-flowをインストールする">windowsにgit-flowをインストールする &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

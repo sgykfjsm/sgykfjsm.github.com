@@ -1,0 +1,524 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>第7回Jenkins勉強会に参加した - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="概要(http://connpass.com/event/1690/ からコピペ) Jenkins勉強会も回を重ね、ついに7回目となりました。今回は、これまであまり事例が出てこなかった組み込み系、もしくはC/C++のプロジェクトでJenkinsを利用している方からの発表を中心にお送りいたします。 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.com/blog/2013/02/04/jenkins-study">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.com" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">第7回Jenkins勉強会に参加した</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2013-02-04T08:44:55+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>4</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>8:44 am</span></time>
+        
+        
+          
+           | <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/edit/master/source/_posts/2013-02-03-jenkins-study.mkd">Edit</a>
+          
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>概要(<a href="http://connpass.com/event/1690/">http://connpass.com/event/1690/</a> からコピペ)</p>
+
+<blockquote><p>Jenkins勉強会も回を重ね、ついに7回目となりました。今回は、これまであまり事例が出てこなかった組み込み系、もしくはC/C++のプロジェクトでJenkinsを利用している方からの発表を中心にお送りいたします。
+日時：2013年1月28日(月) 19:00-21:00
+場所：オラクル青山センター
+ハッシュタグ：#jenkinsstudy</p></blockquote>
+
+<p>togetter: <a href="http://togetter.com/li/446487">http://togetter.com/li/446487</a></p>
+
+<p>今回は組み込み系とのことで、自分はWeb系の人間だけれども、今後の参考とするべく参加した。
+業界は違えど、Jenkinsで品質を改善していくことに違いはないと思ったので。</p>
+
+<p>以下、メモ書き。</p>
+
+<!-- more -->
+
+
+<a name="L..............................................................................................................................................................."></a>
+<h2>「最近作っているプラグインの紹介：レシピプラグイン、リモートターミナルプラグイン、データベースプラグイン」</h2>
+
+<ul>
+<li>川口さん</li>
+<li>DBプラグイン
+
+<ul>
+<li>すべてをXMLに保存するのは無理がある。とのことが多かった。
+
+<ul>
+<li>テストデータの保存</li>
+<li>成果物が500MB超えるとJenkinsのBackupが取れなくなる</li>
+<li>高機能クーロンとして分刻みで起動するジョブを数千レベルで使うとIノードを食いつぶしてしまう。
+  TODO: 下の2つについてはよくわからなかったので要調査</li>
+</ul>
+</li>
+<li>テストデータの保存とか
+
+<ul>
+<li>XMLでなくなることで起動・クエリ速度の工場</li>
+<li>大規模インスタンスへの対応</li>
+</ul>
+</li>
+<li>インフラとしてコアでDBを提供するようにした。
+
+<ul>
+<li>Jenkins全体用</li>
+<li>プロジェクト毎用
+  このへんは実際のコードを少し見せてくれて説明していた。</li>
+</ul>
+</li>
+<li>JPA2サポート
+
+<ul>
+<li>DBを利用するプラグインへの部品提供
+
+<ul>
+<li>２つほど機能名？がスライドにあったが、メモれず…。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>施策として標準UIの提供を行った。</li>
+</ul>
+</li>
+<li>レシピ・プラグイン（凄い）
+
+<ul>
+<li>ユーザ：プラグインを使ってみたいけど、使い方がわからない。</li>
+<li>開発者：使って欲しいのでデモを提供したい
+（ここで実際にデモが行われた）</li>
+<li>エクスポートするレシピはコミュニティサーバに公開することも可能。</li>
+<li>インポートする側はエクスポートされたデータにプラグインの情報が含まれているので、あまり細かいことは気にしなくて良さそう。とりあえず使ってみるか、という事に対して敷居が下がる。</li>
+</ul>
+</li>
+<li>ターミナル・プラグイン（ヤバイ）
+
+<ul>
+<li>JenkinsでこけるジョブをJenkins上でデバッグできるようにするためのターミナルエミュレータ</li>
+<li>GUI上でターミナル画面が出てくる。</li>
+<li>SSHでのアクセスもできる。</li>
+<li>原因究明をより直接的に行えるようになる。</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="L.................................Jenkins.................."></a>
+<h2>「組み込み業界よくあるJenkins環境構築例」</h2>
+
+<ul>
+<li>天久さん</li>
+<li>結論からいうと、組込み業界だから特別な何かがあるわけではなく、環境や構成としては一般的なものが多い（主観）。</li>
+<li>最近、組込み業界ではJenkinsに関する問い合わせが増えてきている。</li>
+<li>というのも、ググっても組込み業界の事例が少ないし、エンタープライズ系の話ばかり。</li>
+<li>組込み業界っぽいところとしては、クロスコンパイルにJenkinsを使う。</li>
+<li>ビルド・静的テスト・単体テストまでは自動化（ビルドパイプライン）しておいて、ブランチのマージは手動でやることが多い。</li>
+<li>開発拠点が複数にまたがる場合はクラウド上にJenkinsを構築することもある。</li>
+<li>まだやってないこととしては、Jenkinsから実機での単体テスト自動化とソースコードレビュー
+
+<ul>
+<li>実機は準備が大変</li>
+<li>何千というケースを行うには期待するパフォーマンスが出ない
+
+<ul>
+<li>モバイルではAndroidのデバイスをつなげての自動化が進んでいる模様</li>
+</ul>
+</li>
+<li>ユーザのニーズ</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="L...........................Jenkins........."></a>
+<h2>「キヤノンにおけるJenkins状況」</h2>
+
+<ul>
+<li>馬場さん</li>
+<li>Jenkins導入の経緯
+
+<ul>
+<li>品質向上・テスト自動化は大きな課題</li>
+<li>CIツールとしてJenkinsの導入</li>
+<li>社内でデモサイトを作ったり、セミナーを実施したり。</li>
+</ul>
+</li>
+<li>開発部隊のテーマ・チームは大小様々で、中身も色々。</li>
+<li>C/C++が大半。環境ツールは標準化。でも…</li>
+<li>Jenkinsの全体構成
+
+<ul>
+<li>チームごとにマスターを分散
+
+<ul>
+<li>セキュリティや使い勝手を優先させるため。</li>
+</ul>
+</li>
+<li>同一マシンでマスター/スレイブが同居
+
+<ul>
+<li>マスターでのビルドは禁止！！</li>
+</ul>
+</li>
+<li>同一マシンで複数のマスター
+
+<ul>
+<li>スレイブの台数を稼ぐため。
+
+<ul>
+<li>とりあえずやってみようという取り組み</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>細かい構成の調整はこれから。</li>
+</ul>
+</li>
+<li>Summary Reportプラグインを内製した。
+
+<ul>
+<li>ビルド結果のサマリーのみをレポート</li>
+<li>履歴レポート</li>
+<li>ダッシュボード　←　これが内製化の大きな理由</li>
+</ul>
+</li>
+<li>各チームのJenkninsからビルド情報をREST APIで取得
+
+<ul>
+<li>グラフ表示など（ジョブ数、ビルド数、不可とか、コードカバレッジとか）</li>
+<li>でもデータがとれていなかったり、ジョブの粒度がマチマチだったり</li>
+<li>チームを横断して、様々な指標・数値を一覧にしてレポーティングできるようにしている。</li>
+<li>あるチームを取り出して、推移グラフを見たりしている。</li>
+<li>データを収集して、特異な状況での原因究明に役立てている。</li>
+</ul>
+</li>
+<li>全体傾向
+
+<ul>
+<li>チームでのばらつきは多いが、概ね有効に活動できている。</li>
+<li>Jenkinsでの手動ビルドも人気（テスト対象が多いので）</li>
+<li>関係各社とのジョブ共有も徐々に進展</li>
+<li>一部チームは苦戦している。
+
+<ul>
+<li>改善しつつある。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>問題
+
+<ul>
+<li>カスタムワークスペース利用が結構多い（同じ場所で異なるビルド）
+
+<ul>
+<li>クリーンビルドが確保できていないかもしれない。</li>
+</ul>
+</li>
+<li>沢山ビルド、でも結果をちゃんと見ていない。</li>
+<li>ツールが活用できていなかったり。</li>
+</ul>
+</li>
+<li>ゴール=「継続的テスト」
+
+<ul>
+<li>現実的には「テストセカンド」
+
+<ul>
+<li>本当はファーストだけど、最悪テストラストにはならないで欲しいという思い。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Q&amp;A
+
+<ul>
+<li>事業部に展開できていないのはなんで？（話の対象は開発本部だった）
+
+<ul>
+<li>まだ周知できていない。事業部との仕事のやり方の違いか？でも今は導入に向けて調整中。</li>
+</ul>
+</li>
+<li>導入前後の違いは？
+
+<ul>
+<li>Jenkins導入前
+
+<ul>
+<li>内製のものだと情報がないので、ユーザがだんだんと使わなくなってくる。</li>
+</ul>
+</li>
+<li>Jenkins導入後
+
+<ul>
+<li>情報が多く、プラグインが豊富。遊び心もある。ユーザ利用のモチベーションが高くなる。
+*（３つ目を聞き逃した…）</li>
+</ul>
+</li>
+<li>Jenkinsボードは公開する？
+
+<ul>
+<li>色々あるけど、ライセンス的にみんなが使えるようになると嬉しい。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="L...Jenkins..........................................Eclipse...C................................Jenkins..........................."></a>
+<h2>「Jenkinsを使うようになったきっかけ、EclipseのC++プロジェクトを簡単にJenkinsでビルドする方法」</h2>
+
+<ul>
+<li>@atottoさん</li>
+<li><a href="http://www.slideshare.net/atotto/jenkins-study720130128">資料</a></li>
+<li><a href="http://atotto.hatenadiary.jp/entry/2013/01/28/183550">補足資料</a></li>
+<li>きっかけ
+
+<ul>
+<li>ビルドが手作業</li>
+<li>テストコードが無い（デバッガベース）</li>
+<li>悲惨な毎日</li>
+</ul>
+</li>
+<li>EclipseでC++
+
+<ul>
+<li>依存関係は自動生成される（Makefileに記述されるらしい）</li>
+<li>Headless Buildでコマンドラインビルドができる</li>
+<li>Jenkinsと連携できる</li>
+<li>細かい手順等は<a href="http://htn.to/iyFo9q">ブログ</a>を参照</li>
+</ul>
+</li>
+<li>導入後
+
+<ul>
+<li>すべての手順をJenkinsに詰め込む
+
+<ul>
+<li>何かあったらJenkinsに聞けば良い。ただし、手順書だよりになるかも？</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>便利なプラグイン
+
+<ul>
+<li><a href="https://wiki.jenkins-ci.org/display/JENKINS/Task+Scanner+Plugin">Task Scanner</a>
+
+<ul>
+<li>コード中のタスクを集計</li>
+</ul>
+</li>
+<li><a href="https://wiki.jenkins-ci.org/display/JENKINS/Warnings+Plugin">Warings Plugin</a></li>
+</ul>
+</li>
+<li>困ってること
+
+<ul>
+<li>テストの完全自動化
+
+<ul>
+<li>実機ベースとかシリアル通信とか。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Q&amp;A
+
+<ul>
+<li>Eclipse CDTとJenkinsの可能性
+
+<ul>
+<li>EclipseとJenkinsが対話して、Eclipseが持っている情報をJenkinsが引き出せるのでは？</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<hr>
+
+
+<p>まとめるのが凄い遅くなってしまった…</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2013-02-04T08:44:55+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>4</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>8:44 am</span></time>
+      <span class="categories">full history <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/commit/master/source/_posts/2013-02-03-jenkins-study.mkd">here</a></span>
+
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/jenkins/'>jenkins</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/02/04/first-post/" title="Previous Post: githubとoctpressでブログを構築する">&laquo; githubとoctpressでブログを構築する</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/02/17/developer-summit/" title="Next Post: デブサミ2013に参加した">デブサミ2013に参加した &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

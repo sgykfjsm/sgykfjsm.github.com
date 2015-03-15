@@ -1,0 +1,268 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Scalatraについて調べた - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="最近、PHPのSilexを再び触り始めたこともあって、Scalaのマイクロフレームワークをちょっと探してみたら、Scalatraというものを見つけた。 Scalatra is a simple, accessible and free web micro-framework. It &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.com/blog/2013/02/20/scalatra-introduction">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.com" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">Scalatraについて調べた</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2013-02-20T23:19:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>20</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>11:19 pm</span></time>
+        
+        
+          
+           | <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/edit/master/source/_posts/2013-02-20-scalatra-introduction.markdown">Edit</a>
+          
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>最近、PHPの<a href="http://silex.sensiolabs.org/">Silex</a>を再び触り始めたこともあって、Scalaのマイクロフレームワークをちょっと探してみたら、<a href="http://www.scalatra.org/">Scalatra</a>というものを見つけた。</p>
+
+<blockquote><p>Scalatra is a simple, accessible and free web micro-framework.</p>
+
+<p>It combines the power of the JVM with the beauty and brevity of Scala, helping you quickly build high-performance web sites and APIs.</p></blockquote>
+
+<!-- more -->
+
+
+<a name="Scalatra........."></a>
+<h2>Scalatraの特徴</h2>
+
+<p>InfoQの記事<a href="http://www.infoq.com/jp/news/2010/10/scalatra">&ldquo;Scalatra: Sinatraに似たScalaのウェブフレームワーク&rdquo;</a>および公式の&#8221;Why would you want to use Scalatra?&ldquo;より。超訳。</p>
+
+<ul>
+<li>RubyのSinatraの原則を踏襲している。</li>
+<li>マイクロフレームワーク。</li>
+<li>Restfulでステートレス。</li>
+<li><a href="http://bbc.co.uk/">BBC</a>とか<a href="http://www.linkedin.com/">LinkedIn</a>、<a href="http://www.guardian.co.uk/">Guardin newspaper</a>とかで使われてるらしい。</li>
+<li>手軽にハイ・パフォーマンスでスケーラブルなHTTP APIをWeb用やモバイル用に作れるらしい。</li>
+<li><a href="http://backbonejs.org/">backbone.js</a>とか<a href="http://emberjs.com/">ember.js</a>とか<a href="http://angularjs.org/">angular.js</a>とかと相性が良いらしい。</li>
+<li><a href="http://www.scala-lang.org/">Scala</a>を学ぶのにいいんじゃない？</li>
+<li>16コアをフルに使うことができるので、<a href="http://akka.io/">Akka Actors</a>を楽に使えるよ。</li>
+</ul>
+
+
+<p>後は<a href="http://www.scalatra.org/2.2/guides/scalatra-philosophy.html">Scalatra&rsquo;s philosophy</a>を見とけば良いのかな。</p>
+
+<a name="L.................."></a>
+<h2>ライブラリ類</h2>
+
+<p>公式が主に使ってそうなやつをデファクトのライブラリだとして、
+<a href="https://github.com/scalatra/scalatra">scalatra / scalatra</a>を見て勝手に判断した。</p>
+
+<a name="Test.Framework"></a>
+<h3>Test Framework</h3>
+
+<p><a href="">Specs2</a>を使っている模様（<a href="https://github.com/scalatra/scalatra/tree/develop/test/src/test/scala/org/scalatra/test">※</a>）。
+ただ、ちょっとテストコードが少ないような…他にもある？</p>
+
+<a name="Template.Engine"></a>
+<h3>Template Engine</h3>
+
+<p><a href="http://scalate.fusesource.org/">Scalate</a>を<a href="https://github.com/scalatra/scalatra/tree/develop/example/src/main/scala/org/scalatra">Example</a>で使っている。<br/>一方で、<a href="https://github.com/scalatra/scalatra-website-examples">scalatra-website-examples</a>では、<a href="https://github.com/spray/twirl">twirl</a>を使ってたりするので、どちらかを使えればいいのだろう。なお、twirlは<a href="http://www.playframework.com/">Play Framework</a>で採用でされているようなので、こっちを使えるようになっておくと潰しが効くかもしれない。</p>
+
+<a name="Database.Access"></a>
+<h3>Database Access</h3>
+
+<p>DBアクセスというかは、永続層的なアレ。</p>
+
+<p>公式の<a href="https://github.com/scalatra/scalatra-website-examples">scalatra-website-examples</a>では<a href="https://github.com/scalatra/scalatra-website-examples/tree/master/2.2/persistence/scalatra-slick">scalatra-slick</a>として紹介されているが、要は普通に<a href="http://slick.typesafe.com/">Slick</a>も使えますよ、ということ。
+一方、<a href="">Squeryl</a>も<a href="https://github.com/futurechimp/ScalatraSqueryl">紹介されている</a>が、このへんはやっぱりSlickがType Safe社謹製なので、Slickを素直に使うほうが無難っぽい。</p>
+
+<a name="L........."></a>
+<h2>おまけ</h2>
+
+<p>ちょっと古いけど、UstにScalatraの解説動画があった。</p>
+
+<iframe width="480" height="392" src="http://www.ustream.tv/embed/recorded/20640292?v=3&amp;wmode=direct" scrolling="no" frameborder="0" style="border: 0px none transparent;">    </iframe>
+
+
+<p><br /><a href="http://www.ustream.tv/" style="padding: 2px 0px 4px; width: 400px; background: #ffffff; display: block; color: #000000; font-weight: normal; font-size: 10px; text-decoration: underline; text-align: center;" target="_blank">Video streaming by Ustream</a></p>
+
+<p>同じ人が<a href="http://seratch.hatenablog.jp/entry/20120219/1329641786">ブログ上でソースコードリーディング</a>してた。必読。</p>
+
+<hr/>
+
+
+<p>他にも押さえないといけないことはあると思うが、とりあえずはこんなところでそろそろScalatraを触ってみようと思う。
+個人的にはOAuthあたりを標準でサポートしてくれると嬉しいんだけど、そのへんは自分で実装するしかないかなー。</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2013-02-20T23:19:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>20</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>11:19 pm</span></time>
+      <span class="categories">full history <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/commit/master/source/_posts/2013-02-20-scalatra-introduction.markdown">here</a></span>
+
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/scala/'>scala</a>, <a class='category' href='/blog/categories/scalatra/'>scalatra</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/02/17/developer-summit2/" title="Previous Post: デブサミ2013に参加した　その２">&laquo; デブサミ2013に参加した　その２</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/02/22/scalatra-tutorial-001/" title="Next Post: scalatraでいろいろやる その１">scalatraでいろいろやる その１ &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

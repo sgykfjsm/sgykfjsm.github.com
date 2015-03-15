@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: s3 | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/s3/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[ec2にfluentdをインストールする]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2013/08/11/fluentd-on-ec2-with-s3/"/>
+    <updated>2013-08-11T02:23:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2013/08/11/fluentd-on-ec2-with-s3</id>
+    <content type="html"><![CDATA[<a name="L......"></a>
+<h2>目的</h2>
+
+<p>fluentdをec2に導入してS3にアップロードする。</p>
+
+<a name="L......"></a>
+<h2>導入</h2>
+
+<p>送出側と収集側はどちらもm1.micro、Amazon Linuxで用意した。<br>
+手順は公式の<a href="http://docs.fluentd.org/articles/install-by-rpm">Installing Fluentd Using rpm Package</a>に従った。</p>
+
+<!-- more -->
+
+
+<a name="L........................................................."></a>
+<h3>ファイルディスクリプタの数を変更する。</h3>
+
+<pre><code>[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo cp -p /etc/security/limits.conf /etc/security/limits.conf.org
+[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo vim /etc/security/limits.conf
+[ec2-user@ip-xx-xxx-xxx-xxx ~]$ diff /etc/security/limits.conf.org /etc/security/limits.conf
+49a50,54
+&gt; root soft nofile 65536
+&gt; root hard nofile 65536
+&gt; * soft nofile 65536
+&gt; * hard nofile 65536
+[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo shutdown -r now
+# 再起動完了後に再度ログイン
+[ec2-user@ip-xx-xxx-xxx-xxx ~]$ ulimit -n
+65536
+</code></pre>
+
+<a name="L....................................................................."></a>
+<h3>ネットワークカーネルのパラメータ値を追加する。</h3>
+
+<pre><code>[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo cp -p /etc/sysctl.conf /etc/sysctl.conf.org
+[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo vim /etc/sysctl.conf
+[ec2-user@ip-xx-xxx-xxx-xxx ~]$ diff /etc/sysctl.conf.org /etc/sysctl.conf
+40a41,45
+&gt;
+&gt; net.ipv4.tcp_tw_recycle = 1
+&gt; net.ipv4.tcp_tw_reuse = 1
+&gt; net.ipv4.ip_local_port_range = 10240    65535
+&gt;
+[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo sysctl -w
+</code></pre>
+
+<a name="L.............................................td-agent.............................."></a>
+<h3>インストールスクリプトを使ってtd-agentをインストールする。</h3>
+
+<p>大雑把に言うと、td-agentはfluentdの安定稼働版のようなもの。細かな違いは<a href="http://docs.fluentd.org/articles/faq#what-is-the-difference-with-td-agent-and-fluentd">What is the difference with td-agent and Fluentd?</a>を参照のこと。</p>
+
+<pre><code>[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo curl -L http://toolbelt.treasure-data.com/sh/install-redhat.sh | sh
+# 省略
+Installed:
+  td-agent.x86_64 0:1.1.15-0
+
+Dependency Installed:
+  compat-libtermcap.x86_64 0:2.0.8-49.2.amzn1 compat-readline5.x86_64 0:5.2-17.3.amzn1 openssl098e.x86_64 0:0.9.8e-17.8.amzn1
+  td-libyaml.x86_64 0:0.1.4-1
+
+Complete!
+</code></pre>
+
+<a name="L......"></a>
+<h3>起動</h3>
+
+<pre><code>[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo /etc/init.d/td-agent start
+Starting td-agent:                                         [  OK  ]
+</code></pre>
+
+<p>試しにサンプルログをPOSTしてみる。</p>
+
+<pre><code>[ec2-user@ip-xx-xxx-xxx-xxx ~]$ curl -X POST -d 'json={"json":"message"}' http://localhost:8888/debug.test
+[ec2-user@ip-xx-xxx-xxx-xxx ~]$ cat /var/log/td-agent/td-agent.log
+2013-08-10 09:49:33 +0000 [info]: starting fluentd-0.10.36
+2013-08-10 09:49:33 +0000 [info]: reading config file path="/etc/td-agent/td-agent.conf"
+2013-08-10 09:49:33 +0000 [info]: using configuration file: &lt;ROOT&gt;
+  &lt;match td.*.*&gt;
+    type tdlog
+    apikey YOUR_API_KEY
+    auto_create_table
+    buffer_type file
+    buffer_path /var/log/td-agent/buffer/td
+  &lt;/match&gt;
+  &lt;match debug.**&gt;
+    type stdout
+  &lt;/match&gt;
+  &lt;source&gt;
+    type forward
+  &lt;/source&gt;
+  &lt;source&gt;
+    type http
+    port 8888
+  &lt;/source&gt;
+  &lt;source&gt;
+    type debug_agent
+    bind 127.0.0.1
+    port 24230
+  &lt;/source&gt;
+&lt;/ROOT&gt;
+2013-08-10 09:49:33 +0000 [info]: adding source type="forward"
+2013-08-10 09:49:33 +0000 [info]: adding source type="http"
+2013-08-10 09:49:33 +0000 [info]: adding source type="debug\_agent"
+2013-08-10 09:49:33 +0000 [info]: adding match pattern="td.\*.\*" type="tdlog"
+2013-08-10 09:49:33 +0000 [info]: adding match pattern="debug.\*\*" type="stdout"
+2013-08-10 09:49:33 +0000 [info]: listening fluent socket on 0.0.0.0:24224
+2013-08-10 09:49:33 +0000 [info]: listening dRuby uri="druby://127.0.0.1:24230" object="Engine"
+2013-08-10 09:50:44 +0000 debug.test: {"json":"message"}
+</code></pre>
+
+<a name="Development.tools..............."></a>
+<h3>Development toolsを入れる。</h3>
+
+<p>fluentdは自分でリポジトリを持っており、各種プラグインはそれを使ってインストールする。
+最初にそのリポジトリをupdateするが、その際に必要となる諸々をDevelopment toolsを導入することで解決しておく。</p>
+
+<pre><code>[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo yum groupinstall -y "Development tools"
+Loaded plugins: priorities, security, update-motd, upgrade-helper
+amzn-main                                                                                                       | 2.1 kB     00:00
+amzn-updates                                                                                                    | 2.3 kB     00:00
+Setting up Group Process
+# 省略
+  systemtap-client.x86\_64 0:1.8-7.14.amzn1                        systemtap-devel.x86\_64 0:1.8-7.14.amzn1
+
+Complete!
+</code></pre>
+
+<a name="fluentd.........................................."></a>
+<h3>fluentdのリポジトリを更新しておく。</h3>
+
+<p>プラグインのインストールは必要に応じてしておけば良いので、とりあえずリポジトリを更新しておく。</p>
+
+<pre><code># fluentdを導入した全てのサーバで実施しておくと良い。
+[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo /usr/lib64/fluent/ruby/bin/fluent-gem update
+</code></pre>
+
+<p>結構時間がかかる。</p>
+
+<p>ここまでと同じ作業をもう1台のサーバで行い、サーバ間でログのやり取りが出来るようにしておく。</p>
+
+<a name="L......1......td-agent..........................."></a>
+<h2>もう1つのtd-agentにログを送出する。</h2>
+
+<p>とりあえずtd-agentが正常に導入できて動作も問題無さそうので、もう1つのtd-agentにログを送出する。
+<a href="http://docs.fluentd.org/articles/high-availability">Fluentd High Availability Configuration</a>を参考に設定する。</p>
+
+<p>まずは送出側の設定。</p>
+
+<pre><code># TCP input
+&lt;source&gt;
+  type forward
+  port 24224
+&lt;/source&gt;
+
+# HTTP input
+&lt;source&gt;
+  type http
+  port 8888
+&lt;/source&gt;
+
+# Log Forwarding
+&lt;match sample.**&gt;
+  type forward
+
+  # primary host
+  &lt;server&gt;
+    host 10.147.229.126
+    port 24224
+  &lt;/server&gt;
+
+  # use longer flush_interval to reduce CPU usage.
+  # note that this is a trade-off against latency.
+  flush_interval 60s
+&lt;/match&gt;
+</code></pre>
+
+<p>次に収集側の設定。</p>
+
+<pre><code># Input
+&lt;source&gt;
+  type forward
+  port 24224
+  tag sample.app_log
+&lt;/source&gt;
+
+# Output
+&lt;match sample.app_log&gt;
+  type file
+  path /var/log/fluent/sample.app_Log.log
+  time_slice_format %Y%m%d
+  time_slice_wait 1m
+  # compress gzip
+  utc
+&lt;/match&gt;
+</code></pre>
+
+<p>設定ファイルを書き換えたら、それぞれのtd-agentを再起動する。再起動の際は<code>/var/log/td-agent/td-agent.log</code>をtailしながら行うと、不要な設定をしている際に気づくことができる。</p>
+
+<p>送出側で先ほど試したのと同じcurlコマンドを使って、ログが収集側に来ていることを確認する。
+また、Security Groupで予め設定したポート番号でTCPとUDPのポートを空けておくこと。
+でないと、&#8221;no nodes are available&#8221;が発生する。</p>
+
+<a name="L........................S3.............................."></a>
+<h2>受け取ったログをS3にアップロードする。</h2>
+
+<p>受け手側でログを受け取れることを確認できたら、その受け取ったログをS3にアップロードする。
+まずはプラグインのインストール。</p>
+
+<pre><code>[ec2-user@ip-zz-zzz-zzz-zzz ~]$ sudo /usr/lib64/fluent/ruby/bin/fluent-gem install fluent-plugin-s3
+Successfully installed fluent-plugin-s3-0.3.4
+1 gem installed
+Installing ri documentation for fluent-plugin-s3-0.3.4...
+Installing RDoc documentation for fluent-plugin-s3-0.3.4...
+</code></pre>
+
+<p>ついでにタグを動的に扱うプラグインとプレースホルダとかディレクティブの設定に繰り返し要素を埋め込めるプラグインも入れておく。これらがあると色々捗る。</p>
+
+<pre><code>[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo /usr/lib64/fluent/ruby/bin/fluent-gem install fluent-plugin-forest
+Fetching: fluent-plugin-forest-0.1.4.gem (100%)
+Successfully installed fluent-plugin-forest-0.1.4
+1 gem installed
+Installing ri documentation for fluent-plugin-forest-0.1.4...
+Installing RDoc documentation for fluent-plugin-forest-0.1.4...
+[ec2-user@ip-xx-xxx-xxx-xxx ~]$ sudo /usr/lib64/fluent/ruby/bin/fluent-gem install fluent-plugin-config-expander
+Fetching: fluent-plugin-config-expander-0.1.3.gem (100%)
+  Successfully installed fluent-plugin-config-expander-0.1.3
+  1 gem installed
+  Installing ri documentation for fluent-plugin-config-expander-0.1.3...
+  Installing RDoc documentation for fluent-plugin-config-expander-0.1.3...
+</code></pre>
+
+<p>次に収集側の設定ファイルを以下のようにする。</p>
+
+<pre><code># Input
+&lt;source&gt;
+  type forward
+  port 24224
+&lt;/source&gt;
+
+# Output
+&lt;match sample.*&gt;
+  type forest
+  subtype s3
+  &lt;template&gt; # このディレクティブによって、S3へのアップロード設定がテンプレート化される。
+    aws_key_id XXX
+    aws_sec_key XXX
+    s3_bucket dev.sgyk
+    # http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
+    s3_endpoint s3-ap-northeast-1.amazonaws.com
+    # Fluentd-plugin-forestによって${tag}が送出側で設定したtagの値に展開される。
+    path ${tag}/
+    buffer_path /var/log/td-agent/buffer/${tag}
+    # time_slice_format %Y-%m-%d-%H-%M # To write files every minutes
+    time_slice_format %Y-%m-%d-%H
+    time_slice_wait 60s
+    utc
+  &lt;/template&gt;
+&lt;/match&gt;
+</code></pre>
+
+<p>修正後、td-agentを再起動するとこんなログが出るようになる
+&#8220;`
+2013-08-10 17:11:19 +0000 [info]: out_forest plants new output: s3 for tag &lsquo;sample.app_log&rsquo;
+2013-08-10 17:11:21 +0000 [info]: out_forest plants new output: s3 for tag &lsquo;sample.str_log&rsquo;</p>
+
+<a name="L..........................................curl............"></a>
+<h1>ちなみに送出側で以下のようにcurlしている</h1>
+
+<a name="L..bin.bash"></a>
+<h1>!/bin/bash</h1>
+
+<p>#</p>
+
+<a name="i.0."></a>
+<h1>i=0;</h1>
+
+<a name="str..code.uuidgen...tr.-d..-...code."></a>
+<h1>str=<code>uuidgen | tr -d '-'</code></h1>
+
+<a name="while.true."></a>
+<h1>while(true)</h1>
+
+<a name="do"></a>
+<h1>do</h1>
+
+<a name="curl.-X.POST.-d..json....i..:.i....json..:....RANDOM......http:..localhost:8888.sample.app_log"></a>
+<h1>curl -X POST -d &ldquo;json={&#34;i\&rdquo;:$i, \&ldquo;json\&rdquo;:\&ldquo;${RANDOM}\&rdquo;}&ldquo; <a href="http://localhost:8888/sample.app_log">http://localhost:8888/sample.app_log</a></h1>
+
+<a name="curl.-X.POST.-d..json....i..:.i....str..:....str......http:..localhost:8888.sample.str_log"></a>
+<h1>curl -X POST -d &ldquo;json={&#34;i\&rdquo;:$i, \&ldquo;str\&rdquo;:\&ldquo;${str}\&rdquo;}&ldquo; <a href="http://localhost:8888/sample.str_log">http://localhost:8888/sample.str_log</a></h1>
+
+<a name="i..code.expr..i...1..code."></a>
+<h1>i=<code>expr $i + 1</code></h1>
+
+<a name="sleep.10"></a>
+<h1>sleep 10</h1>
+
+<a name="done"></a>
+<h1>done</h1>
+
+<p>#</p>
+
+<a name="exit.0"></a>
+<h1>exit 0</h1>
+
+<p>&#8220;`</p>
+
+<p>あとは10分ほど経ってから指定したバケットを見に行くとgz形式で出力されているのが確認できる。</p>
+]]></content>
+  </entry>
+  
+</feed>

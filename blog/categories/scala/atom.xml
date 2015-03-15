@@ -1,0 +1,1046 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: scala | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/scala/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[jenkinsでのテスト自動化いろいろ]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2014/01/13/auto-test-on-jenkins/"/>
+    <updated>2014-01-13T12:28:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2014/01/13/auto-test-on-jenkins</id>
+    <content type="html"><![CDATA[<p>jenkins上でテストを実行したい、自動化したいというリクエストが来たので、その設定方法をまとめた。</p>
+
+<p>今回はplay2.2.1のscalaをサンプルプロジェクトととした。</p>
+
+<!-- more -->
+
+
+<a name="L....................."></a>
+<h2>環境の基本情報</h2>
+
+<p>今回はこんな設定で試した。setup.shは結構長いけど、簡単に言うとjdkを入れて、jenkins、apache2とscala2.10のインストール、apache2がjenkinsのフロントエンドとなるように設定しているだけ。</p>
+
+<p><figure class='code'><figcaption><span>Vagrant / vagrantでubuntuを入れて、jenkins,apapcheをセットアップ。</span><a target='_blank' href='https://gist.github.com/8394448'>link</a></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># -*- mode: ruby -*-</span>
+</span><span class='line'><span class="c1"># vi: set ft=ruby :</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># Vagrantfile API/syntax version. Don&#39;t touch unless you know what you&#39;re doing!</span>
+</span><span class='line'><span class="no">VAGRANTFILE_API_VERSION</span> <span class="o">=</span> <span class="s2">&quot;2&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="no">Vagrant</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="no">VAGRANTFILE_API_VERSION</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">config</span><span class="o">|</span>
+</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">box</span> <span class="o">=</span> <span class="s2">&quot;precise&quot;</span>
+</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">box_url</span> <span class="o">=</span> <span class="s2">&quot;/Users/sgyk/local/vagrant/box/precise-server-cloudimg-amd64-vagrant-disk1.box&quot;</span>
+</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">auto_detect</span> <span class="o">=</span> <span class="kp">true</span>
+</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">define</span> <span class="ss">:presice</span> <span class="k">do</span> <span class="o">|</span><span class="n">presice</span><span class="o">|</span>
+</span><span class='line'>    <span class="n">presice</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">hostname</span> <span class="o">=</span> <span class="s2">&quot;precise&quot;</span>
+</span><span class='line'>    <span class="n">presice</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">network</span> <span class="ss">:private_network</span><span class="p">,</span> <span class="ss">ip</span><span class="p">:</span> <span class="s2">&quot;192.168.56.100&quot;</span>
+</span><span class='line'>    <span class="n">presice</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">provider</span> <span class="s2">&quot;virtualbox&quot;</span> <span class="k">do</span> <span class="o">|</span><span class="n">v</span><span class="o">|</span>
+</span><span class='line'>      <span class="n">v</span><span class="o">.</span><span class="n">customize</span> <span class="o">[</span><span class="s2">&quot;modifyvm&quot;</span><span class="p">,</span> <span class="ss">:id</span><span class="p">,</span> <span class="s2">&quot;--memory&quot;</span><span class="p">,</span> <span class="mi">2048</span><span class="o">]</span>
+</span><span class='line'>      <span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;jenkins_presice&quot;</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>    <span class="n">presice</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">synced_folder</span> <span class="s2">&quot;data1&quot;</span><span class="p">,</span> <span class="s2">&quot;/vagrant_data&quot;</span>
+</span><span class='line'>    <span class="n">presice</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">provision</span> <span class="ss">:shell</span><span class="p">,</span> <span class="ss">:path</span> <span class="o">=&gt;</span> <span class="s2">&quot;./setup.sh&quot;</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure><figure class='code'><figcaption><span>setup.sh / vagrantでubuntuを入れて、jenkins,apapcheをセットアップ。</span><a target='_blank' href='https://gist.github.com/8394448'>link</a></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="c">#!/bin/bash</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># ssh setting</span>
+</span><span class='line'>su - vagrant -c <span class="s1">&#39;</span>
+</span><span class='line'><span class="s1">  mkdir -p ${HOME}/.ssh</span>
+</span><span class='line'><span class="s1">  ## for more secure</span>
+</span><span class='line'><span class="s1">  # ssh-keygen -t rsa -q -P &quot;&quot; -f ~/.ssh/id_dsa</span>
+</span><span class='line'>
+</span><span class='line'><span class="s1">  ## sandbox setting</span>
+</span><span class='line'><span class="s1">  wget -q -O ${HOME}/.ssh/id_dsa https://raw.github.com/mitchellh/vagrant/master/keys/vagrant</span>
+</span><span class='line'><span class="s1">  wget -q -O ${HOME}/.ssh/id_dsa.pub https://raw.github.com/mitchellh/vagrant/master/keys/vagrant.pub</span>
+</span><span class='line'>
+</span><span class='line'><span class="s1">  cat $HOME/.ssh/id_dsa.pub &gt;&gt; $HOME/.ssh/authorized_keys</span>
+</span><span class='line'>
+</span><span class='line'><span class="s1">  chmod 700 ${HOME}/.ssh</span>
+</span><span class='line'><span class="s1">  chmod 600 ${HOME}/.ssh/id_dsa*</span>
+</span><span class='line'><span class="s1">&#39;</span>
+</span><span class='line'><span class="c"># ssh speed up</span>
+</span><span class='line'><span class="nb">echo </span>UseDNS no &gt;&gt; /etc/ssh/sshd_config
+</span><span class='line'>
+</span><span class='line'><span class="nb">cd</span> /tmp
+</span><span class='line'>wget -q -O - http://pkg.jenkins-ci.org/debian/jenkins-ci.org.key <span class="p">|</span> sudo apt-key add -
+</span><span class='line'>sudo sh -c <span class="s1">&#39;echo deb http://pkg.jenkins-ci.org/debian binary/ &gt; /etc/apt/sources.list.d/jenkins.list&#39;</span>
+</span><span class='line'>sudo apt-get -fy update
+</span><span class='line'>sudo apt-get -y install git openjdk-7-jdk apache2 jenkins zip unzip
+</span><span class='line'>
+</span><span class='line'><span class="c"># Setting up an Apache Proxy for port 80 -&gt; 8080</span>
+</span><span class='line'>sudo a2enmod proxy
+</span><span class='line'>sudo a2enmod proxy_http
+</span><span class='line'>sudo a2dissite default
+</span><span class='line'>sudo cat <span class="s">&lt;&lt;EOF &gt; /etc/apache2/sites-available/jenkins</span>
+</span><span class='line'><span class="s">&lt;VirtualHost *:80&gt;</span>
+</span><span class='line'><span class="s">    ServerAdmin webmaster@localhost</span>
+</span><span class='line'><span class="s">    ServerName ci.presice.com</span>
+</span><span class='line'><span class="s">    ServerAlias ci</span>
+</span><span class='line'><span class="s">    ProxyRequests Off</span>
+</span><span class='line'><span class="s">    &lt;Proxy *&gt;</span>
+</span><span class='line'><span class="s">        Order deny,allow</span>
+</span><span class='line'><span class="s">        Allow from all</span>
+</span><span class='line'><span class="s">    &lt;/Proxy&gt;</span>
+</span><span class='line'><span class="s">    ProxyPreserveHost on</span>
+</span><span class='line'><span class="s">    ProxyPass / http://localhost:8080/</span>
+</span><span class='line'><span class="s">&lt;/VirtualHost&gt;</span>
+</span><span class='line'><span class="s">EOF</span>
+</span><span class='line'>
+</span><span class='line'>sudo a2ensite jenkins
+</span><span class='line'>sudo apache2ctl restart
+</span><span class='line'>
+</span><span class='line'><span class="c"># scala</span>
+</span><span class='line'><span class="nv">DOWNLOAD_URL</span><span class="o">=</span>http://www.scala-lang.org/files/archive/scala-2.10.3.tgz
+</span><span class='line'><span class="nv">SCALA_TGZ</span><span class="o">=</span><span class="sb">`</span>basename <span class="k">${</span><span class="nv">DOWNLOAD_URL</span><span class="k">}</span><span class="sb">`</span>
+</span><span class='line'><span class="nv">SCALA_DIR</span><span class="o">=</span><span class="sb">`</span>basename <span class="k">${</span><span class="nv">SCALA_TGZ</span><span class="k">}</span> .tgz<span class="sb">`</span>
+</span><span class='line'>wget -q -O /tmp/<span class="k">${</span><span class="nv">SCALA_TGZ</span><span class="k">}</span> <span class="k">${</span><span class="nv">DOWNLOAD_URL</span><span class="k">}</span>
+</span><span class='line'>sudo tar zxf /tmp/<span class="k">${</span><span class="nv">SCALA_TGZ</span><span class="k">}</span> -C /usr/local/
+</span><span class='line'>sudo ln -s /usr/local/<span class="k">${</span><span class="nv">SCALA_DIR</span><span class="k">}</span> /usr/local/scala
+</span><span class='line'>
+</span><span class='line'><span class="c"># setting environment</span>
+</span><span class='line'><span class="nv">SETTING_FILE</span><span class="o">=</span>/etc/profile.d/append_environment_values.sh
+</span><span class='line'><span class="nb">echo</span> <span class="s1">&#39;#!/bin/bash&#39;</span> <span class="p">|</span> sudo tee -a <span class="k">${</span><span class="nv">SETTING_FILE</span><span class="k">}</span>
+</span><span class='line'><span class="nb">echo</span> <span class="s1">&#39;# added by vagrant setup.sh&#39;</span> <span class="p">|</span> sudo tee -a <span class="k">${</span><span class="nv">SETTING_FILE</span><span class="k">}</span>
+</span><span class='line'><span class="nb">echo</span> <span class="p">|</span> sudo tee -a <span class="k">${</span><span class="nv">SETTING_FILE</span><span class="k">}</span>
+</span><span class='line'><span class="nb">echo</span> <span class="s1">&#39;export JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-amd64&#39;</span> <span class="p">|</span> sudo tee -a <span class="k">${</span><span class="nv">SETTING_FILE</span><span class="k">}</span>
+</span><span class='line'><span class="nb">echo</span> <span class="s1">&#39;export SCALA_HOME=/usr/local/scala&#39;</span> <span class="p">|</span> sudo tee -a <span class="k">${</span><span class="nv">SETTING_FILE</span><span class="k">}</span>
+</span><span class='line'><span class="nb">echo</span> <span class="s1">&#39;export PATH=${SCALA_HOME}/bin:${JAVA_HOME}/bin:${PATH}&#39;</span> <span class="p">|</span> sudo tee -a <span class="k">${</span><span class="nv">SETTING_FILE</span><span class="k">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">exit </span>0
+</span></code></pre></td></tr></table></div></figure></p>
+
+<a name="L.................................git......"></a>
+<h2>サンプルプロジェクトのgit設定</h2>
+
+<p>サンプルプロジェクトはPlayframeworkなので、jenkinsがplayコマンドを使えるようにする。</p>
+
+<pre><code>vagrant@precise:~$ wget http://downloads.typesafe.com/play/2.2.1/play-2.2.1.zip
+vagrant@precise:~$ unzip play-2.2.1.zip &gt; /dev/null
+vagrant@precise:~$ cd play-2.2.1/
+vagrant@precise:~/play-2.2.1$ sudo chmod +x play
+vagrant@precise:~/play-2.2.1$ sudo chmod -R a+w framework/
+vagrant@precise:~/play-2.2.1$ sudo chmod -R a+w repository/
+vagrant@precise:~/play-2.2.1$ cd framework/
+vagrant@precise:~/play-2.2.1/framework$ find . -maxdepth 1 -type f | grep -v '.bat' | xargs sudo chmod a+x
+</code></pre>
+
+<p>サンプルプロジェクト用のgitディレクトリを用意する。</p>
+
+<pre><code>vagrant@precise:~$ mkdir git
+vagrant@precise:~$ cd git
+vagrant@precise:~/git$ mkdir play_sample.git
+vagrant@precise:~/git$ cd play_sample.git/
+vagrant@precise:~/git/play_sample.git$ git --bare init
+</code></pre>
+
+<p>このへんぐらいはまではsetup.shに盛り込んでよかったかも。</p>
+
+<p>以下はサンプルプロジェクトの開発場所にて。</p>
+
+<pre><code>[sgyk@fujishima] 14-01-13 4:01:54 ~/local/script/scala/play_sample
+$ git init
+[sgyk@fujishima] 14-01-13 4:01:59 ~/local/script/scala/play_sample (git)-[master] {?}
+$ git add .
+[sgyk@fujishima] 14-01-13 4:02:04 ~/local/script/scala/play_sample (git)-[master] {?}
+$ git commit -m "initial commit"
+[master (root-commit) d3458d3] initial commit
+[sgyk@fujishima] 14-01-13 4:11:23 ~/local/script/scala/play_sample (git)-[master] {?}
+$ git remote add origin ssh://vagrant@presice/home/vagrant/git/play_sample.git
+[sgyk@fujishima] 14-01-13 4:11:24 ~/local/script/scala/play_sample (git)-[master] {?}
+$ git push origin master
+Counting objects: 32, done.
+Delta compression using up to 4 threads.
+Compressing objects: 100% (23/23), done.
+Writing objects: 100% (32/32), 38.22 KiB, done.
+Total 32 (delta 0), reused 0 (delta 0)
+To ssh://vagrant@presice/home/vagrant/git/play_sample.git
+ * [new branch]      master -&gt; master
+</code></pre>
+
+<p>これでgitの準備は完了</p>
+
+<p>ちなみに、通常のsshコマンドでvagrantのVMにアクセスする場合は以下のようにしてsshのconfigに追加しておくと楽。</p>
+
+<pre><code>vagrant ssh-config --host presice &gt;&gt; ~/.ssh/config
+</code></pre>
+
+<p>今回はsshでgitにpushするようにしたので、このように設定しておくとハマりにくくなる。と思う。</p>
+
+<a name="jenkins........."></a>
+<h2>jenkinsの設定</h2>
+
+<p>最初にjenkinsからGitを扱えるようにプラグインをインストールする。左メニュー「Jenkinsの管理」から「プラグインの管理」にアクセスし、「利用可能」タブから「Jenkins GIT plugin」を選択し、「ダウンロードして再起動後にインストール」を押下する。その後、jenkinsを再起動する。</p>
+
+<p>左メニュー「新規ジョブの作成」をクリック。<br>
+ジョブ名を入力、「フリースタイル・プロジェクトのビルド」を選択して、OKを押下する。「ソースコード管理」でGitを選択し、Repository URLを入力する。「適用」、「保存」の順番に押下する。</p>
+
+<p>これでjenkinsへのリポジトリ登録が完了。</p>
+
+<p>ビルドの設定を行う。リストボックスの「ビルド手順の追加」から、「シェルの実行」を選択し、以下の様なシェルを入力する。</p>
+
+<pre><code>#!/bin/bash
+play=/home/vagrant/play-2.2.1/play
+cd ${WORKSPACE}
+
+${play} clean compile test
+
+exit 0
+</code></pre>
+
+<p>jenkinsにはPlayframeworkのプラグインがあるのだけど、うまく実行できなかったので上記のようにシェル実行するようにした。</p>
+
+<p>テスト結果は<code>${PLAY_HOME}/target/test-reports/{ApplicationSpec,IntegrationSpec}.xml</code>に出力されているので、「ビルド後の処理」に「JUnitテスト結果の集計」を追加して、<code>**/target/test-reports/*.xml</code>と入力すればOK。</p>
+
+<p>この設定により、ビルド後、左メニューの「テスト結果」からテスト結果のレポートを見ることができる。</p>
+
+<a name="jenkins............................................................"></a>
+<h3>jenkins上で任意のタイミングでテストを実行する。</h3>
+
+<p><a href="http://yuroyoro.hatenablog.com/entry/2012/12/20/175205">Jenkinsで外部パラメータで与えたブランチを対象にビルドできるようにしておくと凄惨性あがって墓ドル</a>を参考に設定する。</p>
+
+<p>設定画面にて、「ビルドのパラメータ化」にチェックを入れる。「パラメータの追加」というリストボックスで「文字列」を選択し、「名前」、「デフォルト値」、「説明」を適宜入力する。入力を終えたら、とりあえず「適用」をクリックする。</p>
+
+<p>「ソースコード管理」の項目にある「Branches to build」で、「Branch Specifier」の欄を<code>$branch</code>に変更する。</p>
+
+<p>「適用」、「保存」の順にクリックする。</p>
+
+<p>GUIからビルドを実行したい場合は、左メニュー「パラメータ付きビルド」をクリックして、ビルドしたいブランチを設定して、ビルドをクリックする。<br>
+CLIから実行したい場合は、以下のようにcurlを投げると良い。</p>
+
+<pre><code>vagrant@precise:~/local/script$ cat jenkins_build.sh
+#!/bin/bash
+
+JENKINS_JOB_URL=http://192.168.56.100/job/play_sample/buildWithParameters?branch=origin/feature/add_plugin_scct
+
+curl ${JENKINS_JOB_URL}
+
+exit 0
+</code></pre>
+
+<a name="jenkins............................................."></a>
+<h3>jenkins上で定期的にテストを実行する。</h3>
+
+<p>これは簡単で、プロジェクトごとの設定画面から、ビルド・トリガに「定期的に実行」を選択して、cronっぽく設定すればOK。<br>
+ただし、これは固定的な設定なので任意のブランチを選択することはできない。</p>
+
+<a name="L..................push............jenkins................................."></a>
+<h3>リポジトリにpushする度にjenkins上でテストを実行する。</h3>
+
+<p>リポジトリ側の<code>hook/post-receive</code>に以下のようなスクリプトを用意すればOK。微妙にハマったのが、post-receiveに渡される引数は<code>$1</code>, <code>$2</code>のようなコマンドライン引数ではなくて標準入力だということ。で、その標準入力をどう捉えればいいのかが、よくわからなかった。</p>
+
+<pre><code>#!/bin/bash
+while read oldrev newrev refname
+do
+    branch=$(git rev-parse --symbolic --abbrev-ref $refname)
+    echo branch is ${branch}
+    JENKINS_JOB_URL=http://192.168.56.100/job/play_sample/buildWithParameters?branch=origin/${branch}
+    curl ${JENKINS_JOB_URL}
+done
+
+exit 0
+</code></pre>
+
+<p>参考：<a href="http://stackoverflow.com/questions/7351551/writing-a-git-post-receive-hook-to-deal-with-a-specific-branch">Writing a git post-receive hook to deal with a specific branch</a>の<a href="http://stackoverflow.com/a/13057643">http://stackoverflow.com/a/13057643</a>より。</p>
+
+<a name="L........."></a>
+<h2>おまけ</h2>
+
+<p>jenkinsからテストを実行しようとしたら、以下のようなエラーが発生した。</p>
+
+<pre><code>java.io.IOException: No such file or directory
+    at java.io.UnixFileSystem.createFileExclusively(Native Method)
+    at java.io.File.createNewFile(File.java:947)
+    at xsbt.boot.Locks$.apply0(Locks.scala:35)
+    at xsbt.boot.Locks$.apply(Locks.scala:28)
+    at xsbt.boot.Launch.locked(Launch.scala:178)
+    at xsbt.boot.Launch.app(Launch.scala:93)
+    at xsbt.boot.Launch.app(Launch.scala:91)
+    at xsbt.boot.Launch$.run(Launch.scala:51)
+    at xsbt.boot.Launch$$anonfun$explicit$1.apply(Launch.scala:45)
+    at xsbt.boot.Launch$.launch(Launch.scala:65)
+    at xsbt.boot.Launch$.apply(Launch.scala:16)
+    at xsbt.boot.Boot$.runImpl(Boot.scala:32)
+    at xsbt.boot.Boot$.main(Boot.scala:21)
+    at xsbt.boot.Boot.main(Boot.scala)
+Error during sbt execution: java.io.IOException: No such file or directory
+</code></pre>
+
+<p>エラー発生箇所: <a href="https://github.com/harrah/xsbt/blob/0.13/launch/src/main/scala/xsbt/boot/Locks.scala#L35">https://github.com/harrah/xsbt/blob/0.13/launch/src/main/scala/xsbt/boot/Locks.scala#L35</a><br>解説は<a href="http://stackoverflow.com/a/8105883">http://stackoverflow.com/a/8105883</a>を参照。<br>要は、playコマンドがあるディレクトリにファイルとかをつくろうとしたけど、ダメでした、というエラー。なので、以下のように対応すればOK。</p>
+
+<pre><code>vagrant@precise:~/play-2.2.1$ sudo chmod a+x play
+vagrant@precise:~/play-2.2.1$ sudo chmod -R a+w framework/
+vagrant@precise:~/play-2.2.1$ sudo chmod -R a+w repository/
+vagrant@precise:~/play-2.2.1$ cd framework/
+vagrant@precise:~/play-2.2.1/framework$ find . -maxdepth 1 -type f | grep -v '.bat' | xargs sudo chmod a+x
+</code></pre>
+
+<p>また、以下のようなエラーが出る場合がある。</p>
+
+<pre><code>java.io.FileNotFoundException: /var/lib/jenkins/jobs/play_sample/workspace/target/resolution-cache/play_sample/play_sample_2.10/1.0-SNAPSHOT/resolved.xml.xml
+</code></pre>
+
+<p>workspaceを一旦クリアして再ビルドすればOK</p>
+
+<hr />
+
+<p>以上で、任意 / 定期 / push後 のタイミングで自動テストをjenkins上で行なうことが可能となった。また、任意およびpush後のテストは任意のブランチに対して行なうことができるので、サーバ上でバシバシテストを回していくことができるんじゃないかなーと思う。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[業務システムエンジニアのためのHTML5勉強会#04に参加した]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2013/09/10/html5-with-java-meetup/"/>
+    <updated>2013-09-10T00:05:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2013/09/10/html5-with-java-meetup</id>
+    <content type="html"><![CDATA[<p><a href="http://atnd.org/events/42782">業務システムエンジニアのためのHTML5勉強会#04 Web✕Java - HTML5で進化したWeb標準を、Java技術でどう扱うのか？ -</a>という勉強会に参加した。これはそのメモ。メモを取ったのは一部のみ。</p>
+
+<!--more -->
+
+
+<a name="L......Web.........Struts.Java.............."></a>
+<h2>今のWeb標準とStruts/Javaの問題(仮)</h2>
+
+<p>発表者は小川充さん。</p>
+
+<p><strong>NOTE</strong>
+2013/09/12 08:10:33 スライドを追加</p>
+
+<iframe src="http://www.slideshare.net/slideshow/embed_code/26103373" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen webkitallowfullscreen mozallowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="https://www.slideshare.net/mitsuruogawa33/webstruts" title="業務系WebアプリケーションがStrutsから旅立つ日" target="_blank">業務系WebアプリケーションがStrutsから旅立つ日</a> </strong> from <strong><a href="http://www.slideshare.net/mitsuruogawa33" target="_blank">Mitsuru Ogawa</a></strong> </div></p>
+
+<p>実際のタイトルはメモっていない…。atnndからコピペしてるのでもしかしたら違うのかも。今回のテーマのオープニングテーマにふさわしく、現場でのJava開発のしんどいところを端的に問題提起していて、次世代のWebやJavaに期待を寄せていることが伝わった。以下、メモ。</p>
+
+<ul>
+<li>業務系Webアプリには<strong>しっかりとした</strong>バックエンドが必要。
+
+<ul>
+<li>Struts系がよく使われているが、1.x系はEOLを迎えた。</li>
+<li>J2EE+Struts1.xは過去のテクノロジー</li>
+<li>現在のWeb技術要素を取り込んでいない</li>
+<li>業務系Webアプリのガラパゴス化</li>
+</ul>
+</li>
+<li>J2EE + Struts1.x系が必要な要件を満たしていない
+
+<ul>
+<li>独自フレームワークを構築</li>
+<li>ベンダーロックイン</li>
+<li>属人化、ガラパゴス化</li>
+</ul>
+</li>
+<li>ガラパゴスからの脱出を目指す
+
+<ul>
+<li>標準化</li>
+<li>Java EEやScalaなどのあたらしいテクノロジーをどのように吸収していくか</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="Java.EE..............HTML.5................"></a>
+<h2>Java EE の概要と HTML 5 の取り組み</h2>
+
+<p>発表者は寺田佳央さん。</p>
+
+<p>総括としては、レガシーなJavaは捨ててJava EEに移行すべきということ。あと、なんとなくポジショントーク気味というかJava EE推し気味なのが気になった。以下はメモ。</p>
+
+<ul>
+<li>Java EEは軽量なフレームワーク</li>
+<li>非常に多く採用されている</li>
+<li>標準の技術なので、他のアプリサーバにも移行しやすい
+
+<ul>
+<li>ポータビリティが考慮されている。</li>
+</ul>
+</li>
+<li>StrutsとTomcatはもうやめたほうが良いらしい
+
+<ul>
+<li>１０年前のデファクト・スタンダードが今もそうとは限らない</li>
+<li>Struts1.x系はEOL。新たなバグは自分で対応していくしか無い。</li>
+<li>Eclipse SurveyによるとStruts系のフレームワークをもう使わないという回答</li>
+<li>レガシーな構成でアプリケーションを構築すると、メンテナンス・コストが増大する。</li>
+<li>エンドユーザ（発注主）は基盤となるフレームワークやミドルウェア類には関心を払わない→脆弱性が放置されて信用問題につながる。</li>
+<li>Java EEはオールインワンで非常に多くの試験をクリアしているので安心して使えるよ</li>
+<li>Java EE準拠のアプリサーバはJava EE6全機能を使うことができる。依存関係に悩まなくて済むらしい。</li>
+<li>独自技術から標準の技術へ</li>
+</ul>
+</li>
+<li>Java EE7が2013-06に登場
+
+<ul>
+<li>「HTML5、モバイル・アプリ開発の究極のプラットフォーム」</li>
+<li>Java EE6は国内でも非常に多くの企業が採用しており、１ヶ月で数十万件のダウンロード</li>
+<li>Java EE7はWebSocketに最も興味が持たれている。</li>
+<li>Developer producutivity, html5, enterprise daemonds</li>
+<li>html5&hellip;従来型のWebアプリケーションにも対応し、次世代型のWebアプリにも対応している。
+
+<ul>
+<li>WebSocket(HTTPとは違う。HTTPヘッダーなどがないので、送信データがより少なくなる。), JSON1.0, JAX-RS2.0(HTTP)</li>
+<li>WebSocket, JAX-RS2のどちらが良いかは、つくるアプリケーションの種類しだい。</li>
+</ul>
+</li>
+<li>JavaServer Faces 2.2</li>
+<li>開発生産性の向上
+
+<ul>
+<li>Java EE6からEE7でコード量を60%ほど削減できる場合がある。</li>
+</ul>
+</li>
+<li>エンタープライズニーズへの対応
+
+<ul>
+<li>バッチとか</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Java EE7はEE6の進化版
+
+<ul>
+<li>Java EE7を使うならJava EE6を押さえた上で、その差分としてEE7を使うようにすると良い。</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="Java...........................Scala....................."></a>
+<h1>JavaプログラマのためのScalaプログラミング</h1>
+
+<p>発表者は石黒尚久さん。内容はJavaとの対比を示しながらのScala入門。本当に入門的な内容で若干眠くなった。</p>
+
+<ul>
+<li>JavaとScalaの文法的な違いを説明</li>
+<li>JavaとScalaは相互利用できるとされている</li>
+<li>ScalaはJavaの冗長な書き方を改善しようとしている</li>
+<li>簡潔な表記が特徴的。</li>
+</ul>
+
+
+<a name="Java......Scala.......Scala...Web........................."></a>
+<h2>JavaからScalaへ　~ScalaでWeb開発はこう変わる~</h2>
+
+<p>発表者は竹添直樹さん。</p>
+
+<p><strong>NOTE</strong>
+2013/09/10 08:35:05 スライドを追加した。</p>
+
+<iframe src="http://www.slideshare.net/slideshow/embed_code/26030850" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen webkitallowfullscreen mozallowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="https://www.slideshare.net/takezoe/javascala" title="JavaからScalaへ" target="_blank">JavaからScalaへ</a> </strong> from <strong><a href="http://www.slideshare.net/takezoe" target="_blank">takezoe</a></strong> </div></p>
+
+<p>なぜScalaを使うようになったのか、ということからScalaの主要なフレームワークの紹介、その使い所を提示していた。個人的には今回一番期待していた内容で、期待通りの内容だった。</p>
+
+<ul>
+<li>Scala + アジャイルを実践している。</li>
+<li>小中規模のアプリケーションを効率よくつくることを追求
+
+<ul>
+<li>Javaでは無理、Scalaに可能性を求めた。</li>
+</ul>
+</li>
+<li>Web言語としてのScala
+
+<ul>
+<li>ステートレス
+
+<ul>
+<li>HTTPもステートレス</li>
+<li>関数型言語のステートレスな性質と相性が良い</li>
+</ul>
+</li>
+<li>コレクション操作
+
+<ul>
+<li>DBからデータを取り出して加工する処理と相性が良い。Webアプリケーションはたいていこの処理。</li>
+</ul>
+</li>
+<li>フレームワーク</li>
+</ul>
+</li>
+<li>Scalaの良さはFlexibility and Simplicity(？スライド見逃した)</li>
+<li>Play2
+
+<ul>
+<li>１台で処理できるリクエスト数を上げる</li>
+<li>非同期処理を簡単に書ける</li>
+<li>が、ボトルネックであるDBアクセスがブロックしてしまう</li>
+<li><a href="https://github.com/mauricio/postgresql-async">postgresql-async</a>(mysql版もあるらしい)というノンブロッキングなPostgresqlアクセス用のドライバがある。</li>
+<li>これを使えばJVM上では完全にノンブロッキングになる（が、実戦で使うにはまだ早い？）</li>
+</ul>
+</li>
+<li>タイプセーフ
+
+<ul>
+<li>テンプレートもタイプセーフ</li>
+<li>ルーティングもタイプセーフ</li>
+</ul>
+</li>
+<li>WebSocketも簡単に使える</li>
+<li>ステートレス
+
+<ul>
+<li>サーバサイトに状態を持たない</li>
+</ul>
+</li>
+<li>Nettyの上で動くのでServletコンテナでは動作しない
+
+<ul>
+<li>warにするプラグインが存在するが、イバラの道なのでやめたほうが良い</li>
+</ul>
+</li>
+<li>Scalatra
+
+<ul>
+<li>Sinatra由来</li>
+<li>Scalaのコードの中にHTMLを書くことができる</li>
+<li>もちろんバリデーションやテンプレートもあって、テンプレートはPlay2と同じものを使うことができる。</li>
+<li>ルーティングをタイプセーフにすることは出来ない</li>
+<li>Servlet3.0対応
+
+<ul>
+<li>既存のJava資産の移行ならScalatraが向いているかも</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>PlayとScalatraの使い分け
+
+<ul>
+<li>スマホのバックエンドなど、スケールさせる必要がある場合はPlay2</li>
+<li>業務システムなど規模が固定できるような場合はScalatra</li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p>全体的な所感として、HTML5はどっか行ったということ。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Hosebird Clientを試す]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2013/03/31/twitter-hosebird/"/>
+    <updated>2013-03-31T23:46:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2013/03/31/twitter-hosebird</id>
+    <content type="html"><![CDATA[<p><a href="https://github.com/twitter/hbc">Hosebird Client</a>はTwitter社製のJava HTTPクライアント<br>
+Twitter社が作ってるぐらいだからTwitterとの連携が楽にできるんじゃないかと思って、Scalaでサンプルを試す。</p>
+
+<!-- more -->
+
+
+<p>hbcはhbc-coreとhbc-twitter4jの２つで構成されている。<br>
+hbc-coreはメッセージ・キューを使って、ナマのストリングメッセージをポーリングすることができる。<br>
+hbc-twitter4jはtwitter4jのリスナーを使って、メッセージキューの先頭に解析レイヤーを提供するデータ・モデルを提供している。</p>
+
+<p>とりあえず始める</p>
+
+<p>まずはhbcを取り込むためにbuild.sbtに以下の２行を追加</p>
+
+<pre><code class="scala">libraryDependencies += "com.twitter" % "hbc-core" % "1.3.0"
+
+libraryDependencies += "com.twitter" % "hbc-twitter4j" % "1.3.0"
+</code></pre>
+
+<p>これを追加した後はsbtを起動し、モジュールをダウンロードする。
+intellijを使っている場合は、忘れずにgen-ideaをしておくこと。</p>
+
+<p><a href="https://github.com/twitter/hbc/blob/master/hbc-example/src/main/java/com/twitter/hbc/example/SampleStreamExample.java">SampleStreamExample</a>をScala風に写経してみる。</p>
+
+<pre><code class="scala">package hbc
+
+import java.util.concurrent.{TimeUnit, LinkedBlockingQueue}
+import com.twitter.hbc.core.endpoint.StatusesSampleEndpoint
+import com.twitter.hbc.httpclient.auth.OAuth1
+import com.twitter.hbc.httpclient.BasicClient
+import com.twitter.hbc.core.Constants
+import com.twitter.hbc.core.processor.StringDelimitedProcessor
+import com.twitter.hbc.ClientBuilder
+import net.liftweb.json._
+import net.liftweb.json.JsonAST.{JString, JNothing}
+
+class SampleStreamExample {
+  def hbc_oauth(consumerKey: String, consumerSecret: String,
+                token: String, secret: String) {
+    val queue = new LinkedBlockingQueue[String](10)
+    val endpoint = new StatusesSampleEndpoint()
+    // see at https://dev.twitter.com/docs/streaming-apis/parameters#stall_warnings
+    endpoint.stallWarnings(false)
+    val auth = new OAuth1(consumerKey, consumerSecret, token, secret)
+
+    val client: BasicClient = new ClientBuilder()
+      .name("sampleExamplClient")
+      .hosts(Constants.STREAM_HOST)
+      .endpoint(endpoint)
+      .authentication(auth)
+      .processor(new StringDelimitedProcessor(queue))
+      .build()
+
+    client.connect()
+
+    for (i &lt;- 0 until 10) {
+      if (client.isDone)
+        println("Client connnection closed unexpectedly: %s".format(client.getExitEvent.getMessage))
+      else {
+        val msg: String = queue.poll(5, TimeUnit.SECONDS)
+        val res = parse(msg)
+//        println(pretty(render(res)))
+        res match {
+          case r if (r \ "delete" == JNothing) =&gt; {
+            // http://stackoverflow.com/questions/4169153/what-is-the-most-straightforward-way-to-parse-json-in-scala/4169292#4169292
+            val JString(created_at) = r \ "created_at"
+            val JString(text) = r \ "text"
+            val JString(name) = r \ "user" \ "name"
+            val JString(screen_name) = r \ "user" \ "screen_name"
+            println("%s(%s):\n  %s(%s)".format(screen_name, name, text, created_at))
+          }
+          case r if (r \ "delete" != JNothing) =&gt; println("Sorry.this tweet has deleted.")
+          case _ =&gt; println("Did not recieve a message in 5 seconds")
+        }
+      }
+    }
+    client.stop()
+    println("The client read %d messages!".format(client.getStatsTracker.getNumMessages))
+  }
+
+}
+</code></pre>
+
+<p>以下のスクリプトをMainにして、これをキックするようにする。</p>
+
+<pre><code class="scala">package hbc
+
+
+Object Run extends App {
+  val consumerKey = "xxxxxxxxxxxxxxxxxxxxxx"
+  val consumerSecret = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  val token = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  val tokenSecret = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+  val sse = new SampleStreamExample
+  try {
+    sse.hbc_oauth(consumerKey, consumerSecret, token, tokenSecret)
+  } catch {
+    case e: InterruptedException =&gt; println(e)
+  }
+
+}
+</code></pre>
+
+<p>なんということでしょう。サンプルのJavaコードそのままです。<br>
+Scala力が低すぎる…。個人的には<code>for (i &lt;- 0 until 10)</code>のところをどうにかしたい。このままだとあんまりにもアレなので、後半のfor文で特定のフィールドを取り出してみた。<br>
+微妙にハマったのは、StatusesSampleEndpointはStreaming APIが垂れ流しているのをそのまま受け取っているだけなので、時々以下のような削除したレスポンスが流れてくる。</p>
+
+<pre><code>{
+  "delete":{
+    "status":{
+      "id":318163799519674370,
+      "user_id":29877342,
+      "id_str":"318163799519674370",
+      "user_id_str":"29877342"
+    }
+  }
+}
+</code></pre>
+
+<p>この場合、case文にあるようなガードをつけていないと、<code>r \ "created_at"</code>などをして値を取り出すときにMatch Errorが発生してしまう。<br>
+また、これはHosebirdとは関係ないけど、時々ある特定のフィールドが欠損してしまう場合、以下のようにしておくと良いかもしれない。他の方法があれば教えて欲しい…。<br></p>
+
+<pre><code class="scala">val created_at = (r \ "created_at").toOpt.getOrElse(JString("nothing created_at"))
+</code></pre>
+
+<p>また、case文の最後をアンダースコアでマッチングしているが、サンプルを見るとこの部分に該当するのは<code>if (msg == null)</code>という部分。だからといって<code>case null</code>などとやると以下のようなWarningが出てしまう。</p>
+
+<pre><code class="scala">[warn] /Users/sgyk/local/script/scala/scala_example/src/main/scala/hbc/SampleStreamExample.scala:46: match is not exhaustive!
+[warn] missing combination         JArray
+[warn] missing combination          JBool
+[warn] missing combination        JDouble
+[warn] missing combination         JField
+[warn] missing combination           JInt
+[warn] missing combination       JNothing
+[warn] missing combination        JObject
+[warn] missing combination        JString
+[warn]         res match {
+[warn]         ^
+[warn] one warning found
+</code></pre>
+
+<p>つまり、マッチングのパターンが足りないよということだけど、だからといってそのまま対応するのはちょっとアレなので、アンダースコアで逃げた。<br>
+本当なら<a href="http://d.hatena.ne.jp/xuwei/20120104/1325635980">このブログ記事</a>のようにcase classにapplyしたかったけど、そもそもtweetのフィールド数が22個に収まるはずが無いので諦めた。何かうまい方法あるかな？</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[com.typesafe.akka#akka-actor;2.0.5: not found]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2013/03/18/not-found-akka/"/>
+    <updated>2013-03-18T02:12:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2013/03/18/not-found-akka</id>
+    <content type="html"><![CDATA[<p>Scaltraをいじってたらsbtでこんなエラーが出た時の対処法</p>
+
+<!-- more -->
+
+
+<pre><code>[warn]  ::::::::::::::::::::::::::::::::::::::::::::::
+[warn]  ::          UNRESOLVED DEPENDENCIES         ::
+[warn]  ::::::::::::::::::::::::::::::::::::::::::::::
+[warn]  :: com.typesafe.akka#akka-actor;2.0.5: not found
+[warn]  ::::::::::::::::::::::::::::::::::::::::::::::
+</code></pre>
+
+<p>となったら、以下をresolversに追加すればOK</p>
+
+<pre><code class="scala">resolvers += "Akka Repo" at "http://repo.akka.io/repository",
+</code></pre>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Scalatraでいろいろやる その３]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2013/03/17/scalatra-tutorial-003/"/>
+    <updated>2013-03-17T23:37:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2013/03/17/scalatra-tutorial-003</id>
+    <content type="html"><![CDATA[<p>今までServlet内にベタ書きしていたHTMLを外出しする。</p>
+
+<!-- more -->
+
+
+<p>Scalatraの場合は<a href="http://scalate.fusesource.org/index.html">Scalate</a>を導入することで<a href="http://scalate.fusesource.org/documentation/user-guide.html#Template_Languages">以下のテンプレートエンジン</a>を使うことができる。</p>
+
+<ul>
+<li><a href="http://scalate.fusesource.org/documentation/ssp-reference.html">Ssp (Scala Server Pages)</a>
+<a href="http://velocity.apache.org/">Verocity</a>とかJSPみたいな記述が可能。他のテンプレートエンジンとくらべて一番HTMLっぽい。</li>
+<li><a href="http://scalate.fusesource.org/documentation/scaml-reference.html">Scaml (Scala Markup Language)</a>
+<a href="http://haml.info/">Haml</a>のScala版。</li>
+<li><a href="http://scalate.fusesource.org/documentation/jade.html">Jade</a>
+Scamlに似てるけど変数に%シンボルがつかないのでちょっと読みやすい。</li>
+<li><a href="http://scalate.fusesource.org/documentation/mustache.html">Mustache</a>
+本家は<a href="http://mustache.github.com/">こちら</a>。実際に使ってなのでよくわかってないが、テンプレート内には制御文を入れないで、テンプレートに値を渡すServlet内でロジックを記述する形式っぽい。</li>
+</ul>
+
+
+<a name="L....................."></a>
+<h2>基本的な使い方</h2>
+
+<p>これらのテンプレートエンジンを使うためにはServletに<code>ScalatraSupport</code>をmix inする必要がある。</p>
+
+<pre><code class="scala">class MyFirstScalatraServlet extends ScalatraTestStack with ScalateSupport {
+</code></pre>
+
+<p>例えばsspを使いたい場合は以下のようにする。</p>
+
+<pre><code class="scala">get("/") {
+  contentType="text/html"
+  ssp("index.ssp")
+}
+</code></pre>
+
+<p><code>ssp(&ldquo;index.ssp&rdquo;)</code>は<code>src/main/webapp/WEB-INF/templates/views/index.ssp</code>を指している。<br>
+また、ベースのレイアウトとなるのは、<code>src/main/webapp/WEB-INF/templates/layouts/defaluts.ssp</code>となる。<br>
+レイアウトファイルではServletが返すレスポンスボディを受け取るように記述しなければならない。</p>
+
+<pre><code class="scala">&lt;%@ val body: String %&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;&lt;title&gt;Scaltra Sample&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+  &lt;%= unescape(body) %&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p><code>uneascape</code>は出力するHTMLをエスケープしないようにする。これをエスケープするとHTML文がそのままでるので、注意。</p>
+
+<a name="L................................."></a>
+<h2>テンプレートに値を渡す</h2>
+
+<p>Servletからテンプレートに値を渡したいことはよくあることで、Scalateでは以下のようにやれば良い。</p>
+
+<pre><code class="scala">get("/get/:param") {
+  contentType="text/html"
+  ssp("get/param.ssp", "param" -&gt; params("param"))
+}
+</code></pre>
+
+<p>第2引数以降に<code>&ldquo;テンプレート内で使う変数名&rdquo; -> &ldquo;割り当てたい値&rdquo;</code>のようにすれば良い。</p>
+
+<p>View側は以下のようになる。</p>
+
+<p>&#8220;`html
+&lt;%@ val param: String %></p>
+
+<h1>Scalatra POST Tutorial</h1>
+
+
+<p><p>You submitted: &lt;%= param %></p>
+<hr/>
+<a href="http://sgykfjsm.github.com/">Beck To Index</a>
+&#8220;`</p>
+
+<p>一行目でServletから受け取る値を宣言して、それを<code>&lt;%= 変数名 %></code>で使用する。</p>
+
+<a name="L.........................................."></a>
+<h2>コンパイルされるとどうなるか</h2>
+
+<p>テンプレートのViewファイルはコンパイルされるとどうなるかは<code>target/scala-2.10/src_managed/main/scalate/templates/views</code>を見ると良い。例えば、上記で変数を受け取ったテンプレートの場合だと以下のようになる。</p>
+
+<pre><code class="scala">/* NOTE this file is autogenerated by Scalate : see http://scalate.fusesource.org/ */
+package templates.views.post
+
+object $_scalate_$param_ssp {
+  def $_scalate_$render($_scalate_$_context: _root_.org.fusesource.scalate.RenderContext): Unit = {
+    ;{
+      val context: _root_.org.fusesource.scalate.RenderContext = $_scalate_$_context.attribute("context")
+      import context._
+
+
+      ;{
+        val param: String = $_scalate_$_context.attribute("param")
+        $_scalate_$_context &lt;&lt; ( "&lt;h1&gt;Scalatra POST Tutorial&lt;/h1&gt;\n&lt;p&gt;You submitted: " );
+        $_scalate_$_context &lt;&lt;&lt; (          param
+ );
+        $_scalate_$_context &lt;&lt; ( "&lt;/p&gt;\n&lt;hr/&gt;\n&lt;a href=\"/\"&gt;Beck To Index&lt;/a&gt;\n" );
+      }
+    }
+  }
+}
+
+
+class $_scalate_$param_ssp extends _root_.org.fusesource.scalate.Template {
+  def render(context: _root_.org.fusesource.scalate.RenderContext): Unit = $_scalate_$param_ssp.$_scalate_$render(context)
+}
+</code></pre>
+
+<p>コンパイルされているのでちょっと見にくいが、Servletから受け取った値を<code>$_scalate_$_context.attribute(&ldquo;param&rdquo;)</code>で取り出して、あとは記述されたHTMLなどと一緒に<code>$_scalate_$_context</code>に流し込んでいる様子が見て取れる。</p>
+
+<a name="L.................."></a>
+<h2>制御文を使う</h2>
+
+<p>ここから先はSspのお話。</p>
+
+<p>Sspでは<code>${}</code>か<code>&lt;%= %></code>内に書かれたコードが評価されて出力される。加えて、Velocity形式として<code>#{}</code>による制御文もサポートしており、いわゆるifやforももちろん使えて、一般的なテンプレートエンジンと同じ使い勝手を持っている。<br>
+以下Sspと出力されるHTMLコードを比較する。</p>
+
+<pre><code class="scala">&lt;p&gt;&lt;%= List("hello,", "World!").mkString(" ") %&gt;&lt;/p&gt;
+&lt;p&gt;#{
+    import java.util.Date
+    val now = new Date
+    List("hello,", "Ssp on Scalate!").mkString(" ")
+}#&lt;/p&gt;
+&lt;p&gt;the time is ${now}&lt;/p&gt;
+&lt;p&gt;${ "1 + 2 =" + (1+2)}&lt;/p&gt;
+&lt;%
+    var foo = "this"
+    foo +=  " is"
+    foo +=  " is a pen."
+%&gt;
+&lt;p&gt;${foo}&lt;/p&gt;
+</code></pre>
+
+<pre><code class="html">&lt;p&gt;hello, World!&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
+&lt;p&gt;the time is 2013年3月17日&lt;/p&gt;
+&lt;p&gt;1 + 2 =3&lt;/p&gt;
+&lt;p&gt;this is is a pen.&lt;/p&gt;
+</code></pre>
+
+<p>Scalaのコードは<code>&lt;%= %></code>または<code>${}</code>あるいは<code>#{}</code>内に記述する。<br>
+しかし、出力されるHTMLをみてみると、標準出力されるものはHTMLに出力されていないことがわかる。<br>
+コンパイルされたソースを見てみよう。</p>
+
+<pre><code class="scala">object $_scalate_$Ssp_ssp {
+  def $_scalate_$render($_scalate_$_context: _root_.org.fusesource.scalate.RenderContext): Unit = {
+    ;{
+      val context: _root_.org.fusesource.scalate.RenderContext = $_scalate_$_context.attribute("context")
+      import context._
+
+
+      $_scalate_$_context &lt;&lt; ( "&lt;p&gt;" );
+      $_scalate_$_context &lt;&lt;&lt; (        List("hello, ", "World!").mkString(" ")
+ );
+      $_scalate_$_context &lt;&lt; ( "&lt;/p&gt;\n&lt;p&gt;" );
+
+    import java.util.Date
+    val now = new Date
+    List("hello,", "Ssp on Scalate!").mkString(" ")
+
+
+      $_scalate_$_context &lt;&lt; ( "&lt;/p&gt;\n&lt;p&gt;the time is " );
+      $_scalate_$_context &lt;&lt;&lt; (       now
+ );
+      $_scalate_$_context &lt;&lt; ( "&lt;/p&gt;\n&lt;p&gt;" );
+      $_scalate_$_context &lt;&lt;&lt; (        "1 + 2 =" + (1+2)
+ );
+      $_scalate_$_context &lt;&lt; ( "&lt;/p&gt;\n\n" );
+</code></pre>
+
+<p>後半は割愛しているが、<code>#{}</code>に記述したコードは<code>$_scalate_$_context</code>に流し込まれていないことがわかる。<br>
+どうやら<code>#{}</code>に記述したコードはimport文や変数の格納などに使うようだ。</p>
+
+<p>続いて、forとかif文。</p>
+
+<pre><code class="scala">&lt;ul&gt;
+#for(i &lt;- 1 to 15)
+    #if (i % 15 == 0)
+    &lt;li&gt;${i}: FIzzBuzz&lt;/li&gt;
+    #elseif (i % 5 == 0)
+    &lt;li&gt;${i}: Buzz&lt;/li&gt;
+    #elseif (i % 3 == 0)
+    &lt;li&gt;${i}: Fizz&lt;/li&gt;
+    #else
+    &lt;li&gt;${i}: -&lt;/li&gt;
+    #end
+#end
+&lt;/ul&gt;
+
+&lt;ul&gt;
+    #for(i &lt;- 1 to 5; j &lt;- 1 to 2)
+    &lt;li&gt;(${i}, ${j})&lt;/li&gt;
+    #end
+&lt;/ul&gt;
+</code></pre>
+
+<pre><code class="html">&lt;ul&gt;
+    &lt;li&gt;1: -&lt;/li&gt;
+    &lt;li&gt;2: -&lt;/li&gt;
+    &lt;li&gt;3: Fizz&lt;/li&gt;
+    &lt;li&gt;4: -&lt;/li&gt;
+    &lt;li&gt;5: Buzz&lt;/li&gt;
+    &lt;li&gt;6: Fizz&lt;/li&gt;
+    &lt;li&gt;7: -&lt;/li&gt;
+    &lt;li&gt;8: -&lt;/li&gt;
+    &lt;li&gt;9: Fizz&lt;/li&gt;
+    &lt;li&gt;10: Buzz&lt;/li&gt;
+    &lt;li&gt;11: -&lt;/li&gt;
+    &lt;li&gt;12: Fizz&lt;/li&gt;
+    &lt;li&gt;13: -&lt;/li&gt;
+    &lt;li&gt;14: -&lt;/li&gt;
+    &lt;li&gt;15: FIzzBuzz&lt;/li&gt;
+    &lt;/ul&gt;
+
+&lt;ul&gt;
+        &lt;li&gt;(1, 1)&lt;/li&gt;
+        &lt;li&gt;(1, 2)&lt;/li&gt;
+        &lt;li&gt;(2, 1)&lt;/li&gt;
+        &lt;li&gt;(2, 2)&lt;/li&gt;
+        &lt;li&gt;(3, 1)&lt;/li&gt;
+        &lt;li&gt;(3, 2)&lt;/li&gt;
+        &lt;li&gt;(4, 1)&lt;/li&gt;
+        &lt;li&gt;(4, 2)&lt;/li&gt;
+        &lt;li&gt;(5, 1)&lt;/li&gt;
+        &lt;li&gt;(5, 2)&lt;/li&gt;
+&lt;/ul&gt;
+</code></pre>
+
+<p><hr /></p>
+
+<p>ざっとだが、Scalatraでのテンプレートエンジンの使い方を概観した。<br>
+リファレンス見ながら以上を見てきたわけだが、Scalateというか、テンプレート側にもう少し機能があるかなぁとは思ったが、そんなことはなかった…。<a href="http://twig.sensiolabs.org/">Twig</a>ぐらいは機能を持ってるかと思ったんだけどなぁ。調べ方が足りなかったかな？<br>とはいえ、他のテンプレートエンジンはまた別の機能を持っているを持っていたりするので、用途に合わせて使い分けていけばいいのだろうと思う。</p>
+
+<p>まぁとりあえずということで、次はDBとの接続を試すことにする。試すならSlickかなぁ。</p>
+]]></content>
+  </entry>
+  
+</feed>

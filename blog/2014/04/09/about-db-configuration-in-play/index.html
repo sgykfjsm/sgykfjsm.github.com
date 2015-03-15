@@ -1,0 +1,468 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Play!のDB設定について - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="自分が開発したわけでもないのだけれど、APIのパフォーマンスをどうにかしろ、チューニングしろと言われた。チューニング対象のAPIはPlay!を利用しており、DBのI/Oにパフォーマンスが強く依存するので、まずはDB周りのパラメータをしらべて改善していくことにした。 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.com/blog/2014/04/09/about-db-configuration-in-play">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.com" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">Play!のDB設定について</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-04-09T00:27:00+09:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>9</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>12:27 am</span></time>
+        
+        
+          
+           | <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/edit/master/source/_posts/2014-04-09-about-db-configuration-in-play.markdown">Edit</a>
+          
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>自分が開発したわけでもないのだけれど、APIのパフォーマンスをどうにかしろ、チューニングしろと言われた。チューニング対象のAPIは<a href="http://www.playframework.com/">Play!</a>を利用しており、DBのI/Oにパフォーマンスが強く依存するので、まずはDB周りのパラメータをしらべて改善していくことにした。</p>
+
+<!-- more -->
+
+
+<p>DBの接続周りを改善していくにあたって、Thread Poolへの理解は欠かせないのだけれど、Play!の<a href="http://www.playframework.com/documentation/2.2.x/ThreadPools">ドキュメント</a>だとAkkaとかが出てきて、もう少し基本的な部分からおさらいしたいなーと思ったので、ソースから調べることにした。</p>
+
+<ul>
+<li><a href="http://www.playframework.com/documentation/2.2.x/ThreadPools">play-jdbc/src/main/scala/play/api/db/DB.scala</a></li>
+</ul>
+
+
+<p>DB.scalaはPlayのDB接続周りを管理している。<a href="https://github.com/playframework/playframework/blob/master/framework/src/play-jdbc/src/main/scala/play/api/db/DB.scala#L202">class BoneCPPlugin</a>でconfigファイルからDBの設定を取得している。この辺に注目していけばよさそう。このあたりに書かれている設定に関して言えば、基本は言語やフレームワークに依存しない部分なはずなのでこれまでの経験とか勘が活かせるかなーと思った次第。</p>
+
+<p>ということで、今回はこのソースに書かれている設定を整理する。</p>
+
+<a name="L......"></a>
+<h3>接続</h3>
+
+<p>ラベルのプレフィクスには<code>db.<em>dbName</em>.</code>がつく。</p>
+
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">ラベル        </th>
+<th style="text-align:left;"> 設定値の型     </th>
+<th style="text-align:left;"> 概要           </th>
+<th style="text-align:left;"> メモ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">driver</td>
+<td style="text-align:left;">string</td>
+<td style="text-align:left;">DBドライバ名</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left;">autocommit</td>
+<td style="text-align:left;">Boolean</td>
+<td style="text-align:left;">autocommitを有効にするかどうか</td>
+<td style="text-align:left;"> defaultはtrue</td>
+</tr>
+<tr>
+<td style="text-align:left;">isolation</td>
+<td style="text-align:left;">string</td>
+<td style="text-align:left;">NONE / READ_COMMITTED / READ_UNCOMMITTED / REPEATABLE_READ / SERIALIZABLE</td>
+<td style="text-align:left;">大文字</td>
+</tr>
+<tr>
+<td style="text-align:left;">defaultCatalog</td>
+<td style="text-align:left;">string</td>
+<td style="text-align:left;">デフォルトのDBカタログ名</td>
+<td style="text-align:left;">Postgresqlなど?DB2かも？</td>
+</tr>
+<tr>
+<td style="text-align:left;">readOnly</td>
+<td style="text-align:left;">Boolean</td>
+<td style="text-align:left;">読み取り専用アクセスとするか否か</td>
+<td style="text-align:left;">defaultはfalse</td>
+</tr>
+<tr>
+<td style="text-align:left;">url</td>
+<td style="text-align:left;">string</td>
+<td style="text-align:left;">DBの接続文字列</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left;">user</td>
+<td style="text-align:left;">string</td>
+<td style="text-align:left;">DBの接続ユーザ</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left;">pass</td>
+<td style="text-align:left;">string</td>
+<td style="text-align:left;">DBの接続パスワード</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left;">password</td>
+<td style="text-align:left;">string</td>
+<td style="text-align:left;">DBの接続パスワード</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+
+<a name="Pool.configuration"></a>
+<h3>Pool configuration</h3>
+
+<p>ここの設定項目はBoneCPの設定とほぼ同一だが、初期値の設定が異なっている。<br>
+BoneCPの接続数を計算する場合は<code>maxConnectionsPerPartition * partitionCount</code>となることを押さえておけばよさそう。</p>
+
+<p>ラベルのプレフィクスには<code>db.<em>dbName</em>.</code>がつく。</p>
+
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">ラベル        </th>
+<th style="text-align:left;"> 設定値の型     </th>
+<th style="text-align:left;"> 概要           </th>
+<th style="text-align:left;"> メモ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">partitionCount</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">スレッドプール単体での同時接続数</td>
+<td style="text-align:left;">defaultは1。CPUのコア数と揃えたほうが良い。<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></td>
+</tr>
+<tr>
+<td style="text-align:left;">maxConnectionsPerPartition</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">partitionごとに作られる最大同時接続数</td>
+<td style="text-align:left;">defaultは30。</td>
+</tr>
+<tr>
+<td style="text-align:left;">minConnectionsPerPartition</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">partitionごとに同時接続開始数</td>
+<td style="text-align:left;">defaultは5</td>
+</tr>
+<tr>
+<td style="text-align:left;">acquireIncrement</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">接続が切れそうになるとBoneCPが接続を新たに生成する数。partiticonごとに作用する。</td>
+<td style="text-align:left;">defaultは1</td>
+</tr>
+<tr>
+<td style="text-align:left;">acquireRetryAttempts</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">接続試行回数</td>
+<td style="text-align:left;">defaultは10</td>
+</tr>
+<tr>
+<td style="text-align:left;">acquireRetryDelay</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">接続に失敗して次の試行までの待ち時間</td>
+<td style="text-align:left;">defaultは1000。単位はMillSeconds</td>
+</tr>
+<tr>
+<td style="text-align:left;">connectionTimeout</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">getConnetionを呼び出してからタイムアウトするまでの待ち時間</td>
+<td style="text-align:left;">defaultは1000。単位はMillSeconds</td>
+</tr>
+<tr>
+<td style="text-align:left;">idleMaxAge</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">接続が閉じられるまで使われていない接続を維持する時間。</td>
+<td style="text-align:left;">defaultは1000 * 60 * 10。単位はMillSeconds。つまりdefaultはアイドル時間が10分。</td>
+</tr>
+<tr>
+<td style="text-align:left;">maxConnectionAge</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">接続を強制的に閉じるための判断に使う時間。ここで指定された時間を超えて存在する接続はアイドルであるか否かを問わず閉じられる。プールに戻されるまでは使用中の接続には影響しない</td>
+<td style="text-align:left;">defaultは1000 * 60 * 60。単位はMillSeconds。つまりdefaultでは生成から60分を超えた接続は閉じられる。</td>
+</tr>
+<tr>
+<td style="text-align:left;">disableJMX</td>
+<td style="text-align:left;">Boolean</td>
+<td style="text-align:left;">JMXを有効に<strong>しない</strong>かどうか</td>
+<td style="text-align:left;">defaultはtrue。つまり有効にしない。</td>
+</tr>
+<tr>
+<td style="text-align:left;">statisticsEnabled</td>
+<td style="text-align:left;">Boolean</td>
+<td style="text-align:left;">統計情報の出力を有効にするかどうか(？)</td>
+<td style="text-align:left;">defaultはfalse</td>
+</tr>
+<tr>
+<td style="text-align:left;">idleConnectionTestPeriod</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">DBにテストクエリを送出するまで接続のアイドルを維持する時間。</td>
+<td style="text-align:left;">defaultは1000 * 60。単位はMillSeconds。つまりdefaultは1分。</td>
+</tr>
+<tr>
+<td style="text-align:left;">disableConnectionTracking</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">connection trackingを有効に<strong>しないか</strong>どうか</td>
+<td style="text-align:left;">defaultはtrue</td>
+</tr>
+<tr>
+<td style="text-align:left;">queryExecuteTimeLimit</td>
+<td style="text-align:left;">Int</td>
+<td style="text-align:left;">クエリをロギングするかどうかの基準となる時間。この指定時間を超えたクエリはロギングされる。</td>
+<td style="text-align:left;">defaultはゼロ。つまりどれだけ時間がかかってもロギングしない。単位はMillSeconds</td>
+</tr>
+</tbody>
+</table>
+
+
+<a name="L.................."></a>
+<h3>その他の設定</h3>
+
+<p>初期値が設定されていないが、それはおそらくドライバ依存だからだと思う。</p>
+
+<p>ラベルのプレフィクスには<code>db.<em>dbName</em>.</code>がつく。</p>
+
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">ラベル        </th>
+<th style="text-align:left;"> 設定値の型     </th>
+<th style="text-align:left;"> 概要           </th>
+<th style="text-align:left;"> メモ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">initSQL</td>
+<td style="text-align:left;">String</td>
+<td style="text-align:left;">接続が確立されるときに一度だけ実行されるSQL。これは接続ごとに実行される。</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left;">logStatements</td>
+<td style="text-align:left;">Boolean</td>
+<td style="text-align:left;">SQLをロギングするかどうか</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left;">connectionTestStatement</td>
+<td style="text-align:left;">String</td>
+<td style="text-align:left;">接続テストのために実行されるクエリ</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left;">jndiName</td>
+<td style="text-align:left;">String</td>
+<td style="text-align:left;">JNDIネームスペースの指定</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+
+<a name="L........."></a>
+<h2>おまけ</h2>
+
+<p>DB接続文字列の正規表現</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">val</span> <span class="nc">PostgresFullUrl</span> <span class="k">=</span> <span class="s">&quot;^postgres://([a-zA-Z0-9_]+):([^@]+)@([^/]+)/([^\\s]+)$&quot;</span><span class="o">.</span><span class="n">r</span>
+</span><span class='line'><span class="k">val</span> <span class="nc">MysqlFullUrl</span> <span class="k">=</span> <span class="s">&quot;^mysql://([a-zA-Z0-9_]+):([^@]+)@([^/]+)/([^\\s]+)$&quot;</span><span class="o">.</span><span class="n">r</span>
+</span><span class='line'><span class="k">val</span> <span class="nc">MysqlCustomProperties</span> <span class="k">=</span> <span class="s">&quot;.*\\?(.*)&quot;</span><span class="o">.</span><span class="n">r</span>
+</span><span class='line'><span class="k">val</span> <span class="n">H2DefaultUrl</span> <span class="k">=</span> <span class="s">&quot;^jdbc:h2:mem:.+&quot;</span><span class="o">.</span><span class="n">r</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a href="https://github.com/playframework/playframework/blob/master/framework/src/play-jdbc/src/main/scala/play/api/db/DB.scala#L344-L347">ここで使われている</a></p>
+
+<p>MySQLの場合は以下が自動的に付与される</p>
+
+<pre><code>?useUnicode=yes&amp;characterEncoding=UTF-8&amp;connectionCollation=utf8_general_ci
+</code></pre>
+<div class="footnotes">
+<hr/>
+<ol>
+<li id="fn:1">
+<p><a href="http://stackoverflow.com/questions/14445129/a-better-explanation-for-partitioncount-in-bonecp">A better explanation for partitionCount in BoneCP</a><a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
+</ol>
+</div>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2014-04-09T00:27:00+09:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>9</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>12:27 am</span></time>
+      <span class="categories">full history <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/commit/master/source/_posts/2014-04-09-about-db-configuration-in-play.markdown">here</a></span>
+
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/db/'>db</a>, <a class='category' href='/blog/categories/play/'>play!</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2014/04/01/whats-is-rwxr-sr-x/" title="Previous Post: '-rwxr-sr-x'というパーミッション設定">&laquo; &#8216;-rwxr-sr-x&#8217;というパーミッション設定</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2015/02/13/how-to-analysis-unlaunched-instance/" title="Next Post: 起動に失敗したインスタンスを調査する例">起動に失敗したインスタンスを調査する例 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

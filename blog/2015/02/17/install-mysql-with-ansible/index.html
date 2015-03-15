@@ -1,0 +1,569 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>AnsibleでMySQLをインストールする。 - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="AWSなんかを使ってると、イチからMySQLなどの基本的なミドルウェアをセットアップすることは減ってくる。そんな中、AnsibleでMySQLをインストールする事になったのだけど、意外と忘れてたりAnsibleで作業するのと手作業で進めることの差異でちょっと詰まったりしたので、ここに備忘しておく &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.com/blog/2015/02/17/install-mysql-with-ansible">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.com" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">AnsibleでMySQLをインストールする。</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-02-17T09:19:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>17</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>9:19 am</span></time>
+        
+        
+          
+           | <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/edit/master/source/_posts/2015-02-17-install-mysql-with-ansible.markdown">Edit</a>
+          
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>AWSなんかを使ってると、イチからMySQLなどの基本的なミドルウェアをセットアップすることは減ってくる。そんな中、AnsibleでMySQLをインストールする事になったのだけど、意外と忘れてたりAnsibleで作業するのと手作業で進めることの差異でちょっと詰まったりしたので、ここに備忘しておく。</p>
+
+<!-- more -->
+
+
+<a name="L.................."></a>
+<h2>大まかな手順</h2>
+
+<ol>
+<li>最新安定版(MySQL5.6)をインストールするためのリポジトリを設定する。</li>
+<li>リポジトリ軽油でインストールする。</li>
+<li>初期セットアップを行なう。
+
+<ul>
+<li>rootのパスワード初期化</li>
+<li>mysql_secure_installationによるMySQLの初期化</li>
+<li>諸々の設定</li>
+</ul>
+</li>
+</ol>
+
+
+<p>たったこれだけなんだけど、Ansibleでこれらの作業を実装するのはちょっと面倒。というのも、mysql_secure_installationはコマンドを実行すると対話的に処理を進めることになるが、これをAnsibleで実行するのがちょっと面倒だったりする。また、rootのパスワード初期化についても考慮が必要で、playbookに直書きするのはもちろん駄目だし、mysql_config_editorはこれまた対話式のコマンドなので、自動化が微妙に難しい。諸々の設定に関して、設定すべき内容は案件などによると思うが、予めいくつかのmy.cnfなどを用意しておいて、それをコピーして使うようすればいいだけなので、あまり問題にはならない。</p>
+
+<p>ということで、rootのパスワード初期化および管理とmysql_secure_installationについて考える。</p>
+
+<a name="root...................................."></a>
+<h2>rootのパスワード初期化と管理</h2>
+
+<p>いくつかのブログなどにあるHowTo記事でrootの初期パスワードは.mysql_secretというファイルにある、と書かれていることがある。が、今回MySQL5.6をインストールしてみてもそのようなファイルは無かった。今までも見たことがないので、もしかしたらインストールの方法によってはこのファイルが生成されるのかもしれないが、とにかく無い。なので、パスワードの初期化は基本に忠実に以下のようにMySQLを起動させてからパスワードをSQLで更新した。</p>
+
+<pre><code>/bin/sh /usr/bin/mysqld_safe \
+    --datadir=/var/lib/mysql \
+    --socket=/var/lib/mysql/mysql.sock \
+    --pid-file=/var/run/mysqld/mysqld.pid \
+    --basedir=/usr \
+    --user=mysql \
+    --skip-grant-tables \
+    --skip-networking
+</code></pre>
+
+<p>この起動コマンドについての詳細は<a href="http://dev.mysql.com/doc/refman/5.1/en/resetting-permissions.html#resetting-permissions-generic">Resetting the Root Password: Generic Instructions</a>を参照。この方法がシンプルで覚えることが少なくて良いと思う。</p>
+
+<p>これでMySQLサーバを起動した後、以下のSQLでパスワードを更新する。パスワードはAnsibleの中で<code>cat /dev/urandom | LC_CTYPE=C tr -dc &lsquo;[:alnum:]&rsquo; | head -c 16 ; echo</code>とかやって適当な文字列を生成してあげれば良いと思う。パスワードをplaybookに直書きするよりかはマシだろう。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='sql'><span class='line'><span class="k">UPDATE</span> <span class="n">mysql</span><span class="p">.</span><span class="k">user</span> <span class="k">SET</span> <span class="n">Password</span><span class="o">=</span><span class="n">PASSWORD</span><span class="p">(</span><span class="s1">&#39;NewPassWord&#39;</span><span class="p">)</span> <span class="k">WHERE</span> <span class="k">User</span><span class="o">=</span><span class="s1">&#39;root&#39;</span><span class="p">;</span>
+</span><span class='line'><span class="n">FLUSH</span> <span class="k">PRIVILEGES</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ここまでは特段問題が無くて、問題はこのパスワードをどこに保管するか、ということ。結論から言えば、/etc/my.cnf.d配下に管理することに落ち着いた。以下の様なファイルを作っておいて、それを/etc/my.cnf.d配下に配置しておけば良いと思う。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='ini'><span class='line'><span class="k">[db-administrator]</span>
+</span><span class='line'><span class="na">user</span> <span class="o">=</span> <span class="s">root</span>
+</span><span class='line'><span class="na">password</span> <span class="o">=</span> <span class="s">{ { mysql_root_password.stdout }}</span>
+</span><span class='line'><span class="na">host</span> <span class="o">=</span> <span class="s">localhost</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>{{ mysql_root_password.stdout }}</code>の部分はAnsible内で設定されるプレースホルダー。また、通常は<code>[client]</code>となっている部分は別の文言に変えている。そうでないと、デフォルトの接続情報として使われるので、注意すること。また、/etc/my.cnf.d配下のファイルが読み込まれるように、/etc/my.cnfには<code>!includedir /etc/my.cnf.d</code>を追加しておくこと。</p>
+
+<a name="Ansible...mysql_secure_installation..........................."></a>
+<h2>Ansibleでmysql_secure_installationを如何に行なうか。</h2>
+
+<p>ざっと思いついたのは以下の通り。</p>
+
+<ol>
+<li>普通にmysql_secure_installationを実行して、対話的に処理を行う。
+
+<ul>
+<li>そもそもAnsibleで行なう必要が無いのと、rootのパスワードなどをどこかにメモすることになるので却下</li>
+</ul>
+</li>
+<li>expectを使って、予め回答を入力しておいて、処理を自動化させる。
+
+<ul>
+<li>expectについては、<a href="http://www.math.kobe-u.ac.jp/~kodama/tips-expect.html%E3%81%BE%E3%81%9F%E3%81%AFhttp://linuxjm.sourceforge.jp/html/expect/man1/expect.1.html%E3%81%AA%E3%81%A9%E3%82%92%E5%8F%82%E7%85%A7%E3%80%82">http://www.math.kobe-u.ac.jp/~kodama/tips-expect.html%E3%81%BE%E3%81%9F%E3%81%AFhttp://linuxjm.sourceforge.jp/html/expect/man1/expect.1.html%E3%81%AA%E3%81%A9%E3%82%92%E5%8F%82%E7%85%A7%E3%80%82</a></li>
+<li>expectを別途インストールする必要がある。</li>
+<li>expcet/Tclの文法などを新たに覚えなければならない、かつあまり使うことがなさそうなので、あんまり覚える気がしない。</li>
+<li>試してみたけど微妙だった（予めすべてのパターンの質問を拾って、回答を用意しなければならない）</li>
+<li>ということで却下</li>
+</ul>
+</li>
+<li>mysql_secure_installationと同等の処理を実装し、それを実行する。
+
+<ul>
+<li>mysql_secure_installationがやっている処理自体はいくつかのSQLを実行しているだけで、実装自体は容易。</li>
+<li>ただし、今後のバージョンアップなどでmysql_secure_installationの内容を常に気にしておく必要がある。</li>
+<li>1と2の案に比べて、必要な時間が圧倒的に少なく済むので、今回はこの案にした。</li>
+</ul>
+</li>
+</ol>
+
+
+<p>で、その内容は以下の通り。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#!/bin/bash</span>
+</span><span class='line'><span class="c"># http://dev.mysql.com/doc/refman/5.0/en/resetting-permissions.html#resetting-permissions-unix</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">set</span> -xeu
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span> <span class="k">$(</span>/usr/bin/whoami<span class="k">)</span> <span class="o">=</span> <span class="s1">&#39;root&#39;</span> <span class="o">]</span> <span class="o">||</span> <span class="o">{</span>
+</span><span class='line'>    /bin/echo root only
+</span><span class='line'>    <span class="nb">exit </span>1
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">init_file</span><span class="o">=</span>/tmp/mysql-init
+</span><span class='line'>
+</span><span class='line'>/bin/cat <span class="s">&lt;&lt;EOF &gt; ${init_file}</span>
+</span><span class='line'><span class="s">-- Set the root password</span>
+</span><span class='line'><span class="s">UPDATE mysql.user SET Password=PASSWORD(&#39;${mysql_root_password}&#39;) WHERE User=&#39;root&#39;;</span>
+</span><span class='line'><span class="s">FLUSH PRIVILEGES;</span>
+</span><span class='line'><span class="s">-- Remove anonymous users</span>
+</span><span class='line'><span class="s">DELETE FROM mysql.user WHERE User=&#39;&#39;;</span>
+</span><span class='line'><span class="s">-- Disallow remote root login</span>
+</span><span class='line'><span class="s">DELETE FROM mysql.user WHERE User=&#39;root&#39; AND Host NOT IN (&#39;localhost&#39;,  &#39;127.0.0.1&#39;,  &#39;::1&#39;);</span>
+</span><span class='line'><span class="s">-- Remove test database</span>
+</span><span class='line'><span class="s">DROP DATABASE IF EXISTS test;</span>
+</span><span class='line'><span class="s">DELETE FROM mysql.db WHERE Db=&#39;test&#39; OR Db=&#39;test\\_%&#39;;</span>
+</span><span class='line'><span class="s">-- Reload privilege tables</span>
+</span><span class='line'><span class="s">FLUSH PRIVILEGES;</span>
+</span><span class='line'><span class="s">EOF</span>
+</span><span class='line'>chmod <span class="m">600</span> <span class="k">${</span><span class="nv">init_file</span><span class="k">}</span>
+</span><span class='line'>
+</span><span class='line'>nohup /bin/sh /usr/bin/mysqld_safe <span class="se">\</span>
+</span><span class='line'>    --datadir<span class="o">=</span>/var/lib/mysql <span class="se">\</span>
+</span><span class='line'>    --socket<span class="o">=</span>/var/lib/mysql/mysql.sock <span class="se">\</span>
+</span><span class='line'>    --pid-file<span class="o">=</span>/var/run/mysqld/mysqld.pid <span class="se">\</span>
+</span><span class='line'>    --basedir<span class="o">=</span>/usr <span class="se">\</span>
+</span><span class='line'>    --user<span class="o">=</span>mysql <span class="se">\</span>
+</span><span class='line'>    --skip-grant-tables <span class="se">\</span>
+</span><span class='line'>    --skip-networking <span class="p">&amp;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">while</span> :
+</span><span class='line'><span class="k">do</span>
+</span><span class='line'>    <span class="o">[</span> -r /var/run/mysqld/mysqld.pid <span class="o">]</span> <span class="o">||</span> <span class="k">continue</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> ps -ef <span class="p">|</span> grep -q <span class="k">$(</span>cat /var/run/mysqld/mysqld.pid<span class="k">)</span> <span class="p">;</span> <span class="k">then</span>
+</span><span class='line'>        <span class="nb">break</span>
+</span><span class='line'><span class="nb">    </span><span class="k">fi</span>
+</span><span class='line'>    sleep 10
+</span><span class='line'><span class="k">done</span>
+</span><span class='line'>
+</span><span class='line'>mysql -uroot &lt; <span class="k">${</span><span class="nv">init_file</span><span class="k">}</span> <span class="c"># 実際の処理では--login-pathを指定してrootでログイン、実行としている。</span>
+</span><span class='line'>
+</span><span class='line'>/etc/init.d/mysqld stop
+</span><span class='line'>
+</span><span class='line'>rm -f <span class="k">${</span><span class="nv">init_file</span><span class="k">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">exit</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>実際に書いてみると、なんてことは無いコードではある。</p>
+
+<p>あと、他に何か書こうかと思ったけど、忘れたので、とりあえずMySQL56をインストールするためのplaybookを載っけてお茶を濁すことにする。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="nn">---</span>
+</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Install Official MySQL Repository</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">yum</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">name=&quot;&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">with_items</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">http://dev.mysql.com/get/mysql-community-release-el6-5.noarch.rpm</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">yum</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</span><span class='line'>
+</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Disable Official MySQL Repository</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">replace</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">dest=&quot;/etc/yum.repos.d/.repo&quot; regexp=&quot;^enabled *= *1$&quot; backup=yes replace=&#39;enabled=0&#39;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">with_items</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community-source</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">yum</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</span><span class='line'>
+</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Install MySQL56</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">yum</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">name=&quot;&quot; state=latest enablerepo=mysql56-community,remi</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">with_items</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">php56-php-mysqlnd</span> <span class="c1"># remi</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community-client</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community-common</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community-devel</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community-libs</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community-server</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">MySQL-python</span> <span class="c1"># for remote-host</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</span><span class='line'>
+</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Create root user password</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">shell</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">cat /dev/urandom | LC_CTYPE=C tr -dc &#39;[:alnum:]&#39; | head -c 16</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">register</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mysql_root_password</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</span><span class='line'>
+</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Execute mysql_secure_installation</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">script</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">secure_install.sh &quot;&quot;</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">register</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">result</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</span><span class='line'>
+</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Add Line for include append config</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">lineinfile</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</span><span class='line'>    <span class="no">dest=/etc/my.cnf</span>
+</span><span class='line'>    <span class="no">line=&quot;!includedir /etc/my.cnf.d&quot;</span>
+</span><span class='line'>    <span class="no">backup=yes</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">register</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">result</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Copy my.cnf To /etc/my.cnf.d/login.cnf</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">template</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</span><span class='line'>    <span class="no">src=my.cnf.j2</span>
+</span><span class='line'>    <span class="no">dest=/etc/my.cnf.d/login.cnf</span>
+</span><span class='line'>    <span class="no">owner=root</span>
+</span><span class='line'>    <span class="no">group=root</span>
+</span><span class='line'>    <span class="no">mode=0600</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</span><span class='line'>
+</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Add mysqld to StartUps on boot And Be Running</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">enabled=yes name=mysqld state=running</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
+</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2015-02-17T09:19:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>17</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>9:19 am</span></time>
+      <span class="categories">full history <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/commit/master/source/_posts/2015-02-17-install-mysql-with-ansible.markdown">here</a></span>
+
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/ansible/'>ansible</a>, <a class='category' href='/blog/categories/mysql/'>mysql</a>, <a class='category' href='/blog/categories/ops/'>ops</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2015/02/15/pass-params-to-sbt-on-cli/" title="Previous Post: sbtから起動させる処理にコマンドラインから引数を渡す">&laquo; sbtから起動させる処理にコマンドラインから引数を渡す</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2015/03/14/custom-docker-ami-on-beanstalk/" title="Next Post: AWS BeanstalkでDockerをカスタムAMIで使う。">AWS BeanstalkでDockerをカスタムAMIで使う。 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,291 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>起動に失敗したインスタンスを調査する例 - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="先日、とあるサービスで利用しているBeanstalk環境でインスタンスが起動に失敗した。ログを見ると、S3からリソースの取得に失敗していたようだ。ネットワーク接続の状態としては、AWS内のネットワークでは疎通可能だが、インターネットを経由した通信は不可、という状況。具体的には、 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.com/blog/2015/02/13/how-to-analysis-unlaunched-instance">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.com" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">起動に失敗したインスタンスを調査する例</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-02-13T03:43:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>3:43 am</span></time>
+        
+        
+          
+           | <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/edit/master/source/_posts/2015-02-13-how-to-analysis-unlaunched-instance.markdown">Edit</a>
+          
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>先日、とあるサービスで利用しているBeanstalk環境でインスタンスが起動に失敗した。ログを見ると、S3からリソースの取得に失敗していたようだ。<br>ネットワーク接続の状態としては、AWS内のネットワークでは疎通可能だが、インターネットを経由した通信は不可、という状況。具体的には、例えばAWSのインスタンスからはsshログイン可能だが、グローバルからのsshログインはできないといったような感じ。色々調べたけど、不意に調査対象のインスタンスがTerminateしてしまい、結局原因がわからないままになってしまった。</p>
+
+<p>調査はAWS Supportとやりとりしながら行ったのだけれども、色々と情報収集を都度指示されて捗らなかった。<br>なので、ここには次また事象が再発した場合に備えて、障害発生時に取得しておきべきこと、確認すべきことを整理する。</p>
+
+<!-- more -->
+
+
+<a name="L....................."></a>
+<h2>確認すべきこと</h2>
+
+<ul>
+<li>対象インスタンスに設定されているSecurityGroup
+
+<ul>
+<li>どこからのアクセスを許可しているか</li>
+<li>許可しているプロトコルは何か</li>
+<li>どのポートを開けているか</li>
+</ul>
+</li>
+<li>通信状態に問題がある場合
+
+<ul>
+<li>AWS内ネットワークからアクセス可能か（例えばsshログインなど）</li>
+<li>インターネットからアクセス可能か（例えばcurlでのHTTPアクセスなど）</li>
+</ul>
+</li>
+<li>対象インスタンスにログイン可能な場合
+
+<ul>
+<li>AWS内ネットワークへのアクセスは可能か（例えば<code>curl <a href="http://169.254.169.254/latest/meta-data/">http://169.254.169.254/latest/meta-data/</a></code>でインスタンスのメタデータが取得可能か）</li>
+<li>インターネットへのアクセスは可能か（例えば<code>curl <a href="http://www.google.com">http://www.google.com</a></code>がTimeoutしないか）</li>
+</ul>
+</li>
+<li>対象インスタンスにログインできない場合
+
+<ul>
+<li>Management ConsoleのEC2の画面から対象インスタンスを選択 > Actions > Instance Settings > Get System Logで起動時のログを参照できるかを確認する。</li>
+<li>確認できた場合はそれをテキストファイルなどにコピーしてSupportへ提供する。</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="L....................."></a>
+<h2>収拾すべき情報</h2>
+
+<p>起動に成功したインスタンスと起動に失敗したインスタンスのそれぞれで収拾を行なうこと。</p>
+
+<ul>
+<li>各種設定ファイル
+
+<ul>
+<li>/etc/ssh/sshd_config</li>
+<li>/etc/resolv.conf</li>
+</ul>
+</li>
+<li>各種コマンドの結果
+
+<ul>
+<li>ps -ef</li>
+<li>traceroute, nslookup, dig
+
+<ul>
+<li>これらのコマンドはsshログインできた端末（例えば踏み台に使ったEC2インスタンス）と、sshログインできなかった端末（例えば対象インスタンスへインターネット経由でsshログインを行った作業者の端末）の両方で行うこと。</li>
+<li>www.google.co.jpやrepo.ap-northeast-1.amazonaws.comなど、いくつかのパターンを試すと良い。</li>
+</ul>
+</li>
+<li>tcpdump
+
+<ul>
+<li>.cap形式でコマンドの結果を保存してSupportへ提供する。</li>
+<li>tcpdump port 80 -w filename.cap</li>
+</ul>
+</li>
+<li>netstat -rn, netstat -an</li>
+<li>ssh -vvv</li>
+<li>iptablesの起動有無
+
+<ul>
+<li>sudo /etc/init.d/iptables status</li>
+<li>sudo /etc/init.d/ip6tables status</li>
+<li>起動している場合は設定をテキストファイルなどにコピーしてSupportへ提供する。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="L.................."></a>
+<h2>注意すること</h2>
+
+<p>今回、油断して障害発生した端末が不意にTerminateしてしまい、原因を究明することができなかった。このような障害インスタンスはStanby状態にすることで稼働を維持することができる。具体的にはマニュアルの<a href="http://docs.aws.amazon.com/ja_jp/AutoScaling/latest/DeveloperGuide/TroubleshootingAnAutoScalingInstance.html">Auto Scaling グループのインスタンスのトラブルシューティング</a>を参照すること。Auto ScalingやBeanstalkなどを利用していなければ、勝手にTerminateされることは無いと思うので、Terminate Protectionを設定しておけば大丈夫だと思う。</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2015-02-13T03:43:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>3:43 am</span></time>
+      <span class="categories">full history <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/commit/master/source/_posts/2015-02-13-how-to-analysis-unlaunched-instance.markdown">here</a></span>
+
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/aws/'>aws</a>, <a class='category' href='/blog/categories/ops/'>ops</a>, <a class='category' href='/blog/categories/troubleshooting/'>troubleshooting</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2014/04/09/about-db-configuration-in-play/" title="Previous Post: Play!のDB設定について">&laquo; Play!のDB設定について</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2015/02/13/dereg-instance-under-beanstalk/" title="Next Post: Beanstalk管理下のインスタンスを安全に再起動する">Beanstalk管理下のインスタンスを安全に再起動する &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

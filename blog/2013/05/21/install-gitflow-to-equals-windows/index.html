@@ -1,0 +1,277 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>windowsにgit-flowをインストールする - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="会社のPCがWindowsで、VMはプロキシの関係でインストールできなかったので仕方なく。
+で、ここにあるやり方に従った。 msysgitをインストールする ここから最新版を取得してインストールする。
+http://code.google.com/p/msysgit/downloads/list &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.com/blog/2013/05/21/install-gitflow-to-equals-windows">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.com" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">windowsにgit-flowをインストールする</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2013-05-21T02:00:00+09:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>21</span><span class='date-suffix'>st</span>, <span class='date-year'>2013</span></span> <span class='time'>2:00 am</span></time>
+        
+        
+          
+           | <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/edit/master/source/_posts/2013-05-21-install-gitflow-to-equals-windows.markdown">Edit</a>
+          
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>会社のPCがWindowsで、VMはプロキシの関係でインストールできなかったので仕方なく。<br />
+で、<a href="https://github.com/nvie/gitflow/wiki/Windows">ここ</a>にあるやり方に従った。</p>
+
+<!-- more -->
+
+
+<a name="msysgit..........................."></a>
+<h2>msysgitをインストールする</h2>
+
+<p>ここから最新版を取得してインストールする。
+<a href="http://code.google.com/p/msysgit/downloads/list">http://code.google.com/p/msysgit/downloads/list</a></p>
+
+<p>インストール後は、<code>Git\bin</code>にpathを通しておくこと。</p>
+
+<a name="L.........util-linux.............................."></a>
+<h2>必要なutil-linuxをインストールする。</h2>
+
+<p><a href="http://gnuwin32.sourceforge.net/packages/util-linux-ng.htm">util-linux-ng for Windows</a>から以下の2つをDLする。</p>
+
+<ul>
+<li>Binaries</li>
+<li>Dependencies</li>
+</ul>
+
+
+<p>Binariesからは<code>getcp.exe</code>を、Dependenciesからは<code>libintl3.dll</code>をそれぞれ<code>Git\bin</code>にコピーする。</p>
+
+<a name="gitflow.............................."></a>
+<h2>gitflowをインストールする。</h2>
+
+<p>コマンドプロンプトを立ち上げて、いつもgitリポジトリをクローンしている場所に移動する。特になければ任意のディレクトリで。<br />
+クローン後は<code>contrib\msysgit-install.cmd</code>を実行する。<br />
+インストール先ディレクトリの指定を行う必要があるが、指定したディレクトリの先に<code>bin</code>ディレクトリを作成するので、そこは注意したほうが良い。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>C:\Users\xxxxxxx&gt;cd Documents\GitHub
+</span><span class='line'>
+</span><span class='line'>C:\Users\xxxxxxx\Documents\GitHub&gt;git clone --recursive git://github.com/nvie/gitflow.git
+</span><span class='line'>
+</span><span class='line'>C:\Users\xxxxxxx\Documents\GitHub&gt;cd gitflow
+</span><span class='line'>
+</span><span class='line'>C:\Users\xxxxxxx\Documents\GitHub\gitflow&gt;contrib\msysgit-install.cmd "D:\Program_Files\Git\"
+</span><span class='line'>Installing gitflow into "D:\Program_Files\Git\"...
+</span><span class='line'>......................
+</span><span class='line'>C:\Users\xxxxxxx\Documents\GitHub\gitflow&gt;git flow help
+</span><span class='line'>usage: git flow &lt;subcommand&gt;
+</span><span class='line'>
+</span><span class='line'>Available subcommands are:
+</span><span class='line'>   init      Initialize a new git repo with support for the branching model.
+</span><span class='line'>   feature   Manage your feature branches.
+</span><span class='line'>   release   Manage your release branches.
+</span><span class='line'>   hotfix    Manage your hotfix branches.
+</span><span class='line'>   support   Manage your support branches.
+</span><span class='line'>   version   Shows version information.
+</span><span class='line'>
+</span><span class='line'>Try 'git flow &lt;subcommand&gt; help' for details.
+</span><span class='line'>
+</span><span class='line'>C:\Users\xxxxxxx\Documents\GitHub\gitflow&gt;</span></code></pre></td></tr></table></div></figure>
+
+
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2013-05-21T02:00:00+09:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>21</span><span class='date-suffix'>st</span>, <span class='date-year'>2013</span></span> <span class='time'>2:00 am</span></time>
+      <span class="categories">full history <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/commit/master/source/_posts/2013-05-21-install-gitflow-to-equals-windows.markdown">here</a></span>
+
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/04/29/ascii-delimiter/" title="Previous Post: 区切り文字がASCII 001なファイルを扱う">&laquo; 区切り文字がASCII 001なファイルを扱う</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/08/11/fluentd-on-ec2-with-s3/" title="Next Post: ec2にfluentdをインストールする">ec2にfluentdをインストールする &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

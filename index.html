@@ -1,1 +1,521 @@
-My Octopress Page is coming soon &hellip;
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="既知の通り、BeanstalkでDockerを使うことができるが、通常の使い方だとインスタンスが配備される度にDocker ImageをPull、BuildしてからRunする。初期配備時は問題ないが、スケールアウトの観点で見た場合、非常にもたつくことがある。また、Docker Imageが大きい( &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.com">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.com" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/03/14/custom-docker-ami-on-beanstalk/">AWS BeanstalkでDockerをカスタムAMIで使う。</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-03-14T23:11:00+09:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>14</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:11 pm</span></time>
+        
+        
+          
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>既知の通り、BeanstalkでDockerを使うことができるが、通常の使い方だとインスタンスが配備される度にDocker ImageをPull、BuildしてからRunする。初期配備時は問題ないが、スケールアウトの観点で見た場合、非常にもたつくことがある。また、Docker Imageが大きい(800MB以上ぐらい？)と、devicemapper errorでBuildに失敗することが多い（ような気がする）。単にBuildに失敗しただけであれば切り離せば良いが、複数台のうちいくつかがBuildに失敗しただけでは検知が難しく、そのまま生き残ってしまうとムダなコストが発生する。</p>
+
+<p>上記のような認識でいたため、これまではBeanstalkでDockerを運用することにはあまり乗り気ではなかった。しかし、同僚からの意見で予めデプロイしておいたカスタムAMIを使うのはどうか、という意見があり、検証することにした。</p>
+
+<p>なお、結論から言うと、ここで記した方法では実運用に耐えないと思う。アレコレがんばらないで、素直に<a href="http://aws.amazon.com/jp/ecs/">Amazon EC2 Container Service</a>がGAになるのを待ったほうが良い。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2015/03/14/custom-docker-ami-on-beanstalk/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/02/17/install-mysql-with-ansible/">AnsibleでMySQLをインストールする。</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-02-17T09:19:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>17</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>9:19 am</span></time>
+        
+        
+          
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>AWSなんかを使ってると、イチからMySQLなどの基本的なミドルウェアをセットアップすることは減ってくる。そんな中、AnsibleでMySQLをインストールする事になったのだけど、意外と忘れてたりAnsibleで作業するのと手作業で進めることの差異でちょっと詰まったりしたので、ここに備忘しておく。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2015/02/17/install-mysql-with-ansible/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/02/15/pass-params-to-sbt-on-cli/">sbtから起動させる処理にコマンドラインから引数を渡す</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-02-15T02:02:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>15</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>2:02 am</span></time>
+        
+        
+          
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>以下はskinny frameworkをつかって処理を書いているが、sbtからの起動させる際にはskinny frameworkを使ってるかどうかは関係ないはず。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2015/02/15/pass-params-to-sbt-on-cli/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/02/13/dereg-instance-under-beanstalk/">Beanstalk管理下のインスタンスを安全に再起動する</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-02-13T18:40:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>6:40 pm</span></time>
+        
+        
+          
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>現在のBeanstalkでインスタンスが再起動する場合は主に以下の３つがある。</p>
+
+<ul>
+<li>アプリケーションをデプロイするとき</li>
+<li>Configuration(JVMのパラメータとか)をデプロイするとき</li>
+<li>Management ConsoleなどでRestart Appsを実行した時</li>
+</ul>
+
+
+<p>しかし、運用の中では特定のインスタンスのみを再起動したい場合がある。また、再起動を行う場合、インスタンスを再起動すると自動的にTerminateしてしまうし、インスタンス内部のアプリケーションサーバを再起動すると、ELBからリクエストが来てしまう。ここではこういった点を考慮した安全な再起動の手順を確認する。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2015/02/13/dereg-instance-under-beanstalk/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/02/13/how-to-analysis-unlaunched-instance/">起動に失敗したインスタンスを調査する例</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-02-13T03:43:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>3:43 am</span></time>
+        
+        
+          
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>先日、とあるサービスで利用しているBeanstalk環境でインスタンスが起動に失敗した。ログを見ると、S3からリソースの取得に失敗していたようだ。<br>ネットワーク接続の状態としては、AWS内のネットワークでは疎通可能だが、インターネットを経由した通信は不可、という状況。具体的には、例えばAWSのインスタンスからはsshログイン可能だが、グローバルからのsshログインはできないといったような感じ。色々調べたけど、不意に調査対象のインスタンスがTerminateしてしまい、結局原因がわからないままになってしまった。</p>
+
+<p>調査はAWS Supportとやりとりしながら行ったのだけれども、色々と情報収集を都度指示されて捗らなかった。<br>なので、ここには次また事象が再発した場合に備えて、障害発生時に取得しておきべきこと、確認すべきことを整理する。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2015/02/13/how-to-analysis-unlaunched-instance/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/04/09/about-db-configuration-in-play/">Play!のDB設定について</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-04-09T00:27:00+09:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>9</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>12:27 am</span></time>
+        
+        
+          
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>自分が開発したわけでもないのだけれど、APIのパフォーマンスをどうにかしろ、チューニングしろと言われた。チューニング対象のAPIは<a href="http://www.playframework.com/">Play!</a>を利用しており、DBのI/Oにパフォーマンスが強く依存するので、まずはDB周りのパラメータをしらべて改善していくことにした。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2014/04/09/about-db-configuration-in-play/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/04/01/whats-is-rwxr-sr-x/">&#8216;-rwxr-sr-x&#8217;というパーミッション設定</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-04-01T19:26:00+09:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>1</span><span class='date-suffix'>st</span>, <span class='date-year'>2014</span></span> <span class='time'>7:26 pm</span></time>
+        
+        
+          
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>とある事情でサーバの調査をしていたら、以下の様なパーミッション設定を見かけた。</p>
+
+<pre><code>$ ls -l /usr/sbin/sendmail.sendmail
+-rwxr-sr-x 1 root smmsp 825704  3月 14  2013 /usr/sbin/sendmail.sendmail
+</code></pre>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2014/04/01/whats-is-rwxr-sr-x/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/03/02/about-last-insert-id-with-mysql5-dot-5-5-dot-6/">LAST_INSERT_ID()の返り値の型はバージョンによって違う</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-03-02T07:30:00+09:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>2</span><span class='date-suffix'>nd</span>, <span class='date-year'>2014</span></span> <span class='time'>7:30 am</span></time>
+        
+        
+          
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>昨日、MySQLのバージョンを5.5.27から5.6.13に上げてテストしてたら<code>LAST_INSERT_ID</code>を使っているとこでエラーが出た。それで、ドキュメントを見ていたら以下の様な記述があった。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2014/03/02/about-last-insert-id-with-mysql5-dot-5-5-dot-6/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/03/01/how-to-preview-markdown-on-cli/">markdownをプレビューする</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-03-01T09:43:00+09:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>1</span><span class='date-suffix'>st</span>, <span class='date-year'>2014</span></span> <span class='time'>9:43 am</span></time>
+        
+        
+          
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Macではプレビュー機能があるけど、markdownだとレンダリングされずにそのままが表示される。 ので、ちゃんとレンダリングされた状態でプレビューできるようにする。また、いつもvimを使って作業しているので、コマンドラインからプレビューできるようにする。</p>
+
+<p>ただ、今回はlynxを使ってプレビューするので、あまり一般的なやり方ではないと思う。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2014/03/01/how-to-preview-markdown-on-cli/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/02/05/sudo-ulimit/">sudoでulimitをしたら「sudo: ulimit -Sn: コマンドが見つかりません」と言われた</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-02-05T20:26:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>5</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>8:26 pm</span></time>
+        
+        
+          
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>elasticsearchの調子が悪かったので、いろいろ調べていた。その途中でnofilesの上限を調べようと思って、以下のようにコマンドを叩いたらコマンドが見つからないって言われた。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2014/02/05/sudo-ulimit/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/page2">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

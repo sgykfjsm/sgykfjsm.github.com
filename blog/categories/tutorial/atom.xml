@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: tutorial | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/tutorial/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[scalatraでいろいろやる その１]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2013/02/22/scalatra-tutorial-001/"/>
+    <updated>2013-02-22T00:08:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2013/02/22/scalatra-tutorial-001</id>
+    <content type="html"><![CDATA[<a name="Set.up"></a>
+<h2>Set up</h2>
+
+<p>Scaltraをインストールする前に以下の4つがインストールされていることを確認する。</p>
+
+<ol>
+<li>JDK</li>
+<li>SBT</li>
+<li>conscript</li>
+<li>giter8</li>
+</ol>
+
+
+<!-- more -->
+
+
+<a name="JDK"></a>
+<h3>JDK</h3>
+
+<p>いつものコマンドで確認。</p>
+
+<pre>[sgyk@fujishima] 13-02-21 22:48:43 ~/local/tmp
+$ java -version
+java version "1.7.0_15"
+Java(TM) SE Runtime Environment (build 1.7.0_15-b03)
+Java HotSpot(TM) 64-Bit Server VM (build 23.7-b01, mixed mode)</pre>
+
+
+<p>JDKが入ってなければ、<a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Java SE Development Kit 7 Downloads</a>からダウンロードして入れておく。</p>
+
+<a name="SBT"></a>
+<h3>SBT</h3>
+
+<p>Scalaやってれば入ってるはず。自分の場合は起動してみたらdeprecatedって言われた。</p>
+
+<pre>
+[sgyk@fujishima] 13-02-21 22:34:01 ~
+$ sbt
+[warn] Alternative project directory .sbt (/Users/sgyk/.sbt) has been deprecated since sbt 0.12.0.
+[warn]   Please use the standard location: /Users/sgyk/project
+[info] Loading project definition from /Users/sgyk/.sbt
+[info] Set current project to default-bf7818 (in build file:/Users/sgyk/)
+</pre>
+
+
+<p>のでbrewで入れなおした。</p>
+
+<pre>sgyk@fujishima] 13-02-21 22:34:44 ~
+$ brew uninstall sbt
+Uninstalling /usr/local/Cellar/sbt/0.12.1...
+[sgyk@fujishima] 13-02-21 22:34:51 ~
+$ brew install sbt
+==> Downloading http://typesafe.artifactoryonline.com/typesafe/ivy-releases/org.scala-sbt/sbt-launch/0.12.2/sbt-launch.jar
+######################################################################## 100.0%
+==> Caveats
+You can use $SBT_OPTS to pass additional JVM options to SBT.
+For convenience, this can specified in `~/.sbtconfig`.
+
+For example:
+    SBT_OPTS="-XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=256M"
+==> Summary
+🍺  /usr/local/Cellar/sbt/0.12.2: 3 files, 1.1M, built in 9 seconds</pre>
+
+
+<a name="Conscript"></a>
+<h3>Conscript</h3>
+
+<p><a href="https://github.com/n8han/conscript">Conscript</a>はScalaとかその関連ツールをインストールしたりアップデートするツールらしい。</p>
+
+<blockquote><ul>
+<li>Queries a github project for launch configurations</li>
+<li>Writes these to your local filesystem, with a personalized boot path</li>
+<li>Creates scripts to execute the launch configurations</li>
+</ul>
+</blockquote>
+
+<p><br>で、このあとにインストールするgiter8がこれに依存してるのでインストールする必要がある。</p>
+
+<p><code>curl <a href="https://raw.github.com/n8han/conscript/master/setup.sh">https://raw.github.com/n8han/conscript/master/setup.sh</a> | sh</code>でインストールすればOK。</p>
+
+<a name="giter8"></a>
+<h3>giter8</h3>
+
+<p>giter8については、<a href="http://blog.twiwt.org/e/f12c0f">ここ</a>を読めば、色々書いているけど、要はテンプレートを作ってれるツールらしい。</p>
+
+<blockquote><p>Giter8 は github 上に公開されたテンプレートからアプリケーションのひな形を作成するコマンドラインツールだ。 Scala で実装されており、 sbt のランチャー を使って起動するが、様々な用途に使える。</p></blockquote>
+
+<p>とりあえず <code>cs n8han/giter8</code>でインストール。<br />なんか色々落としてくるので、ちょっと時間がかかる。無事にインストールができたら確認。</p>
+
+<pre>[sgyk@fujishima] 13-02-21 22:49:13 ~
+$ which g8
+/Users/sgyk/bin/g8
+</pre>
+
+
+<a name="first.project"></a>
+<h2>first project</h2>
+
+<p>そんなこんなセットアップが終わったら、早速Scalatraのプロジェクトを作る。</p>
+
+<a name="Build.Project"></a>
+<h3>Build Project</h3>
+
+<p><code>g8 scalatra/scalatra-sbt </code>を<em>プロジェクトを作りたいディレクトリ位置</em>で実行する。</p>
+
+<pre>[sgyk@fujishima] 13-02-21 22:56:51 ~/local/script/scala
+$ g8 scalatra/scalatra-sbt
+organization [com.example]: com.sgykfjsm
+package [com.example.app]: com.sgykfjsm.app
+name [My Scalatra Web App]: Scalatra Test
+scalatra_version [2.2.0]:
+servlet_name [MyScalatraServlet]: MyFirstScalatraServlet
+scala_version [2.10.0]:
+version [0.1.0-SNAPSHOT]:
+
+Template applied in ./scalatra-test
+</pre>
+
+
+<p>色々聞かれるけど適当に答えておけば良い。未入力部分は[]部分のデフォルトが適用されるんだと思う。</p>
+
+<p>出来上がったプロジェクトに入ると以下の様な構成になっている。</p>
+
+<pre>[sgyk@fujishima] 13-02-21 22:58:06 ~/local/script/scala
+$ cd scalatra-test/
+[sgyk@fujishima] 13-02-21 22:58:12 ~/local/script/scala/scalatra-test
+$ ls -l
+total 48
+drwxr-xr-x   7 sgyk  staff    238  2 21 22:57 .
+drwxr-xr-x  20 sgyk  staff    680  2 21 22:58 ..
+-rw-r--r--   1 sgyk  staff    756  2 21 22:57 .gitignore
+-rw-r--r--   1 sgyk  staff    224  2 21 22:57 README.md
+drwxr-xr-x   5 sgyk  staff    170  2 21 22:57 project
+-rw-r--r--   1 sgyk  staff  14321  2 21 22:57 sbt
+drwxr-xr-x   4 sgyk  staff    136  2 21 22:57 src</pre>
+
+
+<p>色々な依存関係を開発前に解決しておきたいので、sbtに実行権限をつけて、sbtを実行しておく。<br />ここでも時間がちょっとかかるので、しばし待つこと。回線が細いと大変かもしれない。</p>
+
+<p>sbtが無事に起動したら、プロンプトがそのまま生きているので、試しにScalatraを起動してみる。</p>
+
+<pre>> container:start
+[info] Generating /Users/sgyk/local/script/scala/scalatra-test/target/scala-2.10/resource_managed/main/rebel.xml.
+[info] Compiling Templates in Template Directory: /Users/sgyk/local/script/scala/scalatra-test/src/main/webapp/WEB-INF/templates
+SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+[info] Compiling 5 Scala sources to /Users/sgyk/local/script/scala/scalatra-test/target/scala-2.10/classes...
+[info] jetty-8.1.8.v20121106
+[info] NO JSP Support for /, did not find org.apache.jasper.servlet.JspServlet
+Null identity service, trying login service: null
+Finding identity service: null
+[info] started o.e.j.w.WebAppContext{/,[file:/Users/sgyk/local/script/scala/scalatra-test/src/main/webapp/]}
+[info] started o.e.j.w.WebAppContext{/,[file:/Users/sgyk/local/script/scala/scalatra-test/src/main/webapp/]}
+23:11:49.785 [pool-6-thread-5] INFO  o.scalatra.servlet.ScalatraListener - Initializing life cycle class: ScalatraBootstrap
+[info] started o.e.j.w.WebAppContext{/,[file:/Users/sgyk/local/script/scala/scalatra-test/src/main/webapp/]}
+23:11:50.061 [pool-6-thread-5] INFO  o.f.s.servlet.ServletTemplateEngine - Scalate template engine using working directory: /var/folders/9_/ggs_d8vd48z5ht76s3cwc7qr0000gn/T/scalate-7636222796467281743-workdir
+[info] Started SelectChannelConnector@0.0.0.0:8080
+[success] Total time: 13 s, completed 2013/02/21 23:11:50</pre>
+
+
+<p>途中になんか失敗してるけど、まぁ気にしない。 <a href="http://localhost:8080">http://localhost:8080</a> にアクセスしてみると、以下の様な画面が表示されるはず。
+<img src="https://dl.dropbox.com/s/tw6w2o3i0y07vt0/2013-02-21%2023.15.45.png?m" alt="screen shot" /></p>
+
+<a name="sbt-idea"></a>
+<h3>sbt-idea</h3>
+
+<p>ここまででも結構時間かかってる…。僕はScalaはいつもIntelliJ IDEAで開発してるので、以下のコードを<code>project/plugins.sbt</code>に追加して、それ用のプラグインもインストールしておく。</p>
+
+<pre>addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.2.0")</pre>
+
+
+<p>で、またsbtを起動して<code>gen-idea</code>を実行しておく。</p>
+
+<p>締めに<code>git init</code>でもしとけばいいんじゃないでしょうか。<br />このあとは簡単なアプリケーションを作ってみる。</p>
+]]></content>
+  </entry>
+  
+</feed>

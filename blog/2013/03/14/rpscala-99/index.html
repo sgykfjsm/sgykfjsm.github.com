@@ -1,0 +1,356 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Scala勉強会第99回 in 本郷に参加した。 - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="久しぶり（1年ぶりぐらい？）に参加した。
+partake 次週に行われる第100回のネタ出し
+質問時間 sbtでv2.9とv2.10を混ぜたい（黒魔術的なことをしたいらしい。構文木をなんとかかんとか？
+無理でしょうでFA Scala web framework比較 会場提供者でもある竹下さんの発表 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.com/blog/2013/03/14/rpscala-99">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.com" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">Scala勉強会第99回 in 本郷に参加した。</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2013-03-14T22:59:00+09:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>14</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>10:59 pm</span></time>
+        
+        
+          
+           | <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/edit/master/source/_posts/2013-03-14-rpscala-99.markdown">Edit</a>
+          
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>久しぶり（1年ぶりぐらい？）に参加した。
+<a href="http://partake.in/events/b1a85809-761d-4fb2-83e7-1aecd7e96b0f">partake</a></p>
+
+<!-- more -->
+
+
+<ul>
+<li>次週に行われる第100回のネタ出し</li>
+<li>質問時間
+
+<ul>
+<li>sbtでv2.9とv2.10を混ぜたい（黒魔術的なことをしたいらしい。構文木をなんとかかんとか？</li>
+<li>無理でしょうでFA</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="Scala.web.framework......"></a>
+<h2>Scala web framework比較</h2>
+
+<p>会場提供者でもある竹下さんの発表。Web業界の末席を汚す自分にはありがたいお話。</p>
+
+<ul>
+<li><a href="http://www.playframework.com/">Play</a>
+
+<ul>
+<li>full stack?</li>
+<li>WebSocket</li>
+<li>StateLess</li>
+<li>習得しやすさ○</li>
+<li>開発しやすさ○</li>
+<li>デザイナ連携☓</li>
+<li>長所→逐次コンパイル(1系</li>
+<li>テンプレートもコンパイル時にチェックOK</li>
+<li>短所→安定しない、開発はあまり活発じゃない、フルスタック（笑）というかAnorm（笑）</li>
+<li>長所→WebSocketが楽、開発活発、CoffeeScriptとの連携が良い感じ</li>
+<li>短所→変更が多い、やはりフルスタック（笑）→Slickへの対応が進めばあるいは？</li>
+<li>使いドコロ：大規模、WebSocket、プロト開発（逐次コンパイル</li>
+</ul>
+</li>
+<li><a href="http://liftweb.net/">Lift</a>
+
+<ul>
+<li>full stack</li>
+<li>Servlet</li>
+<li>開発しやすさ☓</li>
+<li>デザイナ連携○</li>
+<li>長所→テンプレートが非プログラマと分業しやすい</li>
+<li>長所→周辺ライブラリが優秀(lift-json, lift-mapper)</li>
+<li>短所→非常にStatefull（スケールしない）、Routting周りが難解、View-firstも難解、Wikiがクソ</li>
+<li>使いドコロ：デザイン重視のWebアプリ</li>
+</ul>
+</li>
+<li><a href="http://scalatra.org/">Scalatra</a>
+
+<ul>
+<li>Servlet</li>
+<li>StateLess</li>
+<li>習得しやすさ◎</li>
+<li>開発しやすさ☓</li>
+<li>デザイナ連携☓</li>
+<li>長所→非常にわかりやすい（フレームワークというかDSL</li>
+<li>長所→Swaggerが良い感じ</li>
+<li>短所→ページ数が増えると一覧性に乏しい</li>
+<li>使いドコロ：プロト開発、小規模API</li>
+</ul>
+</li>
+<li><a href="http://unfiltered.databinder.net/Unfiltered.html">Unfileterd</a>
+
+<ul>
+<li>Scala, Scala過ぎて…</li>
+</ul>
+</li>
+<li><a href="http://circumflex.ru/">Circumflex</a>
+
+<ul>
+<li>最近のものらしい</li>
+<li>ロシア製</li>
+</ul>
+</li>
+<li>パフォーマンスはPlay, Scalatra > lift(CPU使うらしい
+
+<ul>
+<li>Web frameworkがボトルネックになることは稀</li>
+<li>むしろ実装による</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="L......"></a>
+<h3>所感</h3>
+
+<p>ScalaのWeb frameworkのうち、使ったことがあるのはPlayとScalatraのみだけど、個人的にはどちらも使いやすい。<br>
+基本はPlayだけど、ちょっとしたものを作るのにPlayは大げさなので、軽い奴はScalatraで作るといったような使い分けをできるようになっておけば良いと思う。どちらもまだ使いこなせていないけど。<br>
+余談だが、<a href="http://www.manning.com/carrero2/">Scalatra in Action</a>はまだv1だけど、読みやすくて面白かった。</p>
+
+<a name="Scala2.10.bytecode.problem"></a>
+<h2>Scala2.10 bytecode problem</h2>
+
+<p>麻植さんの発表。麻植さんは<a href="http://www.scalaconf.jp/">Scala Conference2013</a>のコアメンバーの1人。</p>
+
+<iframe src="http://www.slideshare.net/slideshow/embed_code/17167971" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen webkitallowfullscreen mozallowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="http://www.slideshare.net/oeuia/scala210x-bytecode-problems-in-android" title="Scala2.10.x bytecode problems in Android" target="_blank">Scala2.10.x bytecode problems in Android</a> </strong> from <strong><a href="http://www.slideshare.net/oeuia" target="_blank">Taisuke Oe</a></strong> </div></p>
+
+<ul>
+<li>2.9と2.10でバイトコードが異なる</li>
+<li>2.9では継承先のメソッドを呼び出していたが、2.10からは継承元のメソッドを呼び出すバイトコードを呼び出すようになった。</li>
+<li>Android開発で問題となる</li>
+<li>Android4.1のライブラリ+scala2.10+ Android4.0以下の端末でNoSuchMethodErrorが発生する。</li>
+<li>Android4.1以上をtarget SDK versionにしｔら、scala2.10.xにしないか、miniSDKversionを4.1以上にする</li>
+<li>開発環境と本番環境でクラスファイルのバージョンが違ったりする場合は注意したほうが良い。</li>
+<li>どうしてこうなった？っていう経緯</li>
+<li>Android以外じゃ起きないのでは？Webアプリはありえない。</li>
+</ul>
+
+
+<a name="L......"></a>
+<h3>所感</h3>
+
+<p>Android開発はまだ経験していないが、問題の重大性はなんとなく理解できた。これは麻植さんの発表が素晴らしかったからだけど。おそらく自分がこの問題にぶち当たることは無いだろうけど、究明のためにbytecodeにもあたるという姿勢は見習いたい。すぐにググっちゃあだめだよ。</p>
+
+<a name="Scala...Trait....................."></a>
+<h2>ScalaのTraitの実装について</h2>
+
+<p>リリロジさんの発表。ScalaのTraitがどのように実装されているかについてアドリブ（？）で発表。<br>
+Scala Conferenceでの発表にも少し触れていた。<br>話している内容が難しくて、精進せねばという気持ちにさせてもらった。<br>
+Scala Conferenceの発表スライドを参考までに貼っておく。</p>
+
+<iframe src="http://www.slideshare.net/slideshow/embed_code/16898724" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen webkitallowfullscreen mozallowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="http://www.slideshare.net/lyrical_logical/scalaconfjp2013" title="Scala as &quot;Better Java&quot; from object-oriented viewpoint" target="_blank">Scala as &quot;Better Java&quot; from object-oriented viewpoint</a> </strong> from <strong><a href="http://www.slideshare.net/lyrical_logical" target="_blank">lyrical_logical</a></strong> </div></p>
+
+<ul>
+<li>traitの実装知ってる人→いない</li>
+<li>traitの実現方法について</li>
+<li>スライド34/40　Scalaの abstract overrideでは実装にないやつも呼べる→気になるでしょ</li>
+<li><a href="http://d.hatena.ne.jp/lyrical_logical/20110501">ブログの記事</a>を元に解説</li>
+<li>comfrk v3 Open Recursion -> TaPLぼんに詳しく書かれている->便利なのでOCamlでも使いたい -> 詳細は<a href="http://comfrk.info/arch/vol3.pdf">PDF</a>で</li>
+<li>オブジェクト指向 組み合わせ爆発の問題があるよね だからtraitが発明されたんだよ</li>
+<li>traitの起源(<a href="http://d.hatena.ne.jp/sumim/20130306">こんな記事</a>があったので</li>
+<li><a href="http://d.hatena.ne.jp/lyrical_logical/20111107">こっちについても触れていた</a></li>
+<li>scalacでちゃんとclassファイルも確認しようね</li>
+</ul>
+
+
+<a name="L......"></a>
+<h3>所感</h3>
+
+<p>ScalaのTraitについてはちゃんと考えたことがなかった。なんか便利な奴、ぐらいの認識…。改めなければ。発表の内容もすごかったけど、アドリブであんなに色々説明できるってすごいなぁ。<br>
+話の半分も理解できていないので、もっと精進しよう。</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2013-03-14T22:59:00+09:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>14</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>10:59 pm</span></time>
+      <span class="categories">full history <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/commit/master/source/_posts/2013-03-14-rpscala-99.markdown">here</a></span>
+
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/scala/'>scala</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/03/14/riak-meetup-tokyo/" title="Previous Post: Riak Meetup Tokyoに行ってきた">&laquo; Riak Meetup Tokyoに行ってきた</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/03/17/scalatra-tutorial-003/" title="Next Post: Scalatraでいろいろやる その３">Scalatraでいろいろやる その３ &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: ubuntu | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/ubuntu/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[mesosをDEBパッケージからインストールする]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2014/01/09/install-mesos-with-deb/"/>
+    <updated>2014-01-09T06:48:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2014/01/09/install-mesos-with-deb</id>
+    <content type="html"><![CDATA[<p>mesosをインストールする場合、ソースをコンパイルしてインストールすることが公式の<a href="http://mesos.apache.org/gettingstarted/">Getting Started with Apache Mesos</a>に記載されているが、この方法だとコンパイルに非常に時間がかかる（10分から20分ぐらい）ので、<a href="http://mesosphere.io/downloads/">mesosphereが提供しているパッケージ</a>を利用したほうが良い。<br>ここでは、パッケージからインストールする手順をまとめる。</p>
+
+<!-- more -->
+
+
+<a name="L....................."></a>
+<h2>事前準備の前に</h2>
+
+<p>mesosだけを動かすならたぶんメモリは512MBとかでも動くと思うけど、実際にはmesosの上でHadoopやSpark、Chronosを動かす必要がある、というかこれらのアプリケーションと協働しないと意味がないので、クラスターのノードには2GBぐらいのメモリとCPUは2発以上欲しいところ。とりあえず動かすならCPUは1発でも大丈夫。</p>
+
+<p>また、mesosのWeb UIではSlaveがホスト名で表示され、その情報を見ることができるが、Slaveのホスト名が名前解決できるようになっていないといけない。ローカルのVMで試す場合やグローバルで名前解決できない場合は、それぞれを<code>/etc/hosts</code>に登録するなどして置く必要がある。</p>
+
+<p>というか、お金がある人はこんなことに時間を使わずに<a href="https://elastic.mesosphere.io/">Elastic Apache Mesos</a>を使ったほうが良いと思う。マジで。</p>
+
+<p>私のようにお金がない人は以下のように手元の環境で試さざるを得ないと思うので、このポストがそういう人たちの役に立てたら結構うれしい。</p>
+
+<a name="L...................................."></a>
+<h2>先に読んでおくと捗る記事</h2>
+
+<ul>
+<li><a href="http://steps.dodgson.org/b/2013/03/10/mesos-a-cloud-scheduler/">Mesos: A Cloud Scheduler (1)</a>
+
+<ul>
+<li>ソースについての解説があって、mesosを知る上でかなり勉強になる。ただ、記事自体は着目が早かった為か、もしかしたら若干古い可能性がある。</li>
+</ul>
+</li>
+<li><a href="http://d.hatena.ne.jp/kimutansk/searchdiary?word=%2A%5BMesos%5D">夢とガラクタの集積場</a>
+
+<ul>
+<li>色々と試行錯誤をされており、大変参考になる。これがなかったら多分mesosは諦めていた。</li>
+</ul>
+</li>
+<li><a href="http://blog.livedoor.jp/sonots/archives/35421955.html">正月休みだし Mesos 触ってみた</a>
+
+<ul>
+<li>はっきり言って、私の以降のポストを見るよりかはこっちのほうが読んでてわかりやすい。</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="L.................."></a>
+<h2>事前準備など</h2>
+
+<p>今回はmacのvagrantでubuntu on Virtual Boxな環境で試した。なので、vagrantでの設定も事前準備としてついでにまとめておく。</p>
+
+<a name="Vagrant........."></a>
+<h3>Vagrantの設定</h3>
+
+<p>まずは以下のプラグインをインストールする。</p>
+
+<pre><code>$ vagrant pluin install vagrant-cachier
+$ vagrant pluin install vagrant-vbguest
+$ vagrant pluin install vagrant-vbox-snapshot
+</code></pre>
+
+<p>多分使わないけど、なんとなく各VMに対して共有フォルダを用意しておく。
+    $ mkdir data{1,2,3}</p>
+
+<p>Ubuntuをローカルにダウンロードしておく。</p>
+
+<pre><code>$ wget -q -O ~/local/vagrant/box/precise-server-cloudimg-amd64-vagrant-disk1.box http://cloud-images.ubuntu.com/vagrant/precise/current/precise-server-cloudimg-amd64-vagrant-disk1.box
+</code></pre>
+
+<p>適当な名前でVagrantに登録する。</p>
+
+<pre><code>$ vagrant box add precise ~/local/vagrant/box/precise-server-cloudimg-amd64-vagrant-disk1.box
+</code></pre>
+
+<p>Vagrantの設定ファイルを作る
+    $ vagrant init precise</p>
+
+<p>設定ファイルを以下のようにする。</p>
+
+<pre><code># -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "precise"
+  config.vm.box_url = "/Users/sgyk/local/vagrant/box/precise-server-cloudimg-amd64-vagrant-disk1.box"
+  config.cache.auto_detect = true
+
+  config.vm.define :master1 do |master1|
+    master1.vm.hostname = "master1"
+    master1.vm.network :private_network, ip: "192.168.56.100"
+    master1.vm.provider "virtualbox" do |v|
+      v.customize ["modifyvm", :id, "--memory", 2048]
+      v.name = "mesos_master1"
+    end
+    master1.vm.synced_folder "data1", "/vagrant_data"
+    master1.vm.provision :shell, :path =&gt; "./setup.sh"
+  end
+
+  config.vm.define :slave1 do |slave1|
+    slave1.vm.hostname = "slave1"
+    slave1.vm.network :private_network, ip: "192.168.56.101"
+    slave1.vm.provider "virtualbox" do |v|
+      v.customize ["modifyvm", :id, "--memory", 2048]
+      v.name = "mesos_slave1"
+    end
+    slave1.vm.synced_folder "data2", "/vagrant_data"
+    slave1.vm.provision :shell, :path =&gt; "./setup.sh"
+  end
+
+  config.vm.define :slave2 do |slave2|
+    slave2.vm.hostname = "slave2"
+    slave2.vm.network :private_network, ip: "192.168.56.102"
+    slave2.vm.provider "virtualbox" do |v|
+      v.customize ["modifyvm", :id, "--memory", 2048]
+      v.name = "mesos_slave2"
+    end
+    slave2.vm.synced_folder "data3", "/vagrant_data"
+    slave2.vm.provision :shell, :path =&gt; "./setup.sh"
+  end
+end
+</code></pre>
+
+<p>setup.shの内容は<a href="https://gist.github.com/sgykfjsm/8325561#file-setup-sh">これ</a>。大したことは全くしていなくて、Vagrant用のsshノーパス設定とmesosの依存モジュール（ただしコンパイル時の。いらないかも？）のインストール、mesos本体のインストールを行なう。</p>
+
+<p>だいたいこれでmesosを構築する準備が整う。</p>
+
+<a name="hosts.................."></a>
+<h2>hostsを設定する。</h2>
+
+<p>mesosを構築する前に先にhostsを設定しておいたほうが何かとハマらずにすむので、やっておくこと。これが意外と大事。</p>
+
+<pre><code>vagrant@master1:~/scripts$ cat /etc/hosts
+# 127.0.0.1     master1 master1 localhost
+
+# The following lines are desirable for IPv6 capable hosts
+::1 ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts
+192.168.56.100 master1
+192.168.56.101 slave1
+192.168.56.102 slave2
+127.0.0.1 localhost
+</code></pre>
+
+<p>要は以下のように他ノードの名前解決ができればいいのだけど、ポイントは以下の2つ。</p>
+
+<ul>
+<li><code>127.0.0.1 hostname</code>のエントリをコメント文にするなどして無効にすること。</li>
+<li><code>127.0.0.1 localhost</code>のエントリは一番下に置いておくこと。</li>
+</ul>
+
+
+<p>それぞれはmesosとは直接関係ないけど、まず1つ目は後でmesos上でSpark Shellを動かす際に、Spark Shellはホスト名にプライベートIPのエントリがあってもなぜかループバックアドレスの方を優先してしまい、その情報を他ノードに渡してしまうため、他ノードからマスターノードへタスクを返すことができなくなってしまう。よって、ホスト名に対応するエントリを1つに限定することでこのような事態を防ぐ必要がある。これってなんか変な気がするけど、わざわざのログで<code>Your hostname, master1 resolves to a loopback address: 127.0.1.1; using 192.168.56.100 instead (on interface eth1)</code>とかって出しているぐらいなのでバグじゃなくて仕様なのだと思う。</p>
+
+<p>2つ目は、Hadoopの利用を見越しての設定。namenodeがローカルで名前解決するときに、/etc/hostsのエントリを上から舐めるんだけど、最初に合致したエントリをnamenodeが採用するため、今回の場合だと127.0.0.1でバインドしてしまう。そうすると、以下の様なエラーが出る。</p>
+
+<pre><code>2013-12-23 14:41:13, 046 INFO org.apache.hadoop.ipc.Client: Retrying connect to server: vagrant-mesos-master1/192.168.56.100:55000. Already tried 9 time(s); retry policy is RetryUpToMaximumCountWithFixedSleep(maxRetries=10,  sleepTime=1 SECONDS)
+2013-12-23 14:41:13, 048 WARN org.apache.hadoop.hdfs.server.datanode.DataNode: Problem connecting to server: master1/192.168.56.100:55000
+</code></pre>
+
+<p>これを防ぐには、上記のように削除orコメントアウトするか、あるいは一番下の行に持っていくとよい。なお、これはすべてのマシンでやっといたほうがいいらしい。詳細は<a href="http://suzhiyang.appspot.com/?p=188002">ここ</a>を参照のこと。</p>
+
+<p>このhostsファイルの設定は全ノードでやっておくこと。スクリプトでばらまいても良いと思う。</p>
+
+<a name="mesos.................."></a>
+<h2>mesosを設定する。</h2>
+
+<p>で、やっと本筋に到達。</p>
+
+<p>Hadoopにしてもそうだけど、分散処理というかクラスタリングというか、その辺のことを行なうための製品は設定が結構ハマりやすい（ような気がする）。なので、ここからがmesosの構築の本番だったりする。</p>
+
+<p>まず、DEBパッケージでインストールすると、<code>/etc/init</code>にファイルが配置されており、自動起動サービスに登録されていることがわかる。</p>
+
+<pre><code>vagrant@master1:~$ ls -l /etc/init/mesos-*
+-rw-r--r-- 1 root root 368 Dec 19 23:12 /etc/init/mesos-master.conf
+-rw-r--r-- 1 root root 366 Dec 19 23:12 /etc/init/mesos-slave.conf
+</code></pre>
+
+<p>そして、ソースからインストールした場合、mesosの起動オプションは<code>mesos-master-env.sh</code>だったりコマンドライン引数で渡したりするが、serviceから起動する場合は、オプションによって設定箇所が異なる。</p>
+
+<pre><code># masterとslaveの両方
+vagrant@master1:~$ cat /etc/default/mesos
+LOGS=/var/log/mesos
+ULIMIT="-n 8192"
+# masterのみ
+vagrant@master1:~$ cat /etc/default/mesos-master
+PORT=5050
+ZK=`cat /etc/mesos/zk`
+# slaveのみ
+vagrant@master1:~$ cat /etc/default/mesos-slave
+MASTER=`cat /etc/mesos/zk`
+</code></pre>
+
+<p>とりあえずmasterを起動してみようとすると、以下のエラーが出て起動できない。</p>
+
+<pre><code>vagrant@master1:/usr/local/var/mesos/deploy$ mesos-master -h
+mesos-master: error while loading shared libraries: libjvm.so: cannot open shared object file: No such file or directory
+</code></pre>
+
+<p>なので、共有ライブラリにlibjvm.soを登録する。</p>
+
+<pre><code>vagrant@master1:/usr/local/var/mesos/deploy$ sudo vi /etc/ld.so.conf.d/libjvm_so.conf
+vagrant@master1:/usr/local/var/mesos/deploy$ cat /etc/ld.so.conf.d/libjvm_so.conf
+/usr/lib/jvm/java-1.7.0-openjdk-amd64/jre/lib/amd64/server
+vagrant@master1:/usr/local/var/mesos/deploy$ sudo /sbin/ldconfig
+vagrant@master1:/usr/local/var/mesos/deploy$ sudo ldconfig -p | grep jvm
+        libjvm.so (libc6,x86-64) =&gt; /usr/lib/jvm/java-1.7.0-openjdk-amd64/jre/lib/amd64/server/libjvm.so
+        libjsig.so (libc6,x86-64) =&gt; /usr/lib/jvm/java-1.7.0-openjdk-amd64/jre/lib/amd64/server/libjsig.so
+</code></pre>
+
+<p>これで<code>mesos-master</code>と<code>mesos-slave</code>が動くようになる。</p>
+
+<p>masterやslaveに設定する内容は<code>-h</code>か、<a href="http://ampcamp.berkeley.edu/3/exercises/mesos.html#solution_0">ここ</a>とか<a href="http://ampcamp.berkeley.edu/3/exercises/mesos.html#solution_1">ここ</a>を参考にすると良い。</p>
+
+<p>とりあえず、今回は以下のように設定した。なお、ホワイトリストも用意しておくこと。このファイルが無いと、延々と「whitelistが無いよ」というログを吐き続けてしまうし、mesosのマスターは誰彼構わずslaveに組み込んでしまうため、セキュリティ的に用意しておいたほうが良い。</p>
+
+<pre><code>mater1:/etc/default$ cat /etc/default/mesos
+LOGS=/var/log/mesos
+ULIMIT="-n 8192"
+vagrant@master1:/etc/default$ cat /etc/default/mesos-master
+PORT=5050
+ZK=zk://master1:2181,slave1:2181,slave2:2181/mesos
+export MESOS_whitelist=file:///usr/local/var/mesos/deploy/slave.lst
+vagrant@master1:/etc/default$ cat /etc/default/mesos-slave
+MASTER=zk://master1:2181,slave1:2181,slave2:2181/mesos
+export MESOS_work_dir=/tmp/`hostname`/mesos
+vagrant@master1:~/scripts$ cat /usr/local/var/mesos/deploy/slave.lst
+master1
+slave1
+slave2
+</code></pre>
+
+<p>これらの設定ファイルは起動スクリプト内で読み込まれるためコマンドを記述することができる。地味に便利である。<br>が、良く見てもらうとわかるように<code>zk://</code>や<code>file://</code>という記述があったりするので、地味に注意が必要である。</p>
+
+<p>なお、以下については起動スクリプト内の変数として設定されているため、それらの初期値となるように記述する必要がある</p>
+
+<ul>
+<li>zk(masterのみ)</li>
+<li>master(slaveのみ)</li>
+<li>ip</li>
+<li>log_dir</li>
+<li>isolation</li>
+</ul>
+
+
+<p>設定ファイル以外の場所で設定値を記述したい場合は以下の様にする。詳細は起動スクリプト<code>/usr/bin/mesos-init-wrapper</code>参照のこと。
+    # echo setting parameter > /etc/mesos-[master|slave]/(attribute)
+    echo &lsquo;192.168.56.100&rsquo; > /etc/mesos-slave/ip</p>
+
+<p>これでmesosの設定は完了したが、まだmesosを起動させてはいけない。設定ファイルにzkプロトコルを記述していることからわかると思うけど、Zookeeperをインストールする必要がある。</p>
+
+<a name="Zookeeper....................."></a>
+<h2>Zookeeperのインストール</h2>
+
+<p>Zookeeperのinstallは<a href="http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH4/latest/CDH4-Installation-Guide/cdh4ig_topic_4_4.html">Clouderaのマニュアル</a>にしたがってリポジトリを追加して、<a href="http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH4/latest/CDH4-Installation-Guide/cdh4ig_topic_21_3.html">apt-getでインストール</a>すればOK</p>
+
+<pre><code>vagrant@master1:/tmp$ wget http://archive.cloudera.com/cdh4/one-click-install/precise/amd64/cdh4-repository_1.0_all.deb
+vagrant@master1:/tmp$ sudo dpkg -i cdh4-repository_1.0_all.Debian
+vagrant@master1:/tmp$ curl -s http://archive.cloudera.com/cdh4/ubuntu/precise/amd64/cdh/archive.key | sudo apt-key add -
+OK
+vagrant@master1:/tmp$ sudo apt-get update
+vagrant@master1:/tmp$ sudo apt-get -y install zookeeper-server zookeeper
+</code></pre>
+
+<p>設定ファイルを以下のように更新する。</p>
+
+<pre><code>vagrant@master1:/tmp$ cat /etc/zookeeper/conf/zoo.cfg | grep -v -e "^#\|^$"
+maxClientCnxns=50
+tickTime=2000
+initLimit=10
+syncLimit=5
+dataDir=/var/lib/zookeeper
+clientPort=2181
+server.1=master1:2888:3888
+server.2=slave1:2888:3888
+server.3=slave2:2888:3888
+</code></pre>
+
+<p>zookeeper-serverが起動していたら、一旦停止させて起動する。</p>
+
+<pre><code>vagrant@master1:/tmp$ sudo service zookeeper-server status
+zookeeper-server is running
+vagrant@master1:/tmp$ sudo service zookeeper-server stop
+JMX enabled by default
+Using config: /etc/zookeeper/conf/zoo.cfg
+Stopping zookeeper ... STOPPED
+vagrant@master1:/tmp$ sudo -u zookeeper /usr/lib/zookeeper/bin/zkServer-initialize.sh --force --myid 1
+
+Force enabled, data/txnlog directories will be re-initialized
+Using myid of 1
+vagrant@master1:/tmp$ sudo service zookeeper-server start
+JMX enabled by default
+Using config: /etc/zookeeper/conf/zoo.cfg
+Starting zookeeper ... STARTED
+</code></pre>
+
+<p>これらの作業をslaveでも実施しておく。<a href="https://gist.github.com/sgykfjsm/8326115#file-distribute_mesos_setting_and_install_zookeeper-sh">こんなスクリプト</a>を用意しておくと便利かもしれない。</p>
+
+<a name="mesos.................."></a>
+<h2>mesosを起動する。</h2>
+
+<p>ここまでやって、ようやくmesosを起動することができる。全ノードでmesosのマスターとスレーブを起動する。これもスクリプトを使って全ノードを対象にマスターとスレーブの起動・停止ができるようにしておくとよさ気。</p>
+
+<pre><code>vagrant@master1:~$ sudo service mesos-master start
+vagrant@master1:~$ sudo service mesos-slave start
+</code></pre>
+
+<p>適当にどっかのマシン(例えば<a href="http://192.168.56.101:5050/#/">http://192.168.56.101:5050/#/</a> とか)のmesosのWebUIにアクセスして回ると、<code>This master is not the leader, redirecting in 1 seconds &hellip; go now</code>という警告が出て、自動的にZookeeperが選出したmesosのマスターにリダイレクトされる。</p>
+
+<hr />
+
+<p>とりあえず、mesosの構築はここまで。まぁ結構色々設定に気を使うところが多いけど、慣れてしまえば大丈夫なような気がする。続きはHadoop on mesosとSpark on mesosについて書くので、そこで。色々と触ってmesosの感覚を掴んだら、こまかいアーキテクチャなり関連する論文なりを読んで理解を深めていこうと思う。</p>
+
+<p>以下、気になること。</p>
+
+<ul>
+<li>新しくノードをmesosに追加した場合にwhitelistを更新しないといけないけど、そうするとmesos-masterを再起動しないといけなくなる。serviceコマンドのオプションにはgraceful restartみたいなのは無いと思うので、そうなると順番にマスターを再起動するようなローリング・リスタートみたいなことをしないといけない？
+
+<ul>
+<li>ノード数が多いとスゲーめんどくさそう。</li>
+</ul>
+</li>
+<li>mesosをHadoopとかSpark抜きで素で使うには？
+
+<ul>
+<li><a href="http://mesos.apache.org/documentation/latest/app-framework-development-guide/">Framework</a>なるものを自分で作る必要があるけど、<a href="https://github.com/apache/mesos/tree/master/src/examples">Examples</a>を見る限り、JavaとかPyhtonのバインディングはあるけどC++で書くのが楽っぽい？ように見えるけど、C++やったこと無いので個人的にはハードルが高い…。</li>
+</ul>
+</li>
+<li>じゃあ結局のところ、なんでmesos使うの？
+
+<ul>
+<li>カジュアルに大規模な分散（あるいは並行？）処理を実現するにはマシンを並べて処理をぶん回すっていうのが多分今のところの最適解だと思っていて、それを実現しているのがHadoopなのだと思う。ただ、Hadoopが本領を発揮できるのは多分数十から数百GB以上のデータを1時間単位でバッチ処理するような要件だと適切だろうけど、そうじゃないと運用コストのほうがメリットより大きかったり、何よりHive使わずにMapReduce書くのは結構しんどいし、Hiveでは記述できる処理には限界があるので、どうしても大規模だったり計算量の多い処理では行き詰まってしまいがち。mesosはそういった状況に対する一つの解になりうるんじゃないかと思っている。けど、この考えが正しいのか気になるし、他の視点も当然あるだろうから、もっと勉強しないといけない。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>というわけで、mesosをちょっと頑張って追究してみようと思った次第。</p>
+]]></content>
+  </entry>
+  
+</feed>

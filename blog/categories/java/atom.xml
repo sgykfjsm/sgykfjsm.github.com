@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: java | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/java/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[業務システムエンジニアのためのHTML5勉強会#04に参加した]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2013/09/10/html5-with-java-meetup/"/>
+    <updated>2013-09-10T00:05:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2013/09/10/html5-with-java-meetup</id>
+    <content type="html"><![CDATA[<p><a href="http://atnd.org/events/42782">業務システムエンジニアのためのHTML5勉強会#04 Web✕Java - HTML5で進化したWeb標準を、Java技術でどう扱うのか？ -</a>という勉強会に参加した。これはそのメモ。メモを取ったのは一部のみ。</p>
+
+<!--more -->
+
+
+<a name="L......Web.........Struts.Java.............."></a>
+<h2>今のWeb標準とStruts/Javaの問題(仮)</h2>
+
+<p>発表者は小川充さん。</p>
+
+<p><strong>NOTE</strong>
+2013/09/12 08:10:33 スライドを追加</p>
+
+<iframe src="http://www.slideshare.net/slideshow/embed_code/26103373" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen webkitallowfullscreen mozallowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="https://www.slideshare.net/mitsuruogawa33/webstruts" title="業務系WebアプリケーションがStrutsから旅立つ日" target="_blank">業務系WebアプリケーションがStrutsから旅立つ日</a> </strong> from <strong><a href="http://www.slideshare.net/mitsuruogawa33" target="_blank">Mitsuru Ogawa</a></strong> </div></p>
+
+<p>実際のタイトルはメモっていない…。atnndからコピペしてるのでもしかしたら違うのかも。今回のテーマのオープニングテーマにふさわしく、現場でのJava開発のしんどいところを端的に問題提起していて、次世代のWebやJavaに期待を寄せていることが伝わった。以下、メモ。</p>
+
+<ul>
+<li>業務系Webアプリには<strong>しっかりとした</strong>バックエンドが必要。
+
+<ul>
+<li>Struts系がよく使われているが、1.x系はEOLを迎えた。</li>
+<li>J2EE+Struts1.xは過去のテクノロジー</li>
+<li>現在のWeb技術要素を取り込んでいない</li>
+<li>業務系Webアプリのガラパゴス化</li>
+</ul>
+</li>
+<li>J2EE + Struts1.x系が必要な要件を満たしていない
+
+<ul>
+<li>独自フレームワークを構築</li>
+<li>ベンダーロックイン</li>
+<li>属人化、ガラパゴス化</li>
+</ul>
+</li>
+<li>ガラパゴスからの脱出を目指す
+
+<ul>
+<li>標準化</li>
+<li>Java EEやScalaなどのあたらしいテクノロジーをどのように吸収していくか</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="Java.EE..............HTML.5................"></a>
+<h2>Java EE の概要と HTML 5 の取り組み</h2>
+
+<p>発表者は寺田佳央さん。</p>
+
+<p>総括としては、レガシーなJavaは捨ててJava EEに移行すべきということ。あと、なんとなくポジショントーク気味というかJava EE推し気味なのが気になった。以下はメモ。</p>
+
+<ul>
+<li>Java EEは軽量なフレームワーク</li>
+<li>非常に多く採用されている</li>
+<li>標準の技術なので、他のアプリサーバにも移行しやすい
+
+<ul>
+<li>ポータビリティが考慮されている。</li>
+</ul>
+</li>
+<li>StrutsとTomcatはもうやめたほうが良いらしい
+
+<ul>
+<li>１０年前のデファクト・スタンダードが今もそうとは限らない</li>
+<li>Struts1.x系はEOL。新たなバグは自分で対応していくしか無い。</li>
+<li>Eclipse SurveyによるとStruts系のフレームワークをもう使わないという回答</li>
+<li>レガシーな構成でアプリケーションを構築すると、メンテナンス・コストが増大する。</li>
+<li>エンドユーザ（発注主）は基盤となるフレームワークやミドルウェア類には関心を払わない→脆弱性が放置されて信用問題につながる。</li>
+<li>Java EEはオールインワンで非常に多くの試験をクリアしているので安心して使えるよ</li>
+<li>Java EE準拠のアプリサーバはJava EE6全機能を使うことができる。依存関係に悩まなくて済むらしい。</li>
+<li>独自技術から標準の技術へ</li>
+</ul>
+</li>
+<li>Java EE7が2013-06に登場
+
+<ul>
+<li>「HTML5、モバイル・アプリ開発の究極のプラットフォーム」</li>
+<li>Java EE6は国内でも非常に多くの企業が採用しており、１ヶ月で数十万件のダウンロード</li>
+<li>Java EE7はWebSocketに最も興味が持たれている。</li>
+<li>Developer producutivity, html5, enterprise daemonds</li>
+<li>html5&hellip;従来型のWebアプリケーションにも対応し、次世代型のWebアプリにも対応している。
+
+<ul>
+<li>WebSocket(HTTPとは違う。HTTPヘッダーなどがないので、送信データがより少なくなる。), JSON1.0, JAX-RS2.0(HTTP)</li>
+<li>WebSocket, JAX-RS2のどちらが良いかは、つくるアプリケーションの種類しだい。</li>
+</ul>
+</li>
+<li>JavaServer Faces 2.2</li>
+<li>開発生産性の向上
+
+<ul>
+<li>Java EE6からEE7でコード量を60%ほど削減できる場合がある。</li>
+</ul>
+</li>
+<li>エンタープライズニーズへの対応
+
+<ul>
+<li>バッチとか</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Java EE7はEE6の進化版
+
+<ul>
+<li>Java EE7を使うならJava EE6を押さえた上で、その差分としてEE7を使うようにすると良い。</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="Java...........................Scala....................."></a>
+<h1>JavaプログラマのためのScalaプログラミング</h1>
+
+<p>発表者は石黒尚久さん。内容はJavaとの対比を示しながらのScala入門。本当に入門的な内容で若干眠くなった。</p>
+
+<ul>
+<li>JavaとScalaの文法的な違いを説明</li>
+<li>JavaとScalaは相互利用できるとされている</li>
+<li>ScalaはJavaの冗長な書き方を改善しようとしている</li>
+<li>簡潔な表記が特徴的。</li>
+</ul>
+
+
+<a name="Java......Scala.......Scala...Web........................."></a>
+<h2>JavaからScalaへ　~ScalaでWeb開発はこう変わる~</h2>
+
+<p>発表者は竹添直樹さん。</p>
+
+<p><strong>NOTE</strong>
+2013/09/10 08:35:05 スライドを追加した。</p>
+
+<iframe src="http://www.slideshare.net/slideshow/embed_code/26030850" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen webkitallowfullscreen mozallowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="https://www.slideshare.net/takezoe/javascala" title="JavaからScalaへ" target="_blank">JavaからScalaへ</a> </strong> from <strong><a href="http://www.slideshare.net/takezoe" target="_blank">takezoe</a></strong> </div></p>
+
+<p>なぜScalaを使うようになったのか、ということからScalaの主要なフレームワークの紹介、その使い所を提示していた。個人的には今回一番期待していた内容で、期待通りの内容だった。</p>
+
+<ul>
+<li>Scala + アジャイルを実践している。</li>
+<li>小中規模のアプリケーションを効率よくつくることを追求
+
+<ul>
+<li>Javaでは無理、Scalaに可能性を求めた。</li>
+</ul>
+</li>
+<li>Web言語としてのScala
+
+<ul>
+<li>ステートレス
+
+<ul>
+<li>HTTPもステートレス</li>
+<li>関数型言語のステートレスな性質と相性が良い</li>
+</ul>
+</li>
+<li>コレクション操作
+
+<ul>
+<li>DBからデータを取り出して加工する処理と相性が良い。Webアプリケーションはたいていこの処理。</li>
+</ul>
+</li>
+<li>フレームワーク</li>
+</ul>
+</li>
+<li>Scalaの良さはFlexibility and Simplicity(？スライド見逃した)</li>
+<li>Play2
+
+<ul>
+<li>１台で処理できるリクエスト数を上げる</li>
+<li>非同期処理を簡単に書ける</li>
+<li>が、ボトルネックであるDBアクセスがブロックしてしまう</li>
+<li><a href="https://github.com/mauricio/postgresql-async">postgresql-async</a>(mysql版もあるらしい)というノンブロッキングなPostgresqlアクセス用のドライバがある。</li>
+<li>これを使えばJVM上では完全にノンブロッキングになる（が、実戦で使うにはまだ早い？）</li>
+</ul>
+</li>
+<li>タイプセーフ
+
+<ul>
+<li>テンプレートもタイプセーフ</li>
+<li>ルーティングもタイプセーフ</li>
+</ul>
+</li>
+<li>WebSocketも簡単に使える</li>
+<li>ステートレス
+
+<ul>
+<li>サーバサイトに状態を持たない</li>
+</ul>
+</li>
+<li>Nettyの上で動くのでServletコンテナでは動作しない
+
+<ul>
+<li>warにするプラグインが存在するが、イバラの道なのでやめたほうが良い</li>
+</ul>
+</li>
+<li>Scalatra
+
+<ul>
+<li>Sinatra由来</li>
+<li>Scalaのコードの中にHTMLを書くことができる</li>
+<li>もちろんバリデーションやテンプレートもあって、テンプレートはPlay2と同じものを使うことができる。</li>
+<li>ルーティングをタイプセーフにすることは出来ない</li>
+<li>Servlet3.0対応
+
+<ul>
+<li>既存のJava資産の移行ならScalatraが向いているかも</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>PlayとScalatraの使い分け
+
+<ul>
+<li>スマホのバックエンドなど、スケールさせる必要がある場合はPlay2</li>
+<li>業務システムなど規模が固定できるような場合はScalatra</li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p>全体的な所感として、HTML5はどっか行ったということ。</p>
+]]></content>
+  </entry>
+  
+</feed>

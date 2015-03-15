@@ -1,0 +1,639 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: ops | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/ops/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[AnsibleでMySQLをインストールする。]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2015/02/17/install-mysql-with-ansible/"/>
+    <updated>2015-02-17T09:19:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2015/02/17/install-mysql-with-ansible</id>
+    <content type="html"><![CDATA[<p>AWSなんかを使ってると、イチからMySQLなどの基本的なミドルウェアをセットアップすることは減ってくる。そんな中、AnsibleでMySQLをインストールする事になったのだけど、意外と忘れてたりAnsibleで作業するのと手作業で進めることの差異でちょっと詰まったりしたので、ここに備忘しておく。</p>
+
+<!-- more -->
+
+
+<a name="L.................."></a>
+<h2>大まかな手順</h2>
+
+<ol>
+<li>最新安定版(MySQL5.6)をインストールするためのリポジトリを設定する。</li>
+<li>リポジトリ軽油でインストールする。</li>
+<li>初期セットアップを行なう。
+
+<ul>
+<li>rootのパスワード初期化</li>
+<li>mysql_secure_installationによるMySQLの初期化</li>
+<li>諸々の設定</li>
+</ul>
+</li>
+</ol>
+
+
+<p>たったこれだけなんだけど、Ansibleでこれらの作業を実装するのはちょっと面倒。というのも、mysql_secure_installationはコマンドを実行すると対話的に処理を進めることになるが、これをAnsibleで実行するのがちょっと面倒だったりする。また、rootのパスワード初期化についても考慮が必要で、playbookに直書きするのはもちろん駄目だし、mysql_config_editorはこれまた対話式のコマンドなので、自動化が微妙に難しい。諸々の設定に関して、設定すべき内容は案件などによると思うが、予めいくつかのmy.cnfなどを用意しておいて、それをコピーして使うようすればいいだけなので、あまり問題にはならない。</p>
+
+<p>ということで、rootのパスワード初期化および管理とmysql_secure_installationについて考える。</p>
+
+<a name="root...................................."></a>
+<h2>rootのパスワード初期化と管理</h2>
+
+<p>いくつかのブログなどにあるHowTo記事でrootの初期パスワードは.mysql_secretというファイルにある、と書かれていることがある。が、今回MySQL5.6をインストールしてみてもそのようなファイルは無かった。今までも見たことがないので、もしかしたらインストールの方法によってはこのファイルが生成されるのかもしれないが、とにかく無い。なので、パスワードの初期化は基本に忠実に以下のようにMySQLを起動させてからパスワードをSQLで更新した。</p>
+
+<pre><code>/bin/sh /usr/bin/mysqld_safe \
+    --datadir=/var/lib/mysql \
+    --socket=/var/lib/mysql/mysql.sock \
+    --pid-file=/var/run/mysqld/mysqld.pid \
+    --basedir=/usr \
+    --user=mysql \
+    --skip-grant-tables \
+    --skip-networking
+</code></pre>
+
+<p>この起動コマンドについての詳細は<a href="http://dev.mysql.com/doc/refman/5.1/en/resetting-permissions.html#resetting-permissions-generic">Resetting the Root Password: Generic Instructions</a>を参照。この方法がシンプルで覚えることが少なくて良いと思う。</p>
+
+<p>これでMySQLサーバを起動した後、以下のSQLでパスワードを更新する。パスワードはAnsibleの中で<code>cat /dev/urandom | LC_CTYPE=C tr -dc &lsquo;[:alnum:]&rsquo; | head -c 16 ; echo</code>とかやって適当な文字列を生成してあげれば良いと思う。パスワードをplaybookに直書きするよりかはマシだろう。</p>
+
+<pre><code class="sql">UPDATE mysql.user SET Password=PASSWORD('NewPassWord') WHERE User='root';
+FLUSH PRIVILEGES;
+</code></pre>
+
+<p>ここまでは特段問題が無くて、問題はこのパスワードをどこに保管するか、ということ。結論から言えば、/etc/my.cnf.d配下に管理することに落ち着いた。以下の様なファイルを作っておいて、それを/etc/my.cnf.d配下に配置しておけば良いと思う。</p>
+
+<pre><code class="ini">[db-administrator]
+user = root
+password = { { mysql_root_password.stdout }}
+host = localhost
+</code></pre>
+
+<p><code></code>の部分はAnsible内で設定されるプレースホルダー。また、通常は<code>[client]</code>となっている部分は別の文言に変えている。そうでないと、デフォルトの接続情報として使われるので、注意すること。また、/etc/my.cnf.d配下のファイルが読み込まれるように、/etc/my.cnfには<code>!includedir /etc/my.cnf.d</code>を追加しておくこと。</p>
+
+<a name="Ansible...mysql_secure_installation..........................."></a>
+<h2>Ansibleでmysql_secure_installationを如何に行なうか。</h2>
+
+<p>ざっと思いついたのは以下の通り。</p>
+
+<ol>
+<li>普通にmysql_secure_installationを実行して、対話的に処理を行う。
+
+<ul>
+<li>そもそもAnsibleで行なう必要が無いのと、rootのパスワードなどをどこかにメモすることになるので却下</li>
+</ul>
+</li>
+<li>expectを使って、予め回答を入力しておいて、処理を自動化させる。
+
+<ul>
+<li>expectについては、<a href="http://www.math.kobe-u.ac.jp/~kodama/tips-expect.html%E3%81%BE%E3%81%9F%E3%81%AFhttp://linuxjm.sourceforge.jp/html/expect/man1/expect.1.html%E3%81%AA%E3%81%A9%E3%82%92%E5%8F%82%E7%85%A7%E3%80%82">http://www.math.kobe-u.ac.jp/~kodama/tips-expect.html%E3%81%BE%E3%81%9F%E3%81%AFhttp://linuxjm.sourceforge.jp/html/expect/man1/expect.1.html%E3%81%AA%E3%81%A9%E3%82%92%E5%8F%82%E7%85%A7%E3%80%82</a></li>
+<li>expectを別途インストールする必要がある。</li>
+<li>expcet/Tclの文法などを新たに覚えなければならない、かつあまり使うことがなさそうなので、あんまり覚える気がしない。</li>
+<li>試してみたけど微妙だった（予めすべてのパターンの質問を拾って、回答を用意しなければならない）</li>
+<li>ということで却下</li>
+</ul>
+</li>
+<li>mysql_secure_installationと同等の処理を実装し、それを実行する。
+
+<ul>
+<li>mysql_secure_installationがやっている処理自体はいくつかのSQLを実行しているだけで、実装自体は容易。</li>
+<li>ただし、今後のバージョンアップなどでmysql_secure_installationの内容を常に気にしておく必要がある。</li>
+<li>1と2の案に比べて、必要な時間が圧倒的に少なく済むので、今回はこの案にした。</li>
+</ul>
+</li>
+</ol>
+
+
+<p>で、その内容は以下の通り。</p>
+
+<pre><code class="bash">#!/bin/bash
+# http://dev.mysql.com/doc/refman/5.0/en/resetting-permissions.html#resetting-permissions-unix
+
+set -xeu
+
+[ $(/usr/bin/whoami) = 'root' ] || {
+    /bin/echo root only
+    exit 1
+}
+
+init_file=/tmp/mysql-init
+
+/bin/cat &lt;&lt;EOF &gt; ${init_file}
+-- Set the root password
+UPDATE mysql.user SET Password=PASSWORD('${mysql_root_password}') WHERE User='root';
+FLUSH PRIVILEGES;
+-- Remove anonymous users
+DELETE FROM mysql.user WHERE User='';
+-- Disallow remote root login
+DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost',  '127.0.0.1',  '::1');
+-- Remove test database
+DROP DATABASE IF EXISTS test;
+DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
+-- Reload privilege tables
+FLUSH PRIVILEGES;
+EOF
+chmod 600 ${init_file}
+
+nohup /bin/sh /usr/bin/mysqld_safe \
+    --datadir=/var/lib/mysql \
+    --socket=/var/lib/mysql/mysql.sock \
+    --pid-file=/var/run/mysqld/mysqld.pid \
+    --basedir=/usr \
+    --user=mysql \
+    --skip-grant-tables \
+    --skip-networking &amp;
+
+while :
+do
+    [ -r /var/run/mysqld/mysqld.pid ] || continue
+
+    if ps -ef | grep -q $(cat /var/run/mysqld/mysqld.pid) ; then
+        break
+    fi
+    sleep 10
+done
+
+mysql -uroot &lt; ${init_file} # 実際の処理では--login-pathを指定してrootでログイン、実行としている。
+
+/etc/init.d/mysqld stop
+
+rm -f ${init_file}
+
+exit
+</code></pre>
+
+<p>実際に書いてみると、なんてことは無いコードではある。</p>
+
+<p>あと、他に何か書こうかと思ったけど、忘れたので、とりあえずMySQL56をインストールするためのplaybookを載っけてお茶を濁すことにする。</p>
+
+<pre><code class="yaml">---
+- name: Install Official MySQL Repository
+  yum: name=""
+  with_items:
+    - http://dev.mysql.com/get/mysql-community-release-el6-5.noarch.rpm
+  sudo: yes
+  tags:
+    - yum
+    - mysql
+
+- name: Disable Official MySQL Repository
+  replace: dest="/etc/yum.repos.d/.repo" regexp="^enabled *= *1$" backup=yes replace='enabled=0'
+  with_items:
+    - mysql-community
+    - mysql-community-source
+  sudo: yes
+  tags:
+    - yum
+    - mysql
+
+- name: Install MySQL56
+  yum: name="" state=latest enablerepo=mysql56-community,remi
+  with_items:
+    - php56-php-mysqlnd # remi
+    - mysql-community-client
+    - mysql-community-common
+    - mysql-community-devel
+    - mysql-community-libs
+    - mysql-community-server
+    - MySQL-python # for remote-host
+
+  sudo: yes
+  tags:
+    - mysql
+
+- name: Create root user password
+  shell: cat /dev/urandom | LC_CTYPE=C tr -dc '[:alnum:]' | head -c 16
+  register: mysql_root_password
+  tags:
+    - mysql
+
+- name: Execute mysql_secure_installation
+  script: secure_install.sh ""
+  sudo: yes
+  register: result
+  tags:
+    - mysql
+
+- name: Add Line for include append config
+  lineinfile: &gt;
+    dest=/etc/my.cnf
+    line="!includedir /etc/my.cnf.d"
+    backup=yes
+  sudo: yes
+  register: result
+  tags:
+    - mysql
+
+
+- name: Copy my.cnf To /etc/my.cnf.d/login.cnf
+  template: &gt;
+    src=my.cnf.j2
+    dest=/etc/my.cnf.d/login.cnf
+    owner=root
+    group=root
+    mode=0600
+  sudo: yes
+  tags:
+    - mysql
+
+- name: Add mysqld to StartUps on boot And Be Running
+  service: enabled=yes name=mysqld state=running
+  sudo: yes
+  tags:
+    - mysql
+</code></pre>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Beanstalk管理下のインスタンスを安全に再起動する]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2015/02/13/dereg-instance-under-beanstalk/"/>
+    <updated>2015-02-13T18:40:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2015/02/13/dereg-instance-under-beanstalk</id>
+    <content type="html"><![CDATA[<p>現在のBeanstalkでインスタンスが再起動する場合は主に以下の３つがある。</p>
+
+<ul>
+<li>アプリケーションをデプロイするとき</li>
+<li>Configuration(JVMのパラメータとか)をデプロイするとき</li>
+<li>Management ConsoleなどでRestart Appsを実行した時</li>
+</ul>
+
+
+<p>しかし、運用の中では特定のインスタンスのみを再起動したい場合がある。また、再起動を行う場合、インスタンスを再起動すると自動的にTerminateしてしまうし、インスタンス内部のアプリケーションサーバを再起動すると、ELBからリクエストが来てしまう。ここではこういった点を考慮した安全な再起動の手順を確認する。</p>
+
+<!-- more -->
+
+
+<a name="L.................."></a>
+<h2>大まかな流れ</h2>
+
+<ol>
+<li>Auto ScalingのTerminate処理をSuspendにする。</li>
+<li>ELBから対象のインスタンスを切り離す。</li>
+<li>対象のインスタンス、またはインスタンス内部のアプリケーションサーバを再起動する。</li>
+<li>ELBへ対象のインスタンスを再登録する。
+
+<ul>
+<li>インスタンスの再起動を行った場合、インスタンスの状態（Auto ScalingでのHealth State)はUnhealthyとなってしまうので、事前にAuto ScalingのSetInstanceHealthで対象のインスタンスをHealthyにしておくこと。</li>
+</ul>
+</li>
+<li>Auto ScalingのTerminate処理をResumeにする。</li>
+</ol>
+
+
+<a name="L..............."></a>
+<h3>自動化する</h3>
+
+<p>上述した大まかな流れを自動化する。</p>
+
+<ol>
+<li>対象のインスタンスのinstance-idを取得する
+
+<ul>
+<li>例えば対象のインスタンスにsshログインして<code>curl <a href="http://169.254.169.254/latest/meta-data/instance-id/">http://169.254.169.254/latest/meta-data/instance-id/</a></code></li>
+</ul>
+</li>
+<li>取得したinstance-idを元に、そのインスタンスが所属するAuto Scaling Groupを特定する。
+
+<ul>
+<li><code>aws autoscaling describe-auto-scaling-instances &ndash;instance-ids ${instance_id} | jq &ldquo;.AutoScalingInstances[]|.AutoScalingGroupName&rdquo; -r</code></li>
+</ul>
+</li>
+<li>取得したAuto Scaling GroupをキーにTerminate処理をSuspendにする。
+
+<ul>
+<li><code>aws autoscaling suspend-processes &ndash;auto-scaling-group-name ${auto_scaling_group_name} &ndash;scaling-processes Terminate</code></li>
+</ul>
+</li>
+<li>対象のインスタンスが所属するELBのLoadBalancerNameを特定する。
+
+<ul>
+<li><code>aws autoscaling describe-auto-scaling-groups &ndash;auto-scaling-group-name ${auto_scaling_group_name} | jq &ldquo;.AutoScalingGroups[]|.LoadBalancerNames[]&rdquo; -r</code></li>
+<li>上記のコマンドの返り値を配列などで受け取って、instance-idでフィルタリングする。</li>
+<li><code>aws elb describe-instance-health &ndash;load-balancer-name ${load_balancer_name} &ndash;instances ${instance_id}</code></li>
+</ul>
+</li>
+<li>対象のインスタンスをLBから切り離す。
+
+<ul>
+<li><code>aws elb deregister-instances-from-load-balancer &ndash;load-balancer-name ${load_balancer_name} &ndash;instances ${instance_id}</code></li>
+</ul>
+</li>
+<li>対象のインスタンスにて再起動処理を実行する。</li>
+<li>（アプリケーションサーバではなく）インスタンスの再起動を行った場合はHealthyに変更する。
+
+<ul>
+<li><code>aws autoscaling set-instance-health &ndash;instance-id ${instance_id} &ndash;health-status Healthy</code></li>
+</ul>
+</li>
+<li>ELBへ対象のインスタンスを再登録する。
+
+<ul>
+<li><code>aws elb register-instances-with-load-balancer &ndash;load-balancer-name ${load_balancer_name} &ndash;instances ${instance_id}</code></li>
+</ul>
+</li>
+<li>取得したAuto Scaling GroupをキーにTerminate処理をResumeにする。
+
+<ul>
+<li><code>aws autoscaling resume-processes &ndash;auto-scaling-group-name ${auto_scaling_group_name} &ndash;scaling-processes Terminate</code></li>
+</ul>
+</li>
+</ol>
+
+
+<a name="L........."></a>
+<h2>その他</h2>
+
+<p>今回の手順を整理していく中できづいたこと。</p>
+
+<ul>
+<li>ELBからインスタンスを切り離してInService状態のインスタンスがbeanstalk環境に設定している最低稼働台数を下回っても、インスタンスが自動的に追加されることは無い。これはbeanstalkでデフォルトに設定されるAuto ScalingのHealth Check TypeがEC2モードであるためだと思われる。
+
+<ul>
+<li>なので、アプリケーションサーバを再起動するだけならAuto ScalingのTerminate処理に対する操作は不要と言える。</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="L......"></a>
+<h3>余談</h3>
+
+<p>てっきりbeanstalkでのインスタンス死活監視はELB管理下のインスタンスがInServiceになっている数で判断されているものと思い込んでた…</p>
+
+<a name="L....................."></a>
+<h3>参考にした記事</h3>
+
+<p><a href="http://qiita.com/MasaoDX/items/07e46186c450799c6350">Auto ScalingのSuspend/Resumeを使って、Elastic BeanstalkインスタンスをTerminateしないで停止・再起動する</a></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[起動に失敗したインスタンスを調査する例]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2015/02/13/how-to-analysis-unlaunched-instance/"/>
+    <updated>2015-02-13T03:43:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2015/02/13/how-to-analysis-unlaunched-instance</id>
+    <content type="html"><![CDATA[<p>先日、とあるサービスで利用しているBeanstalk環境でインスタンスが起動に失敗した。ログを見ると、S3からリソースの取得に失敗していたようだ。<br>ネットワーク接続の状態としては、AWS内のネットワークでは疎通可能だが、インターネットを経由した通信は不可、という状況。具体的には、例えばAWSのインスタンスからはsshログイン可能だが、グローバルからのsshログインはできないといったような感じ。色々調べたけど、不意に調査対象のインスタンスがTerminateしてしまい、結局原因がわからないままになってしまった。</p>
+
+<p>調査はAWS Supportとやりとりしながら行ったのだけれども、色々と情報収集を都度指示されて捗らなかった。<br>なので、ここには次また事象が再発した場合に備えて、障害発生時に取得しておきべきこと、確認すべきことを整理する。</p>
+
+<!-- more -->
+
+
+<a name="L....................."></a>
+<h2>確認すべきこと</h2>
+
+<ul>
+<li>対象インスタンスに設定されているSecurityGroup
+
+<ul>
+<li>どこからのアクセスを許可しているか</li>
+<li>許可しているプロトコルは何か</li>
+<li>どのポートを開けているか</li>
+</ul>
+</li>
+<li>通信状態に問題がある場合
+
+<ul>
+<li>AWS内ネットワークからアクセス可能か（例えばsshログインなど）</li>
+<li>インターネットからアクセス可能か（例えばcurlでのHTTPアクセスなど）</li>
+</ul>
+</li>
+<li>対象インスタンスにログイン可能な場合
+
+<ul>
+<li>AWS内ネットワークへのアクセスは可能か（例えば<code>curl <a href="http://169.254.169.254/latest/meta-data/">http://169.254.169.254/latest/meta-data/</a></code>でインスタンスのメタデータが取得可能か）</li>
+<li>インターネットへのアクセスは可能か（例えば<code>curl <a href="http://www.google.com">http://www.google.com</a></code>がTimeoutしないか）</li>
+</ul>
+</li>
+<li>対象インスタンスにログインできない場合
+
+<ul>
+<li>Management ConsoleのEC2の画面から対象インスタンスを選択 > Actions > Instance Settings > Get System Logで起動時のログを参照できるかを確認する。</li>
+<li>確認できた場合はそれをテキストファイルなどにコピーしてSupportへ提供する。</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="L....................."></a>
+<h2>収拾すべき情報</h2>
+
+<p>起動に成功したインスタンスと起動に失敗したインスタンスのそれぞれで収拾を行なうこと。</p>
+
+<ul>
+<li>各種設定ファイル
+
+<ul>
+<li>/etc/ssh/sshd_config</li>
+<li>/etc/resolv.conf</li>
+</ul>
+</li>
+<li>各種コマンドの結果
+
+<ul>
+<li>ps -ef</li>
+<li>traceroute, nslookup, dig
+
+<ul>
+<li>これらのコマンドはsshログインできた端末（例えば踏み台に使ったEC2インスタンス）と、sshログインできなかった端末（例えば対象インスタンスへインターネット経由でsshログインを行った作業者の端末）の両方で行うこと。</li>
+<li>www.google.co.jpやrepo.ap-northeast-1.amazonaws.comなど、いくつかのパターンを試すと良い。</li>
+</ul>
+</li>
+<li>tcpdump
+
+<ul>
+<li>.cap形式でコマンドの結果を保存してSupportへ提供する。</li>
+<li>tcpdump port 80 -w filename.cap</li>
+</ul>
+</li>
+<li>netstat -rn, netstat -an</li>
+<li>ssh -vvv</li>
+<li>iptablesの起動有無
+
+<ul>
+<li>sudo /etc/init.d/iptables status</li>
+<li>sudo /etc/init.d/ip6tables status</li>
+<li>起動している場合は設定をテキストファイルなどにコピーしてSupportへ提供する。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="L.................."></a>
+<h2>注意すること</h2>
+
+<p>今回、油断して障害発生した端末が不意にTerminateしてしまい、原因を究明することができなかった。このような障害インスタンスはStanby状態にすることで稼働を維持することができる。具体的にはマニュアルの<a href="http://docs.aws.amazon.com/ja_jp/AutoScaling/latest/DeveloperGuide/TroubleshootingAnAutoScalingInstance.html">Auto Scaling グループのインスタンスのトラブルシューティング</a>を参照すること。Auto ScalingやBeanstalkなどを利用していなければ、勝手にTerminateされることは無いと思うので、Terminate Protectionを設定しておけば大丈夫だと思う。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Amazon RDSのMySQLでオンラインメンテをどうやればいいかを調べた]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2014/01/26/online-maintenance-on-rds-mysql/"/>
+    <updated>2014-01-26T20:28:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2014/01/26/online-maintenance-on-rds-mysql</id>
+    <content type="html"><![CDATA[<p>RDSのMySQLでオンラインメンテ、つまり無停止でのスキーマ変更などをどうやれば良いか、という話。 今までは色々小細工をして生のALTER文を発行していたけど、さすがにロック時間とかが気になり始めたので調べた次第。 ざっとググると、<a href="http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html">pt-online-schema-change</a>というツールを使うと良さそうだったので、ここにその作業ログを残す。 以下は参考にしたブログ記事など。</p>
+
+<ul>
+<li><a href="http://blog.livedoor.jp/sasata299/archives/51983526.html">pt-online-schema-changeを利用して無停止でスキーマ変更</a></li>
+<li><a href="https://twitter.com/frsyuki/statuses/291713629177405441">@frsyukiさんのツイート</a></li>
+<li><a href="http://stackoverflow.com/questions/8919907/can-i-create-trigger-in-an-rds-db">Can I CREATE TRIGGER in an rds DB?</a></li>
+</ul>
+
+
+<!-- more -->
+
+
+<p>なお、別のツールで<a href="http://openarkkit.googlecode.com/svn/trunk/openarkkit/doc/html/oak-online-alter-table.html">oak-online-alter-table</a>というものがある。oak-online-alter-tableに関する記事は以下が参考になる。</p>
+
+<ul>
+<li><a href="http://d.hatena.ne.jp/sh2/20100703">MySQLでサービス停止のないALTER TABLEの検討</a></li>
+</ul>
+
+
+<a name="L............"></a>
+<h2>事前準備</h2>
+
+<p>pt-online-schema-changeの実行に必要なモジュールがあるかを確認する。</p>
+
+<pre><code>$ perl -MDBD::mysql
+Can't locate DBD/mysql.pm in @INC (@INC contains: /Library/Perl/5.12/darwin-thread-multi-2level /Library/Perl/5.12 /Network/Library/Perl/5.12/darwin-thread-multi-2level /Network/Library/Perl/5.12 /Library/Perl/Updates/5.12.5 /System/Library/Perl/5.12/darwin-thread-multi-2level /System/Library/Perl/5.12 /System/Library/Perl/Extras/5.12/darwin-thread-multi-2level /System/Library/Perl/Extras/5.12 .).
+BEGIN failed--compilation aborted.
+</code></pre>
+
+<p>今回は上記の通り、DBD::mysqlがなかったので、cpanmでインストールした。</p>
+
+<p>pt-online-schema-changeを入手する。</p>
+
+<pre><code>$ wget percona.com/get/pt-online-schema-change
+$ chmod a+x pt-online-schema-change
+</code></pre>
+
+<p>今回は以下の様な感じでテスト用のインスタンスを作った。意図せずv5.6になった…。</p>
+
+<pre><code>$ rds-create-db-instance --db-instance-identifier sbtest --db-instance-class db.m1.small --db-name db_sbtest --engine MySQL --allocated-storage 10 --master-username sbtest_user --master-user-password sbtest_passwd
+  DBINSTANCE  sbtest  db.m1.small  mysql  10  sbtest_user  creating  1  ****  n  5.6.13  general-public-license  y
+        SECGROUP  default  active
+        PARAMGRP  default.mysql5.6  in-sync
+        OPTIONGROUP  default:mysql-5-6  in-sync
+</code></pre>
+
+<a name="RDS........................"></a>
+<h2>RDSへの対応について</h2>
+
+<p>チューニングを行っていない場合、Parameter Groupはデフォルトのままなので、pt-online-schemaを使うためには以下の対応を行う必要がある。</p>
+
+<ul>
+<li>メンテナンス用のパラメータグループを作る。(<a href="http://docs.aws.amazon.com/AmazonRDS/latest/CommandLineReference/CLIReference-cmd-CreateDBParameterGroup.html">rds-create-db-parameter-group</a>)</li>
+<li>メンテナンス用のパラメータグループの設定を行う。<code>name=log_bin_trust_function_creators,value=true</code>を指定する。(<a href="http://docs.aws.amazon.com/AmazonRDS/latest/CommandLineReference/CLIReference-cmd-ModifyDBParameterGroup.html">rds-modify-db-parameter-group</a>)</li>
+<li>メンテナンス対象のDBインスタンスのパラメータグループをメンテナンス用のものに変更する。(<a href="http://docs.aws.amazon.com/AmazonRDS/latest/CommandLineReference/CLIReference-cmd-ModifyDBInstance.html">rds-modify-db-instance</a>)</li>
+</ul>
+
+
+<p>コマンドで言うと、以下の様なことを行なう。</p>
+
+<pre><code>$ rds-create-db-parameter-group --db-parameter-group-family mysql5.6 --db-parameter-group-name maintenace-pramas-group --description 'parameter group for maintenace '
+DBPARAMETERGROUP  maintenace-pramas-group  mysql5.6  parameter group for maintenace
+rds-modify-db-parameter-group --db-parameter-group-name maintenace-pramas-group --region us-east --parameters 'name=log_bin_trust_function_creators, value=true, method=immediate'
+$ rds-modify-db-parameter-group --db-parameter-group-name maintenace-pramas-group --parameters 'name=log_bin_trust_function_creators,value=true,method=immediate'
+DBPARAMETERGROUP  maintenace-pramas-group
+$ rds-modify-db-instance --db-instance-identifier sbtest --db-parameter-group-name maintenace-pramas-group --apply-immediately true
+DBINSTANCE  sbtest  2014-01-22T13:52:26.982Z  db.m1.small  mysql  10  sbtest_user  available  sbtest.cfscsg6f7tbd.us-east-1.rds.amazonaws.com  3306  us-east-1a  1  n  5.6.13  general-public-license  y
+      SECGROUP  default  active
+      PARAMGRP  maintenace-pramas-group  applying
+      OPTIONGROUP  default:mysql-5-6  in-sync
+$ rds-describe-db-instances sbtest
+DBINSTANCE  sbtest  2014-01-22T13:52:26.982Z  db.m1.small  mysql  10  sbtest_user  available  sbtest.cfscsg6f7tbd.us-east-1.rds.amazonaws.com  3306  us-east-1a  1  n  5.6.13  general-public-license  y
+      SECGROUP  default  active
+      PARAMGRP  maintenace-pramas-group  pending-reboot
+      OPTIONGROUP  default:mysql-5-6  in-sync
+</code></pre>
+
+<p><code>pending-reboot</code>と出ているので、インスタンスを再起動する。</p>
+
+<pre><code>$ rds-reboot-db-instance sbtest
+DBINSTANCE  sbtest  2014-01-22T13:52:26.982Z  db.m1.small  mysql  10  sbtest_user  rebooting  sbtest.cfscsg6f7tbd.us-east-1.rds.amazonaws.com  3306  us-east-1a  1  n  5.6.13  general-public-license  y
+      SECGROUP  default  active
+      PARAMGRP  maintenace-pramas-group  pending-reboot
+      OPTIONGROUP  default:mysql-5-6  in-sync
+$ rds-describe-db-instances sbtest
+DBINSTANCE  sbtest  2014-01-22T13:52:26.982Z  db.m1.small  mysql  10  sbtest_user  rebooting  sbtest.cfscsg6f7tbd.us-east-1.rds.amazonaws.com  3306  us-east-1a  1  n  5.6.13  general-public-license  y
+      SECGROUP  default  active
+      PARAMGRP  maintenace-pramas-group  in-sync
+      OPTIONGROUP  default:mysql-5-6  in-sync
+</code></pre>
+
+<p><code>in-sync</code>となっていることを確認する。</p>
+
+<a name="L......"></a>
+<h2>実行</h2>
+
+<p>pt-online-schemaを実行する際に、alter文で列のrenameを行なうとき（あるいはchange columnを行なうとき？）には以下のログが出る。</p>
+
+<pre><code>The tool should handle this correctly, but you should test it first because if it fails the renamed columns' data will be lost!  Specify --no-check-alter to disable this check and perform the --alter.
+</code></pre>
+
+<p>今回は<code>&ndash;alter=&lsquo;change column pad new_pad char(60),add column pad char(60)&rsquo;</code>という風に、列名の変更と変更前の列の再作成を行なうために実行の際には<code>&ndash;no-check-alter</code>を付与した。こんな感じでオプションに引数を与えておけばOK。</p>
+
+<pre><code>./pt-online-schema-change --alter='change column pad new_pad char(60),add column pad char(60)' h=sbtest.cfscsg6f7tbd.us-east-1.rds.amazonaws.com,P=3306,D=db_sbtest,t=sbtest,u=sbtest_user,p=sbtest_passwd --statistics --recursion-method processlist --print --execute --no-check-alter
+</code></pre>
+
+<p>生のalter文との処理に比べて、さすがに時間はかかる。ただ、CPU利用率は抑えられるし、何よりオンラインでalter文を発行できるメリットは大きい。とはいえ、MySQL5.6からalterはオンラインに対応するようにはなっているので、MySQL5.5以前のバージョンを使っている場合は利用を検討する価値はあるように思う。</p>
+
+<a name="L........."></a>
+<h2>おまけ</h2>
+
+<p>cpanmでDBD::mysqlをインストールしようとしたら、以下の様なエラーが出て失敗した。</p>
+
+<pre><code>t/10connect.t ........................ Bailout called.  Further testing stopped:  ERROR: Access denied for user 'root'@'localhost' (using password: NO)
+</code></pre>
+
+<p>ログを調べると以下のように出ていた。</p>
+
+<pre><code>You can also optionally set the user to run 'make test' with:
+
+perl Makefile.PL --testuser=username
+</code></pre>
+
+<p>なので、rootでlocalhostのmysqlにアクセスできるようにするための設定を行ってあげればOK。</p>
+
+<pre><code>$ sudo perl Makefile.PL --testuser=root --testpassword=root_password
+Password:
+I will use the following settings for compiling and testing:
+
+  cflags        (mysql_config ) = -I/usr/local/Cellar/mysql/5.6.10/include  -Os -g -fno-strict-aliasing
+  embedded      (mysql_config ) =
+  ldflags       (mysql_config ) =
+  libs          (mysql_config ) = -L/usr/local/Cellar/mysql/5.6.10/lib -lmysqlclient
+  mysql_config  (guessed      ) = mysql_config
+  nocatchstderr (default      ) = 0
+  nofoundrows   (default      ) = 0
+  ssl           (guessed      ) = 0
+  testdb        (default      ) = test
+  testhost      (default      ) =
+  testpassword  (User's choice) = root_password
+  testport      (default      ) =
+  testsocket    (default      ) =
+  testuser      (User's choice) = root
+
+To change these settings, see 'perl Makefile.PL --help' and
+'perldoc DBD::mysql::INSTALL'.
+
+Using DBI 1.622 (for perl 5.016002 on darwin-thread-multi-2level) installed in /System/Library/Perl/Extras/5.16/darwin-thread-multi-2level/auto/DBI/
+Writing Makefile for DBD::mysql
+Writing MYMETA.yml and MYMETA.json
+</code></pre>
+
+<p>あとは<code>make &amp;&amp; make test &amp;&amp; sudo make install</code>しておけばOK。</p>
+]]></content>
+  </entry>
+  
+</feed>

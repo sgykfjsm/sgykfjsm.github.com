@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: linux | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/linux/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA['-rwxr-sr-x'というパーミッション設定]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2014/04/01/whats-is-rwxr-sr-x/"/>
+    <updated>2014-04-01T19:26:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2014/04/01/whats-is-rwxr-sr-x</id>
+    <content type="html"><![CDATA[<p>とある事情でサーバの調査をしていたら、以下の様なパーミッション設定を見かけた。</p>
+
+<pre><code>$ ls -l /usr/sbin/sendmail.sendmail
+-rwxr-sr-x 1 root smmsp 825704  3月 14  2013 /usr/sbin/sendmail.sendmail
+</code></pre>
+
+<!-- more -->
+
+
+<p>本来（というか、いつもは）&#8221;s&#8221;のところは&#8221;-&ldquo;か&#8221;x&#8221;のはずなので、不思議に思って調べたところ、以下の記事に説明があった。</p>
+
+<ul>
+<li><a href="http://www.mukuan.org/basic/permission.html#zone6">特殊なパーミッション</a></li>
+<li><a href="http://kazmax.zpp.jp/linux_beginner/setgroupid.html">SGID（Set Group ID） - 特殊なアクセス権</a></li>
+</ul>
+
+
+<p>これらの記事によると、ここで言うところの&#8221;s&#8221;は<code>SGID(Set Group ID)</code>と呼ばれるもので、この設定がなされている実行ファイルを実行すると、ファイルに設定された所有グループの権限でコマンドが実行されるとのこと。</p>
+
+<pre><code>$ ls -l /usr/sbin/sendmail.sendmail
+-rwxr-sr-x 1 root smmsp 825704  3月 14  2013 /usr/sbin/sendmail.sendmail
+</code></pre>
+
+<p>上記の例で言えば、sendmailを実行すると、smtpグループの権限で実行することになる。</p>
+
+<p>使い道があまりパッと出てこないけど、グループの管理がちょっと楽になるぐらい？日常的な運用で使うことはなさそう。</p>
+]]></content>
+  </entry>
+  
+</feed>

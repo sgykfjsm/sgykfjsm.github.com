@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: riak | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/riak/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Riak Meetup Tokyoに行ってきた]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2013/03/14/riak-meetup-tokyo/"/>
+    <updated>2013-03-14T01:09:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2013/03/14/riak-meetup-tokyo</id>
+    <content type="html"><![CDATA[<p>一度は雪のため中止となった<a href="http://connpass.com/event/1823/">Riak Meetup Tokyo</a>に行ってきた。<br>
+以下はメモ書きなので、ところどころ漏れや間違いがあるかも。</p>
+
+<!-- more -->
+
+
+<p>アジェンダはこんな感じ。</p>
+
+<blockquote><ul>
+<li>shoジャパン株式会社 上西康太</li>
+<li>Riak &amp; Riak CS Introduction / RICON2012参加報告</li>
+<li>Riakの簡単な紹介、および昨年10月に開催されたRICONの参加報告をします。RICONは、Riakだけでなく分散システムおよび分散データベースに関するトピックを扱ったカンファレンスで、歴史は浅いですが非常に多くの興味深い発表がありました。そのいくつかをご紹介します。</li>
+<li>ヤフー株式会社　阪田浩隆</li>
+<li>Riak事始め＆デモ</li>
+<li>Riakを使用するにあたり必要なセットアップ作業や設定方法として、NoSQL を利用する際の注意点や、使いどころの紹介を踏まえた事例をご紹介します。また、簡単なデモも実施します。</li>
+<li>株式会社IDCフロンティア　ビジネス推進本部　新基盤開発部　佐藤博之</li>
+<li>【事例紹介】RiakとCloudStack</li>
+<li>RiakとCloudStackはどのような連携をしていくのか。CloudStack の今後の動向を11月にラスベガスで開催されたCloudStack Collaboration Conference 2012 の参加記もあわせてご紹介します。</li>
+<li>LT</li>
+<li>Riak with EngineYard (仮)  @yando from EngineYard</li>
+</ul>
+</blockquote>
+
+<a name="Riak..amp..Riak.CS.Introduction...RICON2012............"></a>
+<h2>Riak &amp; Riak CS Introduction / RICON2012参加報告</h2>
+
+<p>遅刻したので最初の海外事例は半分ぐらい聞き逃した…</p>
+
+<p><a href="http://ricon.io/archive/ricon2012.html#videos">このへん</a>にRICON2012の講演とかプレゼン資料がある。</p>
+
+<script async class="speakerdeck-embed" data-id="4ba916706dfc0130423e22000a8f87fb" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+
+<p><a href="https://speakerdeck.com/kuenishi/riak-intro-and-and-ricon2012-can-jia-bao-gao">発表スライド</a></p>
+
+<a name="Bump"></a>
+<h3>Bump</h3>
+
+<ul>
+<li>2010-2012にかけてMongoDBからRiakへ</li>
+<li>データが膨らんでMongoDBに対応できなくなってきたから。</li>
+<li>Haskellで実装されているモンタージュというRiakクライアント（プロキシみたいな？
+
+<ul>
+<li><a href="https://github.com/bumptech/montage-haskell-client">これ</a>?</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="BEST.BUY........."></a>
+<h3>BEST BUYの事例</h3>
+
+<ul>
+<li>日本で言うとヨドバシカメラみたいな。</li>
+<li>全米第３位の小売店</li>
+<li>Product CatalogをRiakに突っ込んだ</li>
+<li>基本的にはこっそり試してうまくいったら、メインに載せていくやりかたでRiakを導入した。</li>
+<li>クリスマス商戦はRiakで乗り切った</li>
+</ul>
+
+
+<a name="enStatus"></a>
+<h3>enStatus</h3>
+
+<ul>
+<li>MySQL→RiakへのMigration
+
+<ul>
+<li>結構多いらしい</li>
+</ul>
+</li>
+<li>Amazonがdownしたときのバックアップサービスを提供</li>
+<li>複数のクラウドを切り替えたり、組み合わせて使えるようにするサービス</li>
+<li>クラウドのデータはキャッシュしたりするので、MySQLではスケールしない。</li>
+</ul>
+
+
+<a name="Comcast"></a>
+<h3>Comcast</h3>
+
+<ul>
+<li>ケーブルテーブルみたいなところ</li>
+<li>Netfilxみたいなやつ</li>
+<li>ユーザのプロファイルデータや視聴ログを格納</li>
+</ul>
+
+
+<a name="OpenX"></a>
+<h3>OpenX</h3>
+
+<ul>
+<li>Adプラットフォーム</li>
+<li>MySQL->Cassandra->Riak
+
+<ul>
+<li>全部Riakにするわ</li>
+</ul>
+</li>
+<li>年間1兆の広告を裁く</li>
+<li>2009年頃
+
+<ul>
+<li>鉄板のLAMP構成でプラットフォームを組んでいた。</li>
+<li>トラッキングデータをCookieにぶち込んでたけど、やっぱストレージが良いよねってことでKVSへ</li>
+<li>MySQLとかを使ってたけど、もうお腹いっぱい</li>
+</ul>
+</li>
+<li>2010年頃
+
+<ul>
+<li>初期のCassandraを導入</li>
+</ul>
+</li>
+<li>2011年ごろ
+
+<ul>
+<li>ユーザのアクティビティを残そうぜ</li>
+<li>自前の分散系システムを組んだ</li>
+<li>CassandraをやめてRiakを導入してアプリレイヤでユーザ・データを格納していった。</li>
+</ul>
+</li>
+<li>2012年ごろ
+
+<ul>
+<li>広告主側のデータをCouchDBに入れていた。</li>
+<li>データセンターをまたいだレプリがアレなので、RiakESを導入</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="Voxer"></a>
+<h3>Voxer</h3>
+
+<ul>
+<li>日本で言うとLINEみたいなサービス</li>
+<li>LAMP->CouchDB->Riak + node.js</li>
+<li>Riakを色々disしてたけど、ちゃんと動くところは評価</li>
+<li>ストレージ部分は基本的にRiak</li>
+<li>11nodeで500GB -> ~60node 数TBのデータ増大にも対応</li>
+</ul>
+
+
+<a name="Keep.CALM.and.Query.On"></a>
+<h3>Keep CALM and Query On</h3>
+
+<ul>
+<li>コンピュータやデータベースの歴史や性質を英国になぞらえて解説</li>
+<li>DBのConsistencyは必要だよねって話</li>
+<li>CALMとはConsistency and Logical Monotonicity</li>
+<li>手続き型言語→関数型言語→分散型言?</li>
+</ul>
+
+
+<a name="Riak........."></a>
+<h1>Riak事始め</h1>
+
+<p>ほとんどデモ</p>
+
+<a name="Riak...Riak.EDS"></a>
+<h2>Riak / Riak EDS</h2>
+
+<ul>
+<li>PKG
+
+<ul>
+<li>OSS
+
+<ul>
+<li>1クラスタ構成</li>
+</ul>
+</li>
+<li>有償版
+
+<ul>
+<li>クラス構成OK</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>インストールはrpmでyum</li>
+<li><p>設定を3箇所ぐらいIP書き換えて、それをコピーすれば設定はOK</p></li>
+<li><p>高速にデータをアクセスさせたい場合はKVS一択</p></li>
+<li>Y!の心臓はほとんどKVS</li>
+<li>特定の集合から特定のデータを抜き出したいならRDBのほうが良い</li>
+<li>将来的にデータ件数/容量が増えることがあ確実である</li>
+<li>オペコストを軽減したい場合</li>
+<li>システムが巨大化してしまい、運用コスト軽減を検討してる時に良い</li>
+<li>RiakCSはマルチテナントをかけている。</li>
+<li>セキュリティ上、adminの鍵を設定する必要がある。</li>
+<li>それ以外はRiakと同じ</li>
+<li>CSはS3と互換性がある。s3cmd</li>
+<li>S3 fsの稼働は不安定じゃね？
+
+<ul>
+<li>Y!の中の人がS3 fsのコミッターになって安定するようにした。最新版使えば対応している。</li>
+<li>とはいえ、s3fsはs3のためのものなので別にRiakのため、というわけではないということに注意</li>
+</ul>
+</li>
+</ul>
+
+
+<p>以下の様な構成のアプリについてのライブでも行われて、画像・動画の変換がスピーディーに行われているさまを見せてくれた。</p>
+
+<pre>
+client <-API call -> Riak cluster <-mount-> Web SV
+</pre>
+
+
+<ul>
+<li>clientから画像や動画をアップするとRiakに格納</li>
+<li>クラウドストレージを簡単に構築できる。</li>
+<li>クラウドストレージの導入
+
+<ul>
+<li><a href="http://lohaco.jp">LOHACO</a>（Yahooとアスクルの共同事業？）
+
+<ul>
+<li>登録件数
+
+<ul>
+<li>20万</li>
+</ul>
+</li>
+<li>ファイル
+
+<ul>
+<li>画像データ　5k-500k</li>
+</ul>
+</li>
+<li>リクエスト
+
+<ul>
+<li>450/sec</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>構築からリリースまで
+
+<ul>
+<li>構成検討・各種調整で1week</li>
+<li>構築1day</li>
+<li>test, release 1week</li>
+</ul>
+</li>
+<li>データをフラットに置くと一覧が見れなかった。
+
+<ul>
+<li>ディレクトリに分けて対応</li>
+<li>v1.3では対応済み</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="Q.amp.A"></a>
+<h3>Q&amp;A</h3>
+
+<ul>
+<li>ベンチマークは？
+
+<ul>
+<li>レスポンスから帯域を出して比較。世の中のツールは使わず、自前のスクリプトでやってる</li>
+<li>bash benchは使ってない</li>
+</ul>
+</li>
+<li>Riakのバックアップって必要？
+
+<ul>
+<li>頑丈なのでなくてもいい。</li>
+<li>アクセス分散のためにレプリをするのが本来の使い方</li>
+</ul>
+</li>
+<li>メンテはどう？
+
+<ul>
+<li>メンテは1台づつやってる。サービスを止めないため。</li>
+<li>分散なのでそれが可能。</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="L..................Riak...CloudStack"></a>
+<h2>【事例紹介】RiakとCloudStack</h2>
+
+<ul>
+<li>CloudStack
+
+<ul>
+<li>GUIが良い。色々なツールが標準で付いてるよ</li>
+<li>110以上のクラウドサービスで採用されており、デファクトになりつつある。</li>
+<li><a href="http://incubator.apache.org/cloudstack/index.html">Apache名義でOSS版</a>が出てる</li>
+<li><a href="http://www.citrix.co.jp/products/cloudplatform/index.html">有償版</a>もあるよ</li>
+</ul>
+</li>
+<li>CitrixからASFに技術者が参加し、有償版のフィードバックがOSS版に反映されている。</li>
+<li>ASFに寄贈されて開発スピードが増した。</li>
+<li>Paas事業者とかが積極的に採用している。</li>
+<li><a href="http://books.shoeisha.co.jp/book/b104826.html">CloudStack徹底入門</a>とかが国内で発売されて、一時品切れ状態</li>
+<li>Basho的なCloudって？
+
+<ul>
+<li>Riakはcloudのあるべき姿に近いのでクラウドストレージに最適だよね</li>
+<li>RiakCSにてMulti-DC replicationに対応したよ</li>
+<li>CloudStackとの連携をv4.0.1から開始（2013.3予定
+
+<ul>
+<li>CloudStackのセカンダリストレージとして使えるようになるはず</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>CloudStackとの連携
+
+<ul>
+<li>CloudStackのスナップショットとかテンプレートを格納するためにRiakをストレージに使っている。</li>
+<li>→ストレージってなんでもいいんじゃ？</li>
+<li>→パフォーマンス的にセカンダリが遅いと困る。その点、Riakは結構良い感じらしい。</li>
+</ul>
+</li>
+<li><a href="http://www.atmarkit.co.jp/news/201209/27/idcf.html">IDCFの分散ストレージにもRiak使ってるよ</a>って話（宣伝なので割愛</li>
+</ul>
+
+
+<a name="LT.Riak.with.EngineYard.........yando.from.EngineYard"></a>
+<h2>LT Riak with EngineYard (仮)  @yando from EngineYard</h2>
+
+<ul>
+<li>EngineYardのエンジニアさん</li>
+<li><a href="https://www.facebook.com/eyjapan">fbページ</a>をイイねしてくれると嬉しい</li>
+<li>Riakに力を入れている</li>
+<li>Paasやってます</li>
+<li>デプロイをよろしくやってくれるやつを提供</li>
+<li>Chefですべてを構築し、その上でアプリをデプロイ</li>
+<li>対応しているDB
+
+<ul>
+<li>PostgreSQL</li>
+<li>MySQL</li>
+<li>Riak</li>
+</ul>
+</li>
+<li>Riakのクラスタを任意の台数構築できる</li>
+<li>HA ProxyをAppとRiakの間に立てるので、Appがアクセス先のRiakのNodeをことを考えなくても良い。</li>
+<li>DEMO
+
+<ul>
+<li>GUIで言語やサーバなどを選択</li>
+<li>クラスタ構成</li>
+<li>（なんかポチポチやってた）</li>
+<li>データの取得はcurlだったり各種ライブラリだったり。</li>
+</ul>
+</li>
+<li>Riak Searchの有効化->もうできる。
+
+<ul>
+<li>全文サーチできるけど、<a href="https://speakerdeck.com/basho/yokozuna-ricon">Yokozuna</a>に移行していくので、YokozunaがStableになったらそっちを使うよ</li>
+</ul>
+</li>
+<li>サンプルアプリとの統合</li>
+<li>スナップショット</li>
+<li>使用率ベースでのアラート</li>
+<li>Chefのレシピを活用してるので、GUIからポチポチやってれば後はよろしくやってくれるっぽい。</li>
+</ul>
+
+
+<a name="L......"></a>
+<h2>所感</h2>
+
+<p>Riakを導入している企業が最近増えてきたとは聞いていたが、実際に事例を聞くと感覚としてRiakが実用ベースで使われていることを実感した。<br>
+印象的だったのは、Riakを導入するにあたって裏でこっそり試してうまくいけば実導入に踏み切ったという事例。<br>
+なかなか真似できない（試しても本採用するには技術以外の要素が絡むことが多いので）が、それだけの魅力がRiakにあるのだろうと思う。<br>
+ライブデモはちょっと手間取っていたようだが、実際にインストールなどは確かにやりやすいので、とりあえず試すという分には敷居が低いプロダクトだと思う。</p>
+
+<p>とはいえ、Riakを使うに値するだけのデータ量があってこそ、そのパフォーマンスを活用できると思うので、導入にあたっての勘所を養うためにもRiakの導入事例についてはアンテナを立てておく必要があるだろうと思う。<br>
+また、個人的な偏見かもしれないが、一般的なDB運用担当はSQLやシェル以外のコードを書く機会が少ないので、LLなどのスクリプト有りきのデータ運用を現場が受け入れることができるかが普及の鍵だとも思う。</p>
+
+<p>いずれにせよ、Riakはとても魅力的な製品なので個人的にウォッチを続けていこう。<br>
+うちの現場で導入して欲しいなぁ。</p>
+]]></content>
+  </entry>
+  
+</feed>

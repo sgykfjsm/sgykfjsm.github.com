@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: hbase | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/hbase/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[デブサミ2013に参加した]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2013/02/17/developer-summit/"/>
+    <updated>2013-02-17T22:58:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2013/02/17/developer-summit</id>
+    <content type="html"><![CDATA[<p><a href="http://event.shoeisha.jp/detail/1/">Developers Summit 2013</a>、いわゆる「デブサミ」に参加したので、そのまとめ。</p>
+
+<!-- more -->
+
+
+<a name="L...14-A-2...HBase.at.Ameba"></a>
+<h2><a href="http://event.shoeisha.jp/detail/1/session/2/">【14-A-2】HBase at Ameba</a></h2>
+
+<a name="L............"></a>
+<h3>スライド</h3>
+
+<iframe src="http://www.slideshare.net/slideshow/embed_code/16561017" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen webkitallowfullscreen mozallowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="http://www.slideshare.net/brfrn169/devsumi2013-16561017" title="HBase at Ameba" target="_blank">HBase at Ameba</a> </strong> from <strong><a href="http://www.slideshare.net/brfrn169" target="_blank">Toshihiro Suzuki</a></strong> </div></p>
+
+<p>以下のURLにまとめられている。
+<a href="http://codezine.jp/article/detail/7003">http://codezine.jp/article/detail/7003</a></p>
+
+<p>以下、メモ書き</p>
+
+<ul>
+<li>HBaseについて
+
+<ul>
+<li>NoSQL</li>
+<li>Google BigTableのクローン</li>
+<li>分散ストレージ</li>
+<li>大量のデータを保持するのに向いている</li>
+<li>Auto Sharding</li>
+<li>HDFS
+
+<ul>
+<li>HBaseの信頼性はHDFSに依存する</li>
+</ul>
+</li>
+<li>データモデルはRDBに似ている
+
+<ul>
+<li>違いはColumnがColumn Familyによってグルーピングされること</li>
+<li>Valueは世代を持つ</li>
+</ul>
+</li>
+<li>rowの更新処理はアトミックに行われる</li>
+<li>データファイルはColumn Familyで分割される</li>
+<li>列指向である</li>
+<li>Column FamilyはI/Oを分散させたいときに使うと良い</li>
+<li>APIとしてGet, Put, Delete</li>
+<li>それ以外にもScan, Increment, CAS(Compare and Swap)といった機能も持つ</li>
+<li>Row Keyの範囲でRegionに分割されて負荷分散される。
+
+<ul>
+<li>データの偏りとか</li>
+</ul>
+</li>
+<li>Joinが無い
+
+<ul>
+<li>非正規化がほぼ前提</li>
+</ul>
+</li>
+<li>クエリに対してスキーマが決まる
+
+<ul>
+<li>RDBとは逆のアプローチ</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>HBaseを用いたグラフDB「Hornet」
+
+<ul>
+<li><a href="http://www.itmedia.co.jp/news/articles/1207/13/news119.html">デカグラフ構想</a>
+
+<ul>
+<li>スケールするDBが必要になった</li>
+<li>オンライン処理　高スループットとか</li>
+</ul>
+</li>
+<li>今まで：MySQL + Sharding
+
+<ul>
+<li>書き込みがスケールしにくい</li>
+<li>Shardingの管理が大変</li>
+</ul>
+</li>
+<li>HBaseを利用して、スケールするようにした。また、書き込み速度の点も克服するようにした。</li>
+<li>ログ解析基盤としてHadoopを使ってた実績があり、ノウハウはあった。</li>
+<li>Hornetのデータモデル プロパティグラフ</li>
+<li>アーキテクチャ　Clientに対し、GateWayがあり、その後ろにHBase + HDFS(Hadoop)</li>
+<li>hashを使った分散</li>
+<li>今後はOSS展開したい</li>
+</ul>
+</li>
+<li>JSON Persistent
+
+<ul>
+<li>複数ラインでの開発、スピードが命というAmebaの現場</li>
+<li>背景にDBが各サービスごとに乱立しており、一部が基盤化してしまっていた事情がある。</li>
+<li>全部HBaseにして一元管理したいという思い</li>
+<li>しかしHBaseは難しい
+
+<ul>
+<li>以下に簡単にするか、というのが課題</li>
+<li>RDBに慣れているエンジニアが多い</li>
+</ul>
+</li>
+<li>そこでJSON Persistent
+
+<ul>
+<li>社内ライブラリ</li>
+<li>Javaのオブジェクトをそのまま保存・読み出しできる。</li>
+<li>シンプルなコード AnnotationでPKとかを定義</li>
+<li>インデックス検索、リスト取得</li>
+<li>ValueにJSONを突っ込むイメージ</li>
+<li>Row KeyをIndex検索するスキーマ設計</li>
+<li>これも今後はOSS展開したい</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>なんか長くなったので、ここで一旦終了</p>
+]]></content>
+  </entry>
+  
+</feed>

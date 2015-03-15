@@ -1,0 +1,298 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>LAST_INSERT_ID()の返り値の型はバージョンによって違う - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="昨日、MySQLのバージョンを5.5.27から5.6.13に上げてテストしてたらLAST_INSERT_IDを使っているとこでエラーが出た。それで、ドキュメントを見ていたら以下の様な記述があった。 http://dev.mysql.com/doc/refman/5.5/en/information &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.com/blog/2014/03/02/about-last-insert-id-with-mysql5-dot-5-5-dot-6">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.com" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">LAST_INSERT_ID()の返り値の型はバージョンによって違う</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-03-02T07:30:00+09:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>2</span><span class='date-suffix'>nd</span>, <span class='date-year'>2014</span></span> <span class='time'>7:30 am</span></time>
+        
+        
+          
+           | <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/edit/master/source/_posts/2014-03-02-about-last-insert-id-with-mysql5-dot-5-5-dot-6.markdown">Edit</a>
+          
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>昨日、MySQLのバージョンを5.5.27から5.6.13に上げてテストしてたら<code>LAST_INSERT_ID</code>を使っているとこでエラーが出た。それで、ドキュメントを見ていたら以下の様な記述があった。</p>
+
+<!-- more -->
+
+
+<p><a href="http://dev.mysql.com/doc/refman/5.5/en/information-functions.html#function_last-insert-id">http://dev.mysql.com/doc/refman/5.5/en/information-functions.html#function_last-insert-id</a>より。</p>
+
+<blockquote><p>The value has a type of BIGINT UNSIGNED as of MySQL 5.5.29,  BIGINT (signed) before that.</p></blockquote>
+
+<p>5.5.27ではsigned BIGINTが返る模様。</p>
+
+<p><a href="http://dev.mysql.com/doc/refman/5.6/en/information-functions.html#function_last-insert-id">http://dev.mysql.com/doc/refman/5.6/en/information-functions.html#function_last-insert-id</a>より。</p>
+
+<blockquote><p>The value has a type of BIGINT UNSIGNED as of MySQL 5.6.9,  BIGINT (signed) before that.</p></blockquote>
+
+<p>5.6.13ではunsigned BIGINTが返る模様。</p>
+
+<p>で、これの何が問題になったのかというと、例えばunsignedなBIGINTを<code>java.lang.Long</code>に変換しようとしたら有効桁数が変わってしまうということ。<br>ドキュメント<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>によると、signed BIGINTは</p>
+
+<ul>
+<li>min:-9223372036854775808</li>
+<li>max:9223372036854775807</li>
+</ul>
+
+
+<p>で、これは<code>java.lang.Long</code>の定義<a href="" title="http://docs.oracle.com/javase/7/docs/api/java/lang/Long.html">^2</a>と一致するんだけど、MySQLのunsigned BIGINTは</p>
+
+<ul>
+<li>min:0</li>
+<li>max:18446744073709551615</li>
+</ul>
+
+
+<p>となる。なので、<code>java.lang.Long</code>じゃなくて、<code>java.math.BigDecimal</code>に変換するようにしないといけないんじゃないかなと。どう対応したかまでは知らないんでアレなんだけど。</p>
+
+<p>以下は一応の検証結果。</p>
+
+<pre><code>mysql [localhost] {msandbox} (test) &gt; select version();
++-----------+
+| version() |
++-----------+
+| 5.5.27    |
++-----------+
+1 row in set (0.00 sec)
+
+mysql [localhost] {msandbox} (test) &gt; create table t1(c1 int);
+Query OK, 0 rows affected (0.01 sec)
+
+mysql [localhost] {msandbox} (test) &gt; insert into t1 values(1);
+Query OK, 1 row affected (0.00 sec)
+
+mysql [localhost] {msandbox} (test) &gt; create table t2 select last_insert_id() as c2 from t1;
+Query OK, 1 row affected (0.00 sec)
+Records: 1  Duplicates: 0  Warnings: 0
+
+mysql [localhost] {msandbox} (test) &gt; desc t2;
++-------+------------+------+-----+---------+-------+
+| Field | Type       | Null | Key | Default | Extra |
++-------+------------+------+-----+---------+-------+
+| c2    | bigint(21) | NO   |     | 0       |       |
++-------+------------+------+-----+---------+-------+
+1 row in set (0.00 sec)
+
+
+mysql [localhost] {msandbox} (test) &gt; select version();
++-----------+
+| version() |
++-----------+
+| 5.6.13    |
++-----------+
+1 row in set (0.00 sec)
+
+mysql [localhost] {msandbox} ((none)) &gt; use test;
+Database changed
+mysql [localhost] {msandbox} (test) &gt; create table t1(c1 int);
+Query OK, 0 rows affected (0.01 sec)
+
+mysql [localhost] {msandbox} (test) &gt; insert into t1 values(1);
+Query OK, 1 row affected (0.00 sec)
+
+mysql [localhost] {msandbox} (test) &gt; create table t2 select last_insert_id() as c2 from t1;
+Query OK, 1 row affected (0.02 sec)
+Records: 1  Duplicates: 0  Warnings: 0
+
+mysql [localhost] {msandbox} (test) &gt; desc t2;
++-------+---------------------+------+-----+---------+-------+
+| Field | Type                | Null | Key | Default | Extra |
++-------+---------------------+------+-----+---------+-------+
+| c2    | bigint(21) unsigned | NO   |     | 0       |       |
++-------+---------------------+------+-----+---------+-------+
+1 row in set (0.01 sec)
+</code></pre>
+<div class="footnotes">
+<hr/>
+<ol>
+<li id="fn:1">
+<p>https://dev.mysql.com/doc/refman/5.6/en/integer-types.html<a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
+</ol>
+</div>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2014-03-02T07:30:00+09:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>2</span><span class='date-suffix'>nd</span>, <span class='date-year'>2014</span></span> <span class='time'>7:30 am</span></time>
+      <span class="categories">full history <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/commit/master/source/_posts/2014-03-02-about-last-insert-id-with-mysql5-dot-5-5-dot-6.markdown">here</a></span>
+
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/mysql/'>mysql</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2014/03/01/how-to-preview-markdown-on-cli/" title="Previous Post: markdownをプレビューする">&laquo; markdownをプレビューする</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2014/04/01/whats-is-rwxr-sr-x/" title="Next Post: '-rwxr-sr-x'というパーミッション設定">&#8216;-rwxr-sr-x&#8217;というパーミッション設定 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

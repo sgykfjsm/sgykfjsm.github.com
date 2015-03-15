@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: lean-analytics | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/lean-analytics/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[リーン・アナリティクス入門に行ってきた]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2013/04/15/lean-analytics/"/>
+    <updated>2013-04-15T16:17:56+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2013/04/15/lean-analytics</id>
+    <content type="html"><![CDATA[<p>URL: <a href="http://peatix.com/event/11791">http://peatix.com/event/11791</a></p>
+
+<p>Open NetWork Labにて行われた標記の勉強会に行ってきた。</p>
+
+<p>講師の人は<a href="http://leananalyticsbook.com/authors/alistair-croll/">Alistair Croll</a>という方で、今回の勉強会というかカンファレンスは以下の目的で行われた。</p>
+
+<blockquote><p>リーンアナリティクスでは、解決しようとしている課題が本当に実在するものなのかを検証し、そのプロダクトやサービスを必要とする正しいユーザーを見つけ出し、何を創るかを定義し、どのようにマネタイズするか、そしてどのように世界へ広めるかを定義することができます。スタートアップや新規事業開発においていちばんのリスクは&#8221;誰も望まないものを作ってしまうこと&#8221;です。</p>
+
+<p>常に計測・分析をすることで、本当に望まれるサービスを最短の道筋で作る方法であるリーンアナリティクスについての概要のレクチャーを行います。</p></blockquote>
+
+<p>一応、データ部隊の一員として、今回のカンファレンスに参加した。</p>
+
+<!-- more-->
+
+
+<a name="L......"></a>
+<h2>資料</h2>
+
+<a name="L............"></a>
+<h3>スライド</h3>
+
+<iframe src="http://www.slideshare.net/slideshow/embed_code/18662021?rel=0" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen webkitallowfullscreen mozallowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="http://www.slideshare.net/Leananalytics/onlab-japan-introduction-to-lean-analytics" title="OnLab Japan introduction to Lean Analytics" target="_blank">OnLab Japan introduction to Lean Analytics</a> </strong> from <strong><a href="http://www.slideshare.net/Leananalytics" target="_blank">Lean Analytics</a></strong> </div></p>
+
+<a name="togetter"></a>
+<h3>togetter</h3>
+
+<p>URL: <a href="http://togetter.com/li/487260">http://togetter.com/li/487260</a></p>
+
+<a name="L....................."></a>
+<h3>入門編のまとめ</h3>
+
+<p><a href="http://blog.takejune.com/archives/52334044.html">リーン・アナリティクス著者Alistair Croll氏による&#8221;リーン・アナリティクス入門&#8221;のまとめ</a></p>
+
+<a name="L......"></a>
+<h2>メモ</h2>
+
+<p>以降は聴講しながらのメモのため、誤字・脱字等は多々有り。上記の資料にあるまとめを見てれば、以降は見る必要なし。</p>
+
+<ul>
+<li>分析する事柄は会社のステージによる。
+
+<ul>
+<li>アナリティクスはビジネスの目的への活動の指標・測定</li>
+<li>顧客を動かすこと、除く顧客を作る方法</li>
+<li>スタートアップ企業は自分たちがどのようなステージにあるかをわかっていない→何を測定していいのかわからにい</li>
+<li>PayPal, Freshbooks, Wikiprdia, Mitel, Flickr, Twitter, Autodeslはいずれもスタートアップ時には今とは違うことをしていた。</li>
+</ul>
+</li>
+<li>どの製品をどの市場に向けて作るべきかがわからない、という視座に立脚したのがリーンアナリティクス</li>
+<li>今、何をどの市場に向けて何を作るか？</li>
+<li>作ってから考えるではなく、自分が作れるものを作るのではなく、売れるものを作る。</li>
+<li>何かを作りたいと思っている。まずはものを作るというのはお金がかかる。</li>
+<li>その誘惑に負けず、それが売れるのかどうかを見極める、それがリーンアナリティクス
+
+<ul>
+<li>iteate to a product / market fit before the mponey runs out</li>
+</ul>
+</li>
+<li>Empathy
+
+<ul>
+<li>共感、顧客の理解、顧客へのヒアリングではない、ニーズを検討する、生活環境、時代文化の変化を感じる
+
+<ul>
+<li>タブレットやウォークマンの例</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Stickiness
+
+<ul>
+<li>共感のあとはスティッキネスが必要、まず100人を満足させる、大勢が必要な場合はそうではないけど、大体は数百人の顧客に対して直接ヒアリングやテストを行う、100人に愛されれば、彼らが顧客を広げていく、媒体効果</li>
+</ul>
+</li>
+<li>revenue
+
+<ul>
+<li>稼いだ利益を顧客獲得へ注ぐ、マージンは最初は悪くても良い。</li>
+</ul>
+</li>
+<li>scale
+
+<ul>
+<li>ここまで到達して初めてスケールに動くべき。焦ってここに手をつけてはいけない</li>
+</ul>
+</li>
+<li>revenueとscaleの違い
+
+<ul>
+<li>revenueは収入の確保と顧客の拡大、営業を雇うとか</li>
+<li>scaleは企業の拡大、新規出店とか</li>
+</ul>
+</li>
+<li>スティッキネスの「100人」に根拠は？ただの仮の数字?
+
+<ul>
+<li>統計的な観点から。5人の顧客しかいないのであれば、5000人は無理。100人であれば、色々なテストを行うことができる。1000人では、全ての顧客にアプローチするのが難しくなる</li>
+</ul>
+</li>
+<li>この５つを色々なビジネスモデルにマッピングしなければならない
+
+<ul>
+<li>レストランの場合
+
+<ul>
+<li>スタートアップの場合、毎週メニュー変えて顧客の様子を見てみる。そうすることで在庫を適切に管理するようにする。不確実な想定は検証にコストが高くなる。それがうまく言ったら、ロイヤリティプログラムを始める。スタンプや紹介制度。マージンが出るようになったら、より色々な検証を行ったり、在庫管理をより厳密に行うなどして、顧客獲得への投資を強める。</li>
+</ul>
+</li>
+<li>ソフトウェア会社（BtoB）の場合
+
+<ul>
+<li>法人向けの場合は、自身がその業界出身であることが多い。業界の改革案があったり。自身の経験からアイデアが出てくる。これはBtoCとの違い。BtoCの場合、自分にしか売れないアイデアしかない場合がある。</li>
+<li>Stickiness
+
+<ul>
+<li>人々が使い続けるかどうかよりも、既存のビジネスに新規をどう組み込むか。統合や新規。カスタマーサポートやヘルプデスク。つまり、コンサルタント業務やカスタマイズと標準化。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>法律サービスなど顧客自身が事例を紹介しにくいサービスなどの場合はどのようにバイラルすべきか。
+
+<ul>
+<li>SNSなどのバイラルではなく、事例紹介や交流会などでの拡散</li>
+</ul>
+</li>
+<li>(Qを忘れた)
+
+<ul>
+<li>APIなどで外部アプローチポイントを作る。自然なエコシステムの形成</li>
+<li>利益につながるfeatureを考える。</li>
+</ul>
+</li>
+<li>the five stages of lean Analytics
+
+<ul>
+<li>絶対的に重要なメトリックスは何かを考える。</li>
+<li>自分の行動と周囲の状況からそれを見出す。それが近代的なビジネスにおいて重要なスキル。</li>
+</ul>
+</li>
+<li>データを集めても、それをどうしたらいいのかわからないことがある。</li>
+<li>データを集めるときには、何のためにそのデータを何に使うのかを考える。</li>
+<li>ただのレポーティングなのか、行動を変えるためのものか。</li>
+<li>自分の行動や活動を支えないのであれば、それは悪いメトリック。</li>
+<li>Pick OMTM one metrics thats matter -> Drwn a line in the sand
+
+<ul>
+<li>自分たちのビジネスモデルが破綻しているかどうかを常に計測し、破綻していれば、すぐにピボットすることが大事。</li>
+</ul>
+</li>
+<li>仮説を立てるのに、データの有無はあまり重要ではない。</li>
+<li>テストをデザインして、製品を変えてみる。</li>
+<li>結果を計測する。それは顧客に変化を与えたか？</li>
+<li>high score houseの事例
+
+<ul>
+<li>子供のお手伝いを可視化・指標化、ご褒美を管理する。</li>
+<li>自分で想定した結果と顧客の使い方がずれていた。つまりゲームを間違えていた。ルールが間違っていたのではない。</li>
+</ul>
+</li>
+<li>circle of mamの事例</li>
+<li>qidiqの事例</li>
+<li>リーンスタートアップの考え方を知らないマーケターを説得するには？
+
+<ul>
+<li>社内企業の典型的な例：ロッキード・マージン、スカンクワークス</li>
+<li>イノベーションは組織図を変えること。つまり、スカンクワークスの世界では、いろんな教訓がある。14の教訓。block busterとNetFlixの違いを説明してみる。</li>
+<li>新しい事業は既存の事業を損なうことがある。成功が一方の破滅を招くことがある。</li>
+<li>新しい製品は、何も知らない状態に立ち返って、新たに顧客に共感するところが始めなおしてみる。</li>
+</ul>
+</li>
+<li>The BCG matix
+
+<ul>
+<li>Question marks</li>
+<li>Stars</li>
+<li>Dogs</li>
+<li>Cash cows</li>
+</ul>
+</li>
+<li>業態によってはViralが難しい場合のやり方
+
+<ul>
+<li>匿名性を利用する。例えばtwitterとかでのクチコミ。</li>
+</ul>
+</li>
+<li>Lit Morters
+
+<ul>
+<li>オートバイを作っている。ショールームを作った。ショールームから多くのデータを採取して、マーケティングに投資する。</li>
+<li>どんな人が来るかを調べる。そこから競争相手を想定する。これらのコストは非常に低い。</li>
+</ul>
+</li>
+<li>Segments, cohorts, A/B, and multivariates
+
+<ul>
+<li>cohortが大事</li>
+</ul>
+</li>
+<li>お金をかけずに顧客を獲得するには？</li>
+<li>すでに顧客を持っているパートナーと提携する。</li>
+<li>人工的に顧客を増やす。例えば、アプリをインストールしたら何かしらのリワードを受け取れるとか。</li>
+<li>人工的に希少性をもたせる。敢えてクローズドな環境を作る。</li>
+<li>10k人足りないならば、50k人確保して5人に1人を巻き込めるようにする。</li>
+<li>ユーザを躍らせる。データを得る。メトリクスを設定して、測定する。</li>
+<li>ロイヤリティと90日の関係
+
+<ul>
+<li>1年は待ちたくない。90日を測れば、1年を予測することができる。</li>
+</ul>
+</li>
+<li>Empathyについて。
+
+<ul>
+<li>Get out office</li>
+<li>twitterのAdvanced Search/LinkedIn/facebookで見つける。</li>
+<li>Adwordsのキャンペーンを使う。</li>
+<li>広告を通じてEメールを集めて、そこからアンケートなどでアプローチを行う。</li>
+</ul>
+</li>
+<li>localmindの事例
+
+<ul>
+<li>プロダクトを作る前に、仮説を検証してみる。そのためにTwitterを使ってみた。</li>
+</ul>
+</li>
+<li>スタートアップ企業は「成長するために設計された企業」である。</li>
+<li>通常どうなのか？という数字を知ることが大事。</li>
+<li>自社の数字が異常なのか、それともまだマシなのか。そこを知ることが大事。</li>
+<li>顧客獲得コストと製品から得られる収入
+
+<ul>
+<li>モバイルAppならば、機器によってどのように使われているかを知ることが大事。</li>
+</ul>
+</li>
+<li>測定できなければ、改善できない。</li>
+<li>質問が無ければ答えを得ることはできない。</li>
+</ul>
+
+
+<p>かつて、リーダはデータが無くても説得力を持っている人だった。<br>
+いま、リーダはどんな質問をしたら良いかを知っている人。<br>
+これはとてもむずかしい。間違えてしまうかもしれないから。<br></p>
+
+<p>これからのリーダは適切な質問をして、適切なデータを採取・測定し、適切な市場に適切な製品を提供することが大事。</p>
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: couchbase | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/couchbase/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[ec2にcouchbaseをインストールする。ついでにPython SDKとtd-agentも。]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2013/08/18/couchbase-on-ec2-with-td-agent/"/>
+    <updated>2013-08-18T22:46:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2013/08/18/couchbase-on-ec2-with-td-agent</id>
+    <content type="html"><![CDATA[<a name="L......"></a>
+<h2>目的</h2>
+
+<p>ec2にCouchbaseを入れるついでに、fluentdで集めたログをcouchbaseに貯めこむ。</p>
+
+<a name="couchbase............"></a>
+<h2>couchbaseについて</h2>
+
+<ul>
+<li>元々はLutus Notesを起源に持つ<a href="http://couchdb.apache.org/">CouchDB</a>の開発者のひとりであるDamien Katz氏が商業展開している製品。</li>
+<li>Memcachedもベースとなっているので、<a href="http://www.couchbase.com/jp/memcached">MemcachedをCouchbaseクラスタにリプレースした事例もある。</a></li>
+<li>Enterprise Edition(EE)とCommunity Edition(CE)の２つがあり、前者は2nodeまで無料、後者は無制限に無料で使える。</li>
+<li>EEとCEの違いは、EEではサポートが購入でき、CEに比べ先進的な機能が付属している。対してCEはEEの型落ちのような位置づけである。</li>
+<li>MongoDBと同じドキュメント型NoSQLに位置づけられる。</li>
+<li>自動シャーディング、分散クエリ、独立したキャッシュ郡などの機能や特徴を持つ。</li>
+</ul>
+
+
+<!-- more -->
+
+
+<a name="L......"></a>
+<h2>導入</h2>
+
+<p>今回はEC2のm1.smallにインストールするが、AWSの<a href="http://aws.typepad.com/aws_japan/2013/08/running-couchbase-on-aws-new-white-paper.html">ホワイトペーパー</a>では最小でもlargeインスタンスが推奨されている。今回はお遊びなので、smallとするが本番利用時にはインスタンスのスケールは高めにしたほうが良さそう。</p>
+
+<p>AWSのmarket placeには<a href="https://aws.amazon.com/marketplace/search/results/ref=gtw_navgno_search_box?searchTerms=couchbase&amp;search=">AMIが用意</a>されており、一方ではRightScaleによるテンプレートもある。(<a href="http://www.couchbase.com/docs/couchbase-manual-2.1.0/couchbase-bestpractice-cloud.html">4.6. Using Couchbase in the Cloud</a>)</p>
+
+<p>このように手軽にインストールできる方法はいくつかの方法があるが、今回は学習のためRPMからインストールを行う。</p>
+
+<p>ダウンロードページは以下のURLである。<br>
+<a href="http://www.couchbase.com/jp/download">http://www.couchbase.com/jp/download</a></p>
+
+<p>これ以降の作業は用意したEC2にログインして行う。</p>
+
+<a name="L............"></a>
+<h3>事前準備</h3>
+
+<p>これはとても重要なのだけど、立ち上げたインスタンスにはElasticIPを振っておくこと。でないと、SDKからのアクセスが出来ない。
+なぜそうなのかはまだ理由がつかめていない。
+また、もしCouchbase Serverのnode名がPrivate IPsになっていたら、以下の手順にしたがってnode名を変更しておく必要がある。</p>
+
+<ul>
+<li><a href="http://www.couchbase.com/docs/couchbase-manual-2.0/couchbase-getting-started-hostnames-pre2.0.html">2.4.1. Hostnames for Couchbase Server 2.0.1 and Earlier</a></li>
+</ul>
+
+
+<p>この設定をしてないととても大変なことになる。</p>
+
+<a name="OpenSSL............"></a>
+<h3>OpenSSLを入れる</h3>
+
+<pre><code>[ec2-user@ip-xx-xxx-xx-xxx tmp]$ sudo yum install -y openssl098e
+Loaded plugins: priorities, security, update-motd, upgrade-helper
+amzn-main                                                                                                        | 2.1 kB     00:00
+# 省略
+Installed:
+  openssl098e.x86_64 0:0.9.8e-17.8.amzn1
+
+Complete!
+</code></pre>
+
+<a name="couchbase.server.2.0.1............"></a>
+<h3>couchbase server 2.0.1を入れる</h3>
+
+<p>取得元のURLは<a href="http://www.couchbase.com/jp/download">ダウンロードページ</a>から。</p>
+
+<pre><code>[ec2-user@ip-xx-xxx-xx-xxx tmp]$ wget http://packages.couchbase.com/releases/2.0.1/couchbase-server-community_x86_64_2.0.1.rpm
+--2013-08-11 08:47:37--  http://packages.couchbase.com/releases/2.0.1/couchbase-server-community_x86_64_2.0.1.rpm
+# 省略
+2013-08-11 08:49:00 (1.47 MB/s) - `couchbase-server-community_x86_64_2.0.1.rpm' へ保存完了 [126631806/126631806]
+[ec2-user@ip-xx-xxx-xx-xxx tmp]$ sudo rpm -ivh couchbase-server-community_x86_64_2.0.1.rpm
+準備中...                ########################################### [100%]
+Minimum RAM required  : 4 GB
+System RAM configured : 1696704 kB
+
+Minimum number of processors required : 4 cores
+Number of processors on the system    : 1 cores
+
+   1:couchbase-server       ########################################### [100%]
+Starting couchbase-server[  OK  ]
+
+You have successfully installed Couchbase Server.
+Please browse to http://ip-xx-xxx-xx-xxx:8091/ to configure your server.
+Please refer to http://couchbase.com for additional resources.
+
+Please note that you have to update your firewall configuration to
+allow connections to the following ports: 11211, 11210, 11209, 4369,
+8091, 8092 and from 21100 to 21299.
+
+By using this software you agree to the End User License Agreement.
+See /opt/couchbase/LICENSE.txt.
+</code></pre>
+
+<p>ログに以下のように出ているけど、全く足りてない…、が、今回は学習のためなので気にしない。なお、コレを満たすインスタンスはlargeまたはxlargeからなので、NoSQL系はやはりなんだかんだ言ってお金が無いとダメなのである。
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Minimum RAM required  : 4 GB
+</span><span class='line'>System RAM configured : 1696704 kB&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Minimum number of processors required : 4 cores
+</span><span class='line'>Number of processors on the system    : 1 cores</span></code></pre></td></tr></table></div></figure></p>
+
+<p>あとは指定されたURL:<a href="http://ip-xx-xxx-xx-xxx:8091/%E3%81%AB%E3%82%A2%E3%82%AF%E3%82%BB%E3%82%B9%E3%81%97%E3%81%A6GUI%E3%81%AE%E3%82%A6%E3%82%A3%E3%82%B6%E3%83%BC%E3%83%89%E3%81%AB%E5%BE%93%E3%81%A3%E3%81%A6%E3%81%84%E3%81%91%E3%81%B0%E5%B0%8E%E5%85%A5%E3%81%AF%E7%B5%82%E4%BA%86%E3%80%82%E7%B0%A1%E5%8D%98%E3%81%A7%E3%81%82%E3%82%8B%E3%80%82">http://ip-xx-xxx-xx-xxx:8091/%E3%81%AB%E3%82%A2%E3%82%AF%E3%82%BB%E3%82%B9%E3%81%97%E3%81%A6GUI%E3%81%AE%E3%82%A6%E3%82%A3%E3%82%B6%E3%83%BC%E3%83%89%E3%81%AB%E5%BE%93%E3%81%A3%E3%81%A6%E3%81%84%E3%81%91%E3%81%B0%E5%B0%8E%E5%85%A5%E3%81%AF%E7%B5%82%E4%BA%86%E3%80%82%E7%B0%A1%E5%8D%98%E3%81%A7%E3%81%82%E3%82%8B%E3%80%82</a></p>
+
+<a name="CRUD"></a>
+<h2>CRUD</h2>
+
+<p>CouchbaseはREST APIを備えているが、用途としてはノードやクラスタの管理に利用するのが正しいっぽい。<br>
+公式ドキュメントでは以下のように有る。</p>
+
+<blockquote><p>REST APIはサーバへのデータ読み書きに利用するべきではありません。
+たとえば、setやgetなどのデータ操作はCouchbase SDKによって処理します。
+Couchbase SDKを参照してください。</p></blockquote>
+
+<p>というわけで、CRUDを試すためにはSDKが必要である。</p>
+
+<a name="Python.SDK"></a>
+<h2>Python SDK</h2>
+
+<p>今回はサクッとやりたいのでPython SDKを使う。Python SDKはCouchbaseのC SDKを使って作られているので、まず C SDKをインストールする。<br>
+ちなみに公式の<a href="http://www.couchbase.com/communities/python/getting-started">Getting Start</a>に従った。</p>
+
+<pre><code>[sgyk@fujishima]
+$ brew install libcouchbase
+==&gt; Downloading http://packages.couchbase.com/clients/c/libcouchbase-2.0.7.tar.gz
+######################################################################## 100.0%
+==&gt; ./configure --prefix=/usr/local/Cellar/libcouchbase/2.0.7 --disable-examples --disable-tests --disable-couchbasemock
+==&gt; make install
+🍺  /usr/local/Cellar/libcouchbase/2.0.7: 106 files, 964K, built in 28 seconds
+</code></pre>
+
+<p>Pythonのバージョンは2.6以上であることが必要。
+<code>
+[sgyk@fujishima]
+$ python -V
+Python 2.7.3
+</code></p>
+
+<p>次に<code>pip</code>でSDKをインストールするが、XcodeのCLI Toolsをインストールしていないと以下のエラーが出て悲しい気持ちになるので、インストールしていなければ予めインストールしておくこと。
+<code>
+unable to execute /usr/bin/clang: No such file or directory
+</code></p>
+
+<p>Python SDKをインストールする。
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[sgyk@fujishima]
+</span><span class='line'>$ pip install couchbase
+</span><span class='line'>Downloading/unpacking couchbase
+</span><span class='line'>  Running setup.py egg_info for package couchbase&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;a name="L......"&gt;&lt;/a&gt;
+</span><span class='line'>&lt;h1&gt;省略&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Successfully installed couchbase
+</span><span class='line'>Cleaning up&hellip;</span></code></pre></td></tr></table></div></figure></p>
+
+<p>ちゃんとインストールできたかを確認する。
+&#8220;`
+[sgyk@fujishima]
+$ python
+Python 2.7.3 (default, Nov  9 2012, 22:02:35)
+[GCC 4.2.1 Compatible Apple Clang 4.0 ((tags/Apple/clang-421.0.60))] on darwin
+Type &ldquo;help&rdquo;, &ldquo;copyright&rdquo;, &ldquo;credits&rdquo; or &ldquo;license&rdquo; for more information.</p>
+
+<blockquote><blockquote><blockquote><p>from couchbase import Couchbase</p>
+
+<p>&#8220;`
+エラーが発生しなければOK</p></blockquote></blockquote></blockquote>
+
+<p>なんか気の利いたやつを書こうかと思ったけど、<a href="https://github.com/couchbase/couchbase-python-client#using">githubのサンプルコード</a>をとりあえず試してみるのが良さそう。<br>
+サンプルコードを見たらわかるように、非常に少ないステップでデータ操作ができることがわかると思う。<br>
+あとは<a href="http://pythonhosted.org/couchbase/">APIドキュメント</a>をさらっと見ておけばとりあえずのことはできそうではある。</p>
+
+<a name="Fluentd............"></a>
+<h2>Fluentdとの連携</h2>
+
+<p>正直、あんまり書くべきことはなかったりする。というのも、すでに<a href="https://github.com/obieq/fluent-plugin-couchbase#">プラグインが用意されている</a>ため、それを使えばあっという間にできる。少しハマったところは、書き込みの箇所が</p>
+
+<pre><code class="ruby"># https://github.com/obieq/fluent-plugin-couchbase/blob/master/lib/fluent/plugin/out_couchbase.rb#L52
+connection[record.delete('key'),  :ttl =&gt; self.ttl] = record
+</code></pre>
+
+<p>となっているため、ログレコードの中にkeyという要素（rubyでいうところのエントリ？）が必要になる。これが無いと、couchbaseに書き込む際にログレコードが<code>nil</code>となってしまい、エラーが発生する。<br>
+それ以外はtd-agentとプラグイン、couchbaseがよろしくやってくれるため非常に楽に格納できる。</p>
+
+<p>また、couchbaseはバケットごとに認証を設けることができるが、上で紹介したプラグインはバケット認証に対応していない。<br>
+これに対応しているのは<a href="https://github.com/atware/fluent-plugin-couchbase">atware/fluent-plugin-couchbase</a>のリポジトリにある。ちなみに<a href="http://www.atware.co.jp/">株式会社 アットウェア</a>という会社は多分、今のところ、日本で一番Couchbaseに精通している会社かもしれない。</p>
+
+<a name="L......"></a>
+<h2>今後</h2>
+
+<p>Couchbaseの導入からtd-agentの連携までの作業は慣れたら多分1時間かからない。<br>問題はむしろこの後にあって、CouchbaseではRDBでいうところのSQLのようなDMLはViewと呼ばれるJavascriptのMapReduceで記述する必要がある。なので、ログの運用をCouchbaseに切り替える場合は、如何にしてこれまでRDBで動かしてきたSQLを移行するかが大きな問題となる。SQLバリバリのエンジニアがJavascriptを同じ程度書けるかと言われると多くはそうでないと思うので。まぁこれはNoSQL系DBを運用するときの宿命なので今更いうことでも無いか。</p>
+
+<p>CouchbaseのViewについてはまた色々調べて、ブログにまとめようかな。</p>
+
+<a name="L......"></a>
+<h2>参考</h2>
+
+<ul>
+<li><a href="http://www.atware.co.jp/2013/07/25/fluentd-couchbase-log-analysis/">Fluentd + Couchbase によるログ解析導入事例</a></li>
+<li><a href="http://www.atmarkit.co.jp/fdb/rensai/dbwatch2012/dbwatch201202_02.html">どっちが面白い？ ドキュメント指向データベース</a></li>
+<li><a href="http://pythonhosted.org/couchbase/">Couchbase Python Client Library Documentation</a></li>
+<li><a href="https://github.com/obieq/fluent-plugin-couchbase">obieq/fluent-plugin-couchbase</a></li>
+<li><a href="http://aws.typepad.com/aws/2013/08/running-couchbase-on-aws-new-white-paper.html">Running Couchbase on AWS - New White Paper</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

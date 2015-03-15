@@ -1,0 +1,744 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>td-agentの監視・復旧の仕組みを整える - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="ここで紹介されている仕組みを自分のところにも導入したくなったのでやってみる。 Fluentd Meetup #2 @外道父 Fluentdを優しく見守る監視事例 from 外道 父 事前準備 EC2インスタンスを適当に2つ用意する。今回はmicroを2つ用意した。 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.com/blog/2013/11/13/td-agent_with_monit">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.com" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">td-agentの監視・復旧の仕組みを整える</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2013-11-13T21:26:00+09:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>9:26 pm</span></time>
+        
+        
+          
+           | <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/edit/master/source/_posts/2013-11-13-td-agent_with_monit.markdown">Edit</a>
+          
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>ここで紹介されている仕組みを自分のところにも導入したくなったのでやってみる。</p>
+
+<iframe src="http://www.slideshare.net/slideshow/embed_code/14046820" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="https://www.slideshare.net/GedowFather/fluentd-meetup-2-fluentd" title="Fluentd Meetup #2 @外道父 Fluentdを優しく見守る監視事例" target="_blank">Fluentd Meetup #2 @外道父 Fluentdを優しく見守る監視事例</a> </strong> from <strong><a href="http://www.slideshare.net/GedowFather" target="_blank">外道 父</a></strong> </div></p>
+
+<!-- more -->
+
+
+<a name="L............"></a>
+<h2>事前準備</h2>
+
+<p>EC2インスタンスを適当に2つ用意する。今回はmicroを2つ用意した。<br>インスタンスを立ち上げる時には必要なポートの開放を忘れずにしておく。大体は22(SSH), 80(TCP), 8888(TCP), 24220(TCP/UDP), 24224(TCP/UDP)とかを空けとけば大丈夫。<br>インスタンスが立ち上がったら、ログインしてとりあえずgitをインストールする。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[ec2-user@localhost ~]$ which git
+</span><span class='line'>/usr/bin/which: no git in (/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/opt/aws/bin:/home/ec2-user/bin)
+</span><span class='line'>[ec2-user@localhost ~]$ sudo yum install -y git
+</span><span class='line'>インストール:
+</span><span class='line'>  git.x86_64 0:1.8.3.1-1.28.amzn1
+</span><span class='line'>
+</span><span class='line'>依存性関連をインストールしました:
+</span><span class='line'>  perl-Error.noarch 1:0.17015-4.6.amzn1                 perl-Git.noarch 0:1.8.3.1-1.28.amzn1
+</span><span class='line'>  perl-TermReadKey.x86_64 0:2.30-13.5.amzn1
+</span><span class='line'>
+</span><span class='line'>完了しました!</span></code></pre></td></tr></table></div></figure>
+
+
+<p>事前に用意しておいたセットアップスクリプトをcloneして実行する。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[ec2-user@localhost ~]$ git clone https://gist.github.com/7429430.git
+</span><span class='line'>Cloning into '7429430'...
+</span><span class='line'>remote: Counting objects: 6, done.
+</span><span class='line'>remote: Compressing objects: 100% (4/4), done.
+</span><span class='line'>remote: Total 6 (delta 2), reused 0 (delta 0)
+</span><span class='line'>Unpacking objects: 100% (6/6), done.
+</span><span class='line'>[ec2-user@localhost ~]$ cd 7429430/
+</span><span class='line'>[ec2-user@localhost 7429430]$ ls
+</span><span class='line'>setup_td_agent.sh
+</span><span class='line'>[ec2-user@localhost 7429430]$ bash setup_td_agent.sh</span></code></pre></td></tr></table></div></figure>
+
+
+<p>インスタンスが再起動するので、一旦接続が切れる。しばらくしたら再ログインして設定状況を確認する。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[ec2-user@localhost ~]$ ulimit -n
+</span><span class='line'>65536
+</span><span class='line'>[ec2-user@localhost ~]$ chkconfig --list | grep td-agent
+</span><span class='line'>td-agent        0:off   1:off   2:on    3:on    4:on    5:on    6:off
+</span><span class='line'>[ec2-user@localhost ~]$ ps w -C ruby -C td-agent --no-heading
+</span><span class='line'> 1207 ?        Sl     0:00 /usr/lib64/fluent/ruby/bin/ruby /usr/sbin/td-agent --group td-agent --log /var/log/td-agent/td-agent.log
+</span><span class='line'> 1210 ?        Sl     0:00 /usr/lib64/fluent/ruby/bin/ruby /usr/sbin/td-agent --group td-agent --log /var/log/td-agent/td-agent.log</span></code></pre></td></tr></table></div></figure>
+
+
+<p>大丈夫っぽい。</p>
+
+<p>ログを送る側を以下のように設定する。相手先にforwardするだけ。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[ec2-user@localhost td-agent]$ diff td-agent.conf td-agent.conf.20131112115946
+</span><span class='line'>78,88c78,85
+</span><span class='line'>&lt; &lt;match system.**&gt;
+</span><span class='line'>&lt;   type forward
+</span><span class='line'>&lt;   &lt;server&gt;
+</span><span class='line'>&lt;     host ec2-54-235-51-40.compute-1.amazonaws.com
+</span><span class='line'>&lt;     port 24224
+</span><span class='line'>&lt;   &lt;/server&gt;
+</span><span class='line'>&lt;   # secondary host is optional
+</span><span class='line'>&lt;   # &lt;secondary&gt;
+</span><span class='line'>&lt;   #   host 192.168.0.12
+</span><span class='line'>&lt;   # &lt;/secondary&gt;
+</span><span class='line'>&lt; &lt;/match&gt;
+</span><span class='line'>---
+</span><span class='line'>&gt; #&lt;match system.**&gt;
+</span><span class='line'>&gt; #  type forward
+</span><span class='line'>&gt; #  host 192.168.0.11
+</span><span class='line'>&gt; #  # secondary host is optional
+</span><span class='line'>&gt; #  &lt;secondary&gt;
+</span><span class='line'>&gt; #    host 192.168.0.12
+</span><span class='line'>&gt; #  &lt;/secondary&gt;
+</span><span class='line'>&gt; #&lt;/match&gt;</span></code></pre></td></tr></table></div></figure>
+
+
+<p>受け取る方は適当に標準出力させておく。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[ec2-user@localhost td-agent]$ diff td-agent.conf td-agent.conf.20131112120135
+</span><span class='line'>21c21
+</span><span class='line'>&lt; &lt;match system.**&gt;
+</span><span class='line'>---
+</span><span class='line'>&gt; &lt;match debug.**&gt;</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>curl -X POST -d &lsquo;json={&ldquo;json&rdquo;:&ldquo;message&rdquo;}&rsquo; <a href="http://localhost:8888/system.test">http://localhost:8888/system.test</a></code>とかやって、送り側でログを受け取ったことを確認したら、これまた適当にcurlし続けるようにしておく。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[ec2-user@localhost td-agent]$ while(true);do curl -X POST -d 'json={"json":"message"}' http://local
+</span><span class='line'>host:8888/system.debug; sleep 10;done &</span></code></pre></td></tr></table></div></figure>
+
+
+<p>こうしておけばとりあえずはそれっぽくログを連携する形になる。</p>
+
+<a name="L......"></a>
+<h2>監視</h2>
+
+<p><a href="http://www.slideshare.net/GedowFather/fluentd-meetup-2-fluentd">Fluentd Meetup #2 @外道父 Fluentdを優しく見守る監視事例</a>にある内容を雑にまとめると以下のようになる。</p>
+
+<ul>
+<li>ローカルの監視には<a href="http://mmonit.com/monit/">monit</a>を使う。</li>
+<li>td-agent基本プロセス監視(受け取る側はLISTEN 24224であることも監視する)</li>
+<li>td-agent重複デーモン対策</li>
+<li>flowcounterで転送状態監視</li>
+</ul>
+
+
+<p>これを一つ一つ作業してみる。</p>
+
+<a name="td-agent....................."></a>
+<h3>td-agentのプロセス監視</h3>
+
+<p>monitに以下のような設定を追加する。<a href="http://mmonit.com/monit/documentation/monit.html#configuration_examples">monitの設定例のページ</a>が参考になる。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[ec2-user@localhost monit.d]$ cat /etc/monit.d/td-agent.conf
+</span><span class='line'>check process td-agent with pidfile /var/run/td-agent/td-agent.pid
+</span><span class='line'>  start program = "/etc/init.d/td-agent start"
+</span><span class='line'>  stop program = "/etc/init.d/td-agent stop"
+</span><span class='line'>  if failed port 24224 type udp then restart
+</span><span class='line'>  if failed port 24224 type tcp then restart
+</span><span class='line'>  if 5 restarts within 5 cycles then alert</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>alert</code>は、アラートメールを出すためのコマンド。アラートメールの設定については<a href="http://mmonit.com/monit/documentation/monit.html#setting_a_global_alert_statement">Setting a global alert statement</a>を見ると良い。</p>
+
+<p>td-agentをstopしてmonitが検知すると、以下の様なログが出てきて復旧を行っていることがわかる。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[UTC Nov 12 13:02:02] error    : 'td-agent' process is not running
+</span><span class='line'>[UTC Nov 12 13:02:02] info     : 'td-agent' trying to restart
+</span><span class='line'>[UTC Nov 12 13:02:02] info     : 'td-agent' start: /etc/init.d/td-agent
+</span><span class='line'>[UTC Nov 12 13:03:03] info     : 'td-agent' process is running with pid 19221</span></code></pre></td></tr></table></div></figure>
+
+
+<p>何度か試した感じだと最長で検知に1分ぐらいかかる。というか1分がデフォルト？<br>秒単位でのポーリング間隔指定ができるけど、まぁ大抵は1分でいいんじゃないでしょうか。</p>
+
+<a name="td-agent..........................."></a>
+<h3>td-agentの重複デーモン対策</h3>
+
+<p>スライドにもあるようにデーモンの正常性は確認する必要がある。td-agentでは多重起動のバグが修正されているけど、td-agentを停止してもうまくプロセスが消えないことがあり、それに気づかないままtd-agentを立ち上げると障害の原因になってしまう（これは実際に経験した）。
+スライドではmonitでどのように設定しているかの具体例までは無いが、確認すべき事柄が非常に丁寧に示されているので、やるべきことは大体想像がつく。
+多分、こんなスクリプトを用意して、それをmonitに監視させれば良いんじゃないかなぁ。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#!/bin/bash</span>
+</span><span class='line'><span class="c"># check_td_process.sh</span>
+</span><span class='line'><span class="nv">TD_AGENT</span><span class="o">=</span><span class="s2">&quot;/usr/lib64/fluent/ruby/bin/ruby /usr/sbin/td-agent&quot;</span>
+</span><span class='line'><span class="nv">RETVAL</span><span class="o">=</span>1
+</span><span class='line'>
+</span><span class='line'><span class="c"># プロセス数の確認</span>
+</span><span class='line'><span class="nv">TD_PROCESS_NUM</span><span class="o">=</span><span class="k">$(</span>ps w -C ruby -C td-agent --no-heading <span class="p">|</span> grep <span class="s2">&quot;${TD_AGENT}&quot;</span> <span class="p">|</span> grep -v <span class="s2">&quot;\]$ &quot;</span> <span class="p">|</span> wc -l<span class="k">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">if</span> <span class="o">[</span> <span class="k">${</span><span class="nv">TD_PROCESS_NUM</span><span class="k">}</span> -eq <span class="m">2</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+</span><span class='line'>  <span class="nv">RETVAL</span><span class="o">=</span>0
+</span><span class='line'><span class="k">else</span>
+</span><span class='line'>  <span class="nb">echo </span>td-agent process is <span class="k">${</span><span class="nv">TD_PROCESS_NUM</span><span class="k">}</span> process. 1&gt;<span class="p">&amp;</span>2
+</span><span class='line'>  <span class="nb">echo </span>execute /usr/bin/td_restarter.sh 1&gt;<span class="p">&amp;</span>2
+</span><span class='line'>  <span class="nv">RETVAL</span><span class="o">=</span>1
+</span><span class='line'><span class="k">fi</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span> <span class="k">${</span><span class="nv">RETVAL</span><span class="k">}</span> <span class="o">==</span> <span class="m">1</span> <span class="o">]</span> <span class="o">&amp;&amp;</span> <span class="nb">exit</span> <span class="k">${</span><span class="nv">RETVAL</span><span class="k">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># run/pidのプロセス番号で動いていることを確認する</span>
+</span><span class='line'><span class="nv">TD_PID_FILE</span><span class="o">=</span>/var/run/td-agent/td-agent.pid
+</span><span class='line'><span class="nv">TD_PID</span><span class="o">=</span><span class="k">$(</span>cat <span class="k">${</span><span class="nv">TD_PID_FILE</span><span class="k">})</span>
+</span><span class='line'><span class="nv">TD_REAL_PID</span><span class="o">=</span><span class="k">$(</span>ps l --ppid<span class="o">=</span><span class="m">1</span> <span class="p">|</span> grep <span class="s2">&quot;${TD_AGENT}&quot;</span> <span class="p">|</span> grep -v <span class="s2">&quot;\]$ &quot;</span> <span class="p">|</span> awk <span class="s1">&#39;{print $3}&#39;</span><span class="k">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;${TD_PID}&quot;</span> !<span class="o">=</span> <span class="s2">&quot;${TD_REAL_PID}&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+</span><span class='line'>  <span class="nb">echo</span> <span class="k">${</span><span class="nv">TD_PID_FILE</span><span class="k">}</span> is <span class="k">${</span><span class="nv">TD_PID</span><span class="k">}</span> 1&gt;<span class="p">&amp;</span>2
+</span><span class='line'>  <span class="nb">echo </span>but real pid is <span class="k">${</span><span class="nv">TD_REAL_PID</span><span class="k">}</span> 1&gt;<span class="p">&amp;</span>2
+</span><span class='line'>  <span class="nb">echo </span>execute /usr/bin/td_restarter.sh 1&gt;<span class="p">&amp;</span>2
+</span><span class='line'>  <span class="nv">RETVAL</span><span class="o">=</span>1
+</span><span class='line'><span class="k">fi</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span> <span class="k">${</span><span class="nv">RETVAL</span><span class="k">}</span> <span class="o">==</span> <span class="m">1</span> <span class="o">]</span> <span class="o">&amp;&amp;</span> <span class="nb">exit</span> <span class="k">${</span><span class="nv">RETVAL</span><span class="k">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># fluentdが固まってないことを確認する</span>
+</span><span class='line'><span class="c"># system.testというタグはtd-agentの設定ファイルでnullに吐き出すようにしておけば良い</span>
+</span><span class='line'>curl --connect-timeout <span class="m">300</span> --max-time <span class="m">300</span> --silent -X POST -d <span class="s1">&#39;json={&quot;json&quot;:&quot;message&quot;}&#39;</span> http://localhost:8888/system.test
+</span><span class='line'>
+</span><span class='line'><span class="k">if</span> <span class="o">[</span> <span class="nv">$?</span> -ne <span class="m">0</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+</span><span class='line'>  <span class="nb">echo </span>failed to execute curl check 1&gt;<span class="p">&amp;</span>2
+</span><span class='line'>  <span class="nb">echo </span>execute /usr/bin/td_restarter.sh 1&gt;<span class="p">&amp;</span>2
+</span><span class='line'>  <span class="nv">RETVAL</span><span class="o">=</span>1
+</span><span class='line'><span class="k">fi</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span> <span class="k">${</span><span class="nv">RETVAL</span><span class="k">}</span> <span class="o">==</span> <span class="m">1</span> <span class="o">]</span> <span class="o">&amp;&amp;</span> <span class="nb">exit</span> <span class="k">${</span><span class="nv">RETVAL</span><span class="k">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">#</span>
+</span><span class='line'><span class="c"># configure here as you like...</span>
+</span><span class='line'><span class="c">#</span>
+</span><span class='line'><span class="nb">exit</span> <span class="k">${</span><span class="nv">RETVAL</span><span class="k">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>このへんのスクリプトをmonitに実行させて返り値が1だったら、こんなスクリプト（といってもスライドから丸パクリ）を実行させれば良さそう。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#!/bin/bash</span>
+</span><span class='line'><span class="c"># td_restarter.sh</span>
+</span><span class='line'><span class="nv">TD_AGENT</span><span class="o">=</span><span class="s2">&quot;/usr/lib64/fluent/ruby/bin/ruby /usr/sbin/td-agent&quot;</span>
+</span><span class='line'><span class="nv">RETVAL</span><span class="o">=</span>0
+</span><span class='line'>
+</span><span class='line'>/etc/init.d/td-agent stop
+</span><span class='line'>pkill -KILL -f <span class="s2">&quot;${TD_AGENT}&quot;</span>
+</span><span class='line'>/etc/init.d/td-agent start
+</span><span class='line'>
+</span><span class='line'><span class="k">if</span> <span class="o">[</span> <span class="nv">$?</span> -ne <span class="m">0</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+</span><span class='line'>  <span class="nb">echo</span> <span class="s2">&quot;Serious Error is occured($0).&quot;</span> 1&gt;<span class="p">&amp;</span>2
+</span><span class='line'>  <span class="nv">RETVAL</span><span class="o">=</span>1
+</span><span class='line'><span class="k">fi</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">exit</span> <span class="k">${</span><span class="nv">RETVAL</span><span class="k">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="flowcounter....................."></a>
+<h3>flowcounterで転送状態監視</h3>
+
+<p>何はともあれflowcounterをインストールする。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="o">[</span>ec2-user@ip-10-147-141-104 td-agent<span class="o">]</span><span class="nv">$ </span>sudo /usr/lib64/fluent/ruby/bin/fluent-gem install fluent-plugin-flowcounter
+</span><span class='line'>Fetching: fluent-plugin-flowcounter-0.1.9.gem <span class="o">(</span>100%<span class="o">)</span>
+</span><span class='line'>Successfully installed fluent-plugin-flowcounter-0.1.9
+</span><span class='line'><span class="m">1</span> gem installed
+</span><span class='line'>Installing ri documentation <span class="k">for</span> fluent-plugin-flowcounter-0.1.9...
+</span><span class='line'>Installing RDoc documentation <span class="k">for</span> fluent-plugin-flowcounter-0.1.9...
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>詳しい設定はgithubをみる。<a href="https://github.com/tagomoris/fluent-plugin-flowcounter">tagomoris / fluent-plugin-flowcounter</a><br>とは言え、そんなに設定する項目は多くないので、今回の場合だとシンプルになる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>&lt;match system.**&gt;
+</span><span class='line'>  <span class="nb">type </span>copy
+</span><span class='line'>  &lt;store&gt;
+</span><span class='line'>    <span class="nb">type </span>stdout
+</span><span class='line'>  &lt;/store&gt;
+</span><span class='line'>  &lt;store&gt;
+</span><span class='line'>    <span class="nb">type </span>flowcounter
+</span><span class='line'>    count_keys *
+</span><span class='line'>  &lt;/store&gt;
+</span><span class='line'>&lt;/match&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;match flowcount&gt;
+</span><span class='line'>  <span class="nb">type </span>file
+</span><span class='line'>  path /var/log/td-agent/flowcount/flowcount.log
+</span><span class='line'>  time_slice_format %Y%m%
+</span><span class='line'>&lt;/match&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>大体こんな感じだけど、実際の本番運用ではrewrite_tag_filterでタグを付け替えながら集計対象のタグを選別して…みたいな設定をする必要があるかもしれない。</p>
+
+<p>つぎに出力されたログの最新2行（tail -2）を見て、カウント数から障害かどうかを判定するわけだけど、スライドだと障害だと判定した場合に「原因を出力」とある。この「原因」って何を指してるんだろ？送る側で検知した場合はAPIがローカルに吐いているエラーログ、受取側で検知した場合は検知対象となったタグの情報とかを添えて標準エラー出力して、メールで通知ということかなぁ？今回は受取側なので、とりあえずはこんな感じ？</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#!/bin/bash</span>
+</span><span class='line'><span class="c"># check_flowcounter.sh</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">RETVAL</span><span class="o">=</span>0
+</span><span class='line'><span class="nv">CHECK_NUM</span><span class="o">=</span>2
+</span><span class='line'><span class="nv">FLOW_REFERENCE_VALUE</span><span class="o">=</span>10
+</span><span class='line'><span class="nv">FLOWCOUNTER_LOG</span><span class="o">=</span><span class="k">$(</span>ls -tr /var/log/td-agent/flowcount/flowcount.log* <span class="p">|</span> tail -1<span class="k">)</span>
+</span><span class='line'><span class="k">for</span> i in <span class="k">$(</span>seq <span class="m">1</span> <span class="k">${</span><span class="nv">CHECK_NUM</span><span class="k">})</span>
+</span><span class='line'><span class="k">do</span>
+</span><span class='line'>  <span class="nv">FLOWCOUNTER_LOG_LINE</span><span class="o">=</span><span class="k">$(</span>tail -<span class="k">${</span><span class="nv">CHECK_NUM</span><span class="k">}</span> <span class="k">${</span><span class="nv">FLOWCOUNTER_LOG</span><span class="k">}</span> <span class="p">|</span> awk <span class="s1">&#39;NR==&#39;</span><span class="k">${</span><span class="nv">i</span><span class="k">}</span><span class="s1">&#39;{print $3}&#39;</span><span class="k">)</span>
+</span><span class='line'>  <span class="nv">FLOW_COUNT</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span> <span class="k">${</span><span class="nv">FLOWCOUNTER_LOG_LINE</span><span class="k">}</span> <span class="p">|</span> sed -e <span class="s1">&#39;s/{&quot;.*_count&quot;:\([0-9]\+\).*}$/\1/&#39;</span><span class="k">)</span>
+</span><span class='line'>  <span class="k">if</span> <span class="o">[</span> <span class="k">${</span><span class="nv">FLOW_COUNT</span><span class="k">}</span> -lt <span class="k">${</span><span class="nv">FLOW_REFERENCE_VALUE</span><span class="k">}</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+</span><span class='line'>    <span class="nb">echo </span>flow count is under <span class="k">${</span><span class="nv">FLOW_REFERENCE_VALUE</span><span class="k">}</span> 1&gt;<span class="p">&amp;</span>2
+</span><span class='line'>    <span class="nb">echo</span> <span class="nv">$0</span> count : <span class="k">${</span><span class="nv">FLOW_COUNT</span><span class="k">}</span> 1&gt;<span class="p">&amp;</span>2
+</span><span class='line'>    <span class="nb">echo</span> <span class="k">${</span><span class="nv">FLOWCOUNTER_LOG_LINE</span><span class="k">}</span> 1&gt;<span class="p">&amp;</span>2
+</span><span class='line'>    <span class="nv">RETVAL</span><span class="o">=</span>1
+</span><span class='line'>  <span class="k">fi</span>
+</span><span class='line'><span class="k">done</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">exit</span> <span class="k">${</span><span class="nv">RETVAL</span><span class="k">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>で、ここまで用意したスクリプトを監視させるためのmonitの設定は以下のようになる。<br>monitのドキュメントだと<a href="http://mmonit.com/monit/documentation/monit.html#program_status_testing">ここ</a>を見れば良い。<code>td-agent.conf</code>って名前で<code>/etc/monit.d/</code>とかに置いておく。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">set </span>logfile /var/log/monit.log
+</span><span class='line'><span class="nb">set </span>alert shigeyuki.fujishima@gmail.com with mail-format <span class="o">{</span> from: shigeyuki.fujishima@gmail.com <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">set </span>mailserver email-smtp.us-east-1.amazonaws.com port 465
+</span><span class='line'><span class="c"># set mailserver localhost port 25</span>
+</span><span class='line'>    username <span class="s2">&quot;xxxxx&quot;</span>  password <span class="s2">&quot;yyyyy&quot;</span>
+</span><span class='line'>    using sslv3 with timeout <span class="m">15</span> seconds
+</span><span class='line'>    <span class="c"># using tlsv1 with timeout 15 seconds</span>
+</span><span class='line'>
+</span><span class='line'>check process td-agent with pidfile /var/run/td-agent/td-agent.pid
+</span><span class='line'>    start <span class="nv">program</span> <span class="o">=</span> <span class="s2">&quot;/etc/init.d/td-agent start&quot;</span>
+</span><span class='line'>    stop <span class="nv">program</span> <span class="o">=</span> <span class="s2">&quot;/etc/init.d/td-agent stop&quot;</span>
+</span><span class='line'>    <span class="c"># if failed port 24224 type udp then restart</span>
+</span><span class='line'>    <span class="c"># if failed port 24224 type tcp then restart</span>
+</span><span class='line'>    <span class="k">if</span> failed port <span class="m">24224</span> <span class="nb">type </span>udp <span class="k">then</span> alert
+</span><span class='line'>    <span class="k">if</span> failed port <span class="m">24224</span> <span class="nb">type </span>tcp <span class="k">then</span> alert
+</span><span class='line'>    <span class="k">if</span> <span class="m">5</span> restarts within <span class="m">5</span> cycles <span class="k">then</span> alert
+</span><span class='line'>
+</span><span class='line'>check program check_td_process with path <span class="s2">&quot;/usr/local/bin/check_td_process.sh&quot;</span>
+</span><span class='line'>    <span class="k">if</span> status !<span class="o">=</span> <span class="m">0</span> <span class="k">then</span> <span class="nb">exec</span> <span class="s2">&quot;/usr/local/bin/td_restarter.sh&quot;</span>
+</span><span class='line'>
+</span><span class='line'>check program check_flowcounter with path <span class="s2">&quot;/usr/local/bin/check_flowcounter.sh&quot;</span>
+</span><span class='line'>    <span class="k">if</span> status !<span class="o">=</span> <span class="m">0</span> <span class="k">then</span> alert
+</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="L........."></a>
+<h2>番外編</h2>
+
+<p>エラーメールの通知にAmazon SESを使おうとしたけど、以下のエラーが出てうまく行かなかった。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="o">[</span>UTC Nov <span class="m">12</span> 14:24:02<span class="o">]</span> error    : monit: Openssl engine error: error:1408F10B:SSL routines:func<span class="o">(</span>143<span class="o">)</span>:reason<span class="o">(</span>267<span class="o">)</span>
+</span><span class='line'><span class="o">[</span>UTC Nov <span class="m">12</span> 14:24:02<span class="o">]</span> error    : Cannot open a connection to the mailserver <span class="s1">&#39;email-smtp.us-east-1.amazonaws.com:25&#39;</span> -- Success
+</span><span class='line'><span class="o">[</span>UTC Nov <span class="m">12</span> 14:24:02<span class="o">]</span> error    : No mail servers are available
+</span><span class='line'><span class="o">[</span>UTC Nov <span class="m">12</span> 14:24:02<span class="o">]</span> error    : Aborting event
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>冷静に見ると、portが25でsslv3っておかしい？気がする。</p>
+
+<p>以下のようにすればOK。<code>set mailserver</code>より先にSESに登録したアドレスを書いておいて、portは465を指定する。<br>あとは<code>using sslv3 with timeout 15 seconds</code>とかしておけばmonitさんからバンバンメールが飛ぶようになる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">set </span>alert foo.bar@baz.com with mail-format <span class="o">{</span> from: foo.bar@baz.com<span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">set </span>mailserver email-smtp.us-east-1.amazonaws.com port 465
+</span><span class='line'><span class="c"># set mailserver localhost port 25</span>
+</span><span class='line'>    username <span class="s2">&quot;xxxxx&quot;</span>  password <span class="s2">&quot;yyyyy&quot;</span>
+</span><span class='line'>    using sslv3 with timeout <span class="m">15</span> seconds
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ちなみに、適当なアドレスだと以下のエラーログが出てくる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="o">[</span>UTC Nov <span class="m">13</span> 05:39:19<span class="o">]</span> error    : Sendmail error: <span class="m">554</span> Message rejected: Email address is not verified.
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2013-11-13T21:26:00+09:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>9:26 pm</span></time>
+      <span class="categories">full history <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/commit/master/source/_posts/2013-11-13-td-agent_with_monit.markdown">here</a></span>
+
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/monit/'>monit</a>, <a class='category' href='/blog/categories/td-agent/'>td-agent</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/09/27/mysql-cluster-casual-talk/" title="Previous Post: MySQL Cluster Casual Talksに行ってきた">&laquo; MySQL Cluster Casual Talksに行ってきた</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/11/28/mysql-study/" title="Next Post: mysql_study">mysql_study &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

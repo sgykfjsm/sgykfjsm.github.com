@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: dynamodb | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/dynamodb/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[DynamoDBをEMRで扱うときに気をつけること]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2013/08/31/elasticemapreduce-with-dynamodb/"/>
+    <updated>2013-08-31T03:57:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2013/08/31/elasticemapreduce-with-dynamodb</id>
+    <content type="html"><![CDATA[<p>実際に検証したわけではないが、経験的にDynamoDBをEMRで扱うときには以下の点に気を付ける必要がある。</p>
+
+<!-- more -->
+
+
+<a name="DynamoDB......................................................................................................"></a>
+<h3>DynamoDBからフェッチするカラムは後続の処理で必要とする最低限にとどめておく。</h3>
+
+<p>DynamoDBは１度のスキャンで読み取れるのは1.5KB(整合性を保証したいなら1KB)なので、カラムに無駄があるとスループットが悪くなる。ブログコンテンツのように１カラムで1KBを超えるような場合は相当スループットが落ちる。何となく後で必要になるだろうから、という理由で使わないカラムをフェッチするのは無駄。</p>
+
+<a name="DynamoDB................................................"></a>
+<h3>DynamoDBを直接参照する処理は極力避ける。</h3>
+
+<p>DynamoDBから必要な行をフィルタリングしてEMRのローカルに保持してから集計処理などを行うべきである。理由は上記とほぼ同じ。</p>
+
+<a name="DynamoDB...Read.Capacity.Unit......................................................................................."></a>
+<h3>DynamoDBのRead Capacity Unitはキャップの上限を引き上げるが、スループットを保証しない。</h3>
+
+<p>このへんが謎。400に引き上げても200ぐらいで頭打ちになる。</p>
+
+<a name="L.......id_hash........................."></a>
+<h3>キー(id_hash)を分散させること</h3>
+
+<p>DynamoDBにかぎらずNoSQL系DB全てに言えることだけど、キーが分散していないと処理が遅い。</p>
+
+<a name="EMR......DynamoDB.............................................S3.................................S3....................................EMR.................................................................."></a>
+<h3>EMRからDynamoDBを直接参照するぐらいなら、一度S3にエクスポートしてからS3のファイルを外部表にしてEMRで処理したほうが早く、コスト安になりやすい。</h3>
+
+<p>処理の内容によるだろうけど、DynamoDBは新しいレコードほど早く取り出せるような気がする（未検証）ので、日次などで定期的にS3にエクスポートしてEMRで処理したほうが良い。件数にもよるが、キーが分散していない１ヶ月前のDynamoDBのレコードをとりだすのに相当時間がかかる(１０時間ぐらい)こともある。</p>
+
+<p>2013/09/27 05:18:03 追記</p>
+
+<blockquote><p>DynamoDBは新しいレコードほど早く取り出せるような気がする（未検証）</p></blockquote>
+
+<p>これは全くの大嘘。実際にログを見てみるとちゃんと古いものからスキャンしてた。だから何って話なんだけど。</p>
+
+<a name="L.....................id_range........................"></a>
+<h3>可能であれば、id_rangeを指定すること。</h3>
+
+<p>id_hashが分散してなくてもid_rangeが指定できればなんとかパフォーマンスを向上させる余地はある。</p>
+
+<hr />
+
+<p>この辺の事柄に気をつけても遅いときは本当に遅い。DynamoDBはid_hashやid_rangeで一本釣りできるような場合は有効だけど、ログの蓄積とか集計用途には向いてない気がする。</p>
+]]></content>
+  </entry>
+  
+</feed>

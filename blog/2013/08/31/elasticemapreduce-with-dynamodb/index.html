@@ -1,0 +1,242 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>DynamoDBをEMRで扱うときに気をつけること - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="実際に検証したわけではないが、経験的にDynamoDBをEMRで扱うときには以下の点に気を付ける必要がある。 DynamoDBからフェッチするカラムは後続の処理で必要とする最低限にとどめておく。 DynamoDBは１度のスキャンで読み取れるのは1.5KB(整合性を保証したいなら1KB)なので、 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.com/blog/2013/08/31/elasticemapreduce-with-dynamodb">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.com" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">DynamoDBをEMRで扱うときに気をつけること</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2013-08-31T03:57:00+09:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>31</span><span class='date-suffix'>st</span>, <span class='date-year'>2013</span></span> <span class='time'>3:57 am</span></time>
+        
+        
+          
+           | <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/edit/master/source/_posts/2013-08-31-elasticemapreduce-with-dynamodb.markdown">Edit</a>
+          
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>実際に検証したわけではないが、経験的にDynamoDBをEMRで扱うときには以下の点に気を付ける必要がある。</p>
+
+<!-- more -->
+
+
+<a name="DynamoDB......................................................................................................"></a>
+<h3>DynamoDBからフェッチするカラムは後続の処理で必要とする最低限にとどめておく。</h3>
+
+<p>DynamoDBは１度のスキャンで読み取れるのは1.5KB(整合性を保証したいなら1KB)なので、カラムに無駄があるとスループットが悪くなる。ブログコンテンツのように１カラムで1KBを超えるような場合は相当スループットが落ちる。何となく後で必要になるだろうから、という理由で使わないカラムをフェッチするのは無駄。</p>
+
+<a name="DynamoDB................................................"></a>
+<h3>DynamoDBを直接参照する処理は極力避ける。</h3>
+
+<p>DynamoDBから必要な行をフィルタリングしてEMRのローカルに保持してから集計処理などを行うべきである。理由は上記とほぼ同じ。</p>
+
+<a name="DynamoDB...Read.Capacity.Unit......................................................................................."></a>
+<h3>DynamoDBのRead Capacity Unitはキャップの上限を引き上げるが、スループットを保証しない。</h3>
+
+<p>このへんが謎。400に引き上げても200ぐらいで頭打ちになる。</p>
+
+<a name="L.......id_hash........................."></a>
+<h3>キー(id_hash)を分散させること</h3>
+
+<p>DynamoDBにかぎらずNoSQL系DB全てに言えることだけど、キーが分散していないと処理が遅い。</p>
+
+<a name="EMR......DynamoDB.............................................S3.................................S3....................................EMR.................................................................."></a>
+<h3>EMRからDynamoDBを直接参照するぐらいなら、一度S3にエクスポートしてからS3のファイルを外部表にしてEMRで処理したほうが早く、コスト安になりやすい。</h3>
+
+<p>処理の内容によるだろうけど、DynamoDBは新しいレコードほど早く取り出せるような気がする（未検証）ので、日次などで定期的にS3にエクスポートしてEMRで処理したほうが良い。件数にもよるが、キーが分散していない１ヶ月前のDynamoDBのレコードをとりだすのに相当時間がかかる(１０時間ぐらい)こともある。</p>
+
+<p>2013/09/27 05:18:03 追記</p>
+
+<blockquote><p>DynamoDBは新しいレコードほど早く取り出せるような気がする（未検証）</p></blockquote>
+
+<p>これは全くの大嘘。実際にログを見てみるとちゃんと古いものからスキャンしてた。だから何って話なんだけど。</p>
+
+<a name="L.....................id_range........................"></a>
+<h3>可能であれば、id_rangeを指定すること。</h3>
+
+<p>id_hashが分散してなくてもid_rangeが指定できればなんとかパフォーマンスを向上させる余地はある。</p>
+
+<hr />
+
+<p>この辺の事柄に気をつけても遅いときは本当に遅い。DynamoDBはid_hashやid_rangeで一本釣りできるような場合は有効だけど、ログの蓄積とか集計用途には向いてない気がする。</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2013-08-31T03:57:00+09:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>31</span><span class='date-suffix'>st</span>, <span class='date-year'>2013</span></span> <span class='time'>3:57 am</span></time>
+      <span class="categories">full history <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/commit/master/source/_posts/2013-08-31-elasticemapreduce-with-dynamodb.markdown">here</a></span>
+
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/aws/'>aws</a>, <a class='category' href='/blog/categories/dynamodb/'>dynamodb</a>, <a class='category' href='/blog/categories/emr/'>emr</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/08/18/couchbase-on-ec2-with-td-agent/" title="Previous Post: ec2にcouchbaseをインストールする。ついでにPython SDKとtd-agentも。">&laquo; ec2にcouchbaseをインストールする。ついでにPython SDKとtd-agentも。</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/09/10/html5-with-java-meetup/" title="Next Post: 業務システムエンジニアのためのHTML5勉強会#04に参加した">業務システムエンジニアのためのHTML5勉強会#04に参加した &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

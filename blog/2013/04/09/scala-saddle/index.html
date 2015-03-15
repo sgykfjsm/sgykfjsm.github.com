@@ -1,0 +1,920 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Saddleを試す - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="Saddleとは http://saddle.github.io/ SaddleはハイパフォーマンスなScala向けデータ操作ライブラリで、Scala Data Libraryの各頭文字から名付けられている。 Saddleでは以下の様なデータ形式や性質をもたらす。 array-backed &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.com/blog/2013/04/09/scala-saddle">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.com" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">Saddleを試す</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2013-04-09T21:41:00+09:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>9</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>9:41 pm</span></time>
+        
+        
+          
+           | <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/edit/master/source/_posts/2013-04-09-scala-saddle.markdown">Edit</a>
+          
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><a name="Saddle......"></a>
+<h2>Saddleとは</h2>
+
+<p><a href="http://saddle.github.io/">http://saddle.github.io/</a></p>
+
+<p>SaddleはハイパフォーマンスなScala向けデータ操作ライブラリで、<u>S</u>cala <u>D</u>ata <u>L</u>ibraryの各頭文字から名付けられている。</p>
+
+<p>Saddleでは以下の様なデータ形式や性質をもたらす。</p>
+
+<ul>
+<li>array-backed</li>
+<li>Indexed</li>
+<li>1次元または2次元データ構造</li>
+<li>ベクトル計算</li>
+<li>自動的データアライメント（？）</li>
+<li>データ欠損への堅牢性</li>
+<li>I/O周り</li>
+<li>rangeとかshuffleとか、joda DataTime objectsのヘルパーといった便利機能いっぱい</li>
+</ul>
+
+
+<p>Saddleは<a href="http://cran.us.r-project.org/">R言語</a>やその統計環境、<a href="http://www.numpy.org/">numpy</a>や<a href="http://pandas.pydata.org/">pandas</a>、<a href="http://www.python.org/">Python</a>、そしてScalaのコレクションライブラリなどから影響を受けている。<br>
+SaddleはJVM上での構造化されたデータへのプログラミングを簡便にし、より表現豊かにすることができる。</p>
+
+<!-- more -->
+
+
+<a name="L..............."></a>
+<h2>導入の仕方</h2>
+
+<ul>
+<li><a href="http://saddle.github.io/doc/index.html#download-and-install">公式の解説</a></li>
+</ul>
+
+
+<p>公式では状況に応じていくつかの方法が提示されている。</p>
+
+<a name="Sadle................................................"></a>
+<h3>Sadleを使ったプロジェクトを作成したい</h3>
+
+<p>おなじみg8を使う。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ g8 saddle/saddle.g8
+</span><span class='line'># follow the promts, go to your new project directory, and run
+</span><span class='line'>$ sbt console</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="L............................................."></a>
+<h3>既存のプロジェクト内で使いたい</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">resolvers</span> <span class="o">++=</span> <span class="nc">Seq</span><span class="o">(</span>
+</span><span class='line'>  <span class="s">&quot;Sonatype Snapshots&quot;</span> <span class="n">at</span> <span class="s">&quot;http://oss.sonatype.org/content/repositories/snapshots&quot;</span><span class="o">,</span>
+</span><span class='line'>  <span class="s">&quot;Sonatype Releases&quot;</span> <span class="n">at</span> <span class="s">&quot;http://oss.sonatype.org/content/repositories/releases&quot;</span>
+</span><span class='line'><span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">libraryDependencies</span> <span class="o">++=</span> <span class="nc">Seq</span><span class="o">(</span>
+</span><span class='line'>  <span class="s">&quot;org.scala-saddle&quot;</span> <span class="o">%%</span> <span class="s">&quot;saddle&quot;</span> <span class="o">%</span> <span class="s">&quot;1.0.1&quot;</span>
+</span><span class='line'><span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>なお、自分で試した時には以下のようなログが出ており、resolversには<code>repo.typesafe.com</code>も加えておいたほうが良さそう（自分の場合はすでにrepo.typesafe.comを加えていた）。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span> <span class="n">downloading</span> <span class="n">http</span><span class="o">://</span><span class="n">repo</span><span class="o">.</span><span class="n">typesafe</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">typesafe</span><span class="o">/</span><span class="n">repo</span><span class="o">/</span><span class="n">org</span><span class="o">/</span><span class="n">scala</span><span class="o">-</span><span class="n">saddle</span><span class="o">/</span><span class="n">saddle_2</span><span class="o">.</span><span class="mf">9.2</span><span class="o">/</span><span class="mf">1.0</span><span class="o">.</span><span class="mi">1</span><span class="o">/</span><span class="n">saddle_2</span><span class="o">.</span><span class="mf">9.2</span><span class="o">-</span><span class="mf">1.0</span><span class="o">.</span><span class="mf">1.</span><span class="n">jar</span> <span class="o">...</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span>  <span class="o">[</span><span class="kt">SUCCESSFUL</span> <span class="o">]</span> <span class="n">org</span><span class="o">.</span><span class="n">scala</span><span class="o">-</span><span class="n">saddle</span><span class="k">#</span><span class="n">saddle_2</span><span class="o">.</span><span class="mf">9.2</span><span class="o">;</span><span class="mf">1.0</span><span class="o">.</span><span class="mi">1</span><span class="o">!</span><span class="n">saddle_2</span><span class="o">.</span><span class="mf">9.2</span><span class="o">.</span><span class="n">jar</span> <span class="o">(</span><span class="mi">32904</span><span class="n">ms</span><span class="o">)</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span> <span class="n">downloading</span> <span class="n">http</span><span class="o">://</span><span class="n">repo</span><span class="o">.</span><span class="n">typesafe</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">typesafe</span><span class="o">/</span><span class="n">repo</span><span class="o">/</span><span class="n">com</span><span class="o">/</span><span class="n">googlecode</span><span class="o">/</span><span class="n">efficient</span><span class="o">-</span><span class="n">java</span><span class="o">-</span><span class="n">matrix</span><span class="o">-</span><span class="n">library</span><span class="o">/</span><span class="n">ejml</span><span class="o">/</span><span class="mf">0.19</span><span class="o">/</span><span class="n">ejml</span><span class="o">-</span><span class="mf">0.19</span><span class="o">.</span><span class="n">jar</span> <span class="o">...</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span>  <span class="o">[</span><span class="kt">SUCCESSFUL</span> <span class="o">]</span> <span class="n">com</span><span class="o">.</span><span class="n">googlecode</span><span class="o">.</span><span class="n">efficient</span><span class="o">-</span><span class="n">java</span><span class="o">-</span><span class="n">matrix</span><span class="o">-</span><span class="n">library</span><span class="k">#</span><span class="n">ejml</span><span class="o">;</span><span class="mf">0.19</span><span class="o">!</span><span class="n">ejml</span><span class="o">.</span><span class="n">jar</span> <span class="o">(</span><span class="mi">8050</span><span class="n">ms</span><span class="o">)</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span> <span class="n">downloading</span> <span class="n">http</span><span class="o">://</span><span class="n">repo</span><span class="o">.</span><span class="n">typesafe</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">typesafe</span><span class="o">/</span><span class="n">repo</span><span class="o">/</span><span class="n">org</span><span class="o">/</span><span class="n">apache</span><span class="o">/</span><span class="n">commons</span><span class="o">/</span><span class="n">commons</span><span class="o">-</span><span class="n">math</span><span class="o">/</span><span class="mf">2.2</span><span class="o">/</span><span class="n">commons</span><span class="o">-</span><span class="n">math</span><span class="o">-</span><span class="mf">2.2</span><span class="o">.</span><span class="n">jar</span> <span class="o">...</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span>  <span class="o">[</span><span class="kt">SUCCESSFUL</span> <span class="o">]</span> <span class="n">org</span><span class="o">.</span><span class="n">apache</span><span class="o">.</span><span class="n">commons</span><span class="k">#</span><span class="n">commons</span><span class="o">-</span><span class="n">math</span><span class="o">;</span><span class="mf">2.2</span><span class="o">!</span><span class="n">commons</span><span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">jar</span> <span class="o">(</span><span class="mi">11273</span><span class="n">ms</span><span class="o">)</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span> <span class="n">downloading</span> <span class="n">http</span><span class="o">://</span><span class="n">repo</span><span class="o">.</span><span class="n">typesafe</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">typesafe</span><span class="o">/</span><span class="n">repo</span><span class="o">/</span><span class="n">it</span><span class="o">/</span><span class="n">unimi</span><span class="o">/</span><span class="n">dsi</span><span class="o">/</span><span class="n">fastutil</span><span class="o">/</span><span class="mf">6.5</span><span class="o">.</span><span class="mi">2</span><span class="o">/</span><span class="n">fastutil</span><span class="o">-</span><span class="mf">6.5</span><span class="o">.</span><span class="mf">2.</span><span class="n">jar</span> <span class="o">...</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span>  <span class="o">[</span><span class="kt">SUCCESSFUL</span> <span class="o">]</span> <span class="n">it</span><span class="o">.</span><span class="n">unimi</span><span class="o">.</span><span class="n">dsi</span><span class="k">#</span><span class="n">fastutil</span><span class="o">;</span><span class="mf">6.5</span><span class="o">.</span><span class="mi">2</span><span class="o">!</span><span class="n">fastutil</span><span class="o">.</span><span class="n">jar</span> <span class="o">(</span><span class="mi">185619</span><span class="n">ms</span><span class="o">)</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span> <span class="n">downloading</span> <span class="n">http</span><span class="o">://</span><span class="n">repo</span><span class="o">.</span><span class="n">typesafe</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">typesafe</span><span class="o">/</span><span class="n">repo</span><span class="o">/</span><span class="n">it</span><span class="o">/</span><span class="n">unimi</span><span class="o">/</span><span class="n">dsi</span><span class="o">/</span><span class="n">dsiutils</span><span class="o">/</span><span class="mf">2.0</span><span class="o">.</span><span class="mi">15</span><span class="o">/</span><span class="n">dsiutils</span><span class="o">-</span><span class="mf">2.0</span><span class="o">.</span><span class="mf">15.</span><span class="n">jar</span> <span class="o">...</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span>  <span class="o">[</span><span class="kt">SUCCESSFUL</span> <span class="o">]</span> <span class="n">it</span><span class="o">.</span><span class="n">unimi</span><span class="o">.</span><span class="n">dsi</span><span class="k">#</span><span class="n">dsiutils</span><span class="o">;</span><span class="mf">2.0</span><span class="o">.</span><span class="mi">15</span><span class="o">!</span><span class="n">dsiutils</span><span class="o">.</span><span class="n">jar</span> <span class="o">(</span><span class="mi">11210</span><span class="n">ms</span><span class="o">)</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span> <span class="n">downloading</span> <span class="n">http</span><span class="o">://</span><span class="n">repo</span><span class="o">.</span><span class="n">typesafe</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">typesafe</span><span class="o">/</span><span class="n">repo</span><span class="o">/</span><span class="n">org</span><span class="o">/</span><span class="n">scala</span><span class="o">-</span><span class="n">saddle</span><span class="o">/</span><span class="n">jhdf5</span><span class="o">/</span><span class="mf">2.9</span><span class="o">/</span><span class="n">jhdf5</span><span class="o">-</span><span class="mf">2.9</span><span class="o">.</span><span class="n">jar</span> <span class="o">...</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span>  <span class="o">[</span><span class="kt">SUCCESSFUL</span> <span class="o">]</span> <span class="n">org</span><span class="o">.</span><span class="n">scala</span><span class="o">-</span><span class="n">saddle</span><span class="k">#</span><span class="n">jhdf5</span><span class="o">;</span><span class="mf">2.9</span><span class="o">!</span><span class="n">jhdf5</span><span class="o">.</span><span class="n">jar</span> <span class="o">(</span><span class="mi">13801</span><span class="n">ms</span><span class="o">)</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span> <span class="n">downloading</span> <span class="n">http</span><span class="o">://</span><span class="n">repo</span><span class="o">.</span><span class="n">typesafe</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">typesafe</span><span class="o">/</span><span class="n">repo</span><span class="o">/</span><span class="n">com</span><span class="o">/</span><span class="n">martiansoftware</span><span class="o">/</span><span class="n">jsap</span><span class="o">/</span><span class="mf">2.1</span><span class="o">/</span><span class="n">jsap</span><span class="o">-</span><span class="mf">2.1</span><span class="o">.</span><span class="n">jar</span> <span class="o">...</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span>  <span class="o">[</span><span class="kt">SUCCESSFUL</span> <span class="o">]</span> <span class="n">com</span><span class="o">.</span><span class="n">martiansoftware</span><span class="k">#</span><span class="n">jsap</span><span class="o">;</span><span class="mf">2.1</span><span class="o">!</span><span class="n">jsap</span><span class="o">.</span><span class="n">jar</span> <span class="o">(</span><span class="mi">4825</span><span class="n">ms</span><span class="o">)</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span> <span class="n">downloading</span> <span class="n">http</span><span class="o">://</span><span class="n">repo</span><span class="o">.</span><span class="n">typesafe</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">typesafe</span><span class="o">/</span><span class="n">repo</span><span class="o">/</span><span class="n">com</span><span class="o">/</span><span class="n">google</span><span class="o">/</span><span class="n">guava</span><span class="o">/</span><span class="n">guava</span><span class="o">/</span><span class="mf">14.0</span><span class="o">-</span><span class="n">rc3</span><span class="o">/</span><span class="n">guava</span><span class="o">-</span><span class="mf">14.0</span><span class="o">-</span><span class="n">rc3</span><span class="o">.</span><span class="n">jar</span> <span class="o">...</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span>  <span class="o">[</span><span class="kt">SUCCESSFUL</span> <span class="o">]</span> <span class="n">com</span><span class="o">.</span><span class="n">google</span><span class="o">.</span><span class="n">guava</span><span class="k">#</span><span class="n">guava</span><span class="o">;</span><span class="mf">14.0</span><span class="o">-</span><span class="n">rc3</span><span class="o">!</span><span class="n">guava</span><span class="o">.</span><span class="n">jar</span><span class="o">(</span><span class="n">bundle</span><span class="o">)</span> <span class="o">(</span><span class="mi">26383</span><span class="n">ms</span><span class="o">)</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span> <span class="n">downloading</span> <span class="n">http</span><span class="o">://</span><span class="n">repo</span><span class="o">.</span><span class="n">typesafe</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">typesafe</span><span class="o">/</span><span class="n">repo</span><span class="o">/</span><span class="n">log4j</span><span class="o">/</span><span class="n">log4j</span><span class="o">/</span><span class="mf">1.2</span><span class="o">.</span><span class="mi">17</span><span class="o">/</span><span class="n">log4j</span><span class="o">-</span><span class="mf">1.2</span><span class="o">.</span><span class="mf">17.</span><span class="n">jar</span> <span class="o">...</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span>  <span class="o">[</span><span class="kt">SUCCESSFUL</span> <span class="o">]</span> <span class="n">log4j</span><span class="k">#</span><span class="n">log4j</span><span class="o">;</span><span class="mf">1.2</span><span class="o">.</span><span class="mi">17</span><span class="o">!</span><span class="n">log4j</span><span class="o">.</span><span class="n">jar</span><span class="o">(</span><span class="n">bundle</span><span class="o">)</span> <span class="o">(</span><span class="mi">7654</span><span class="n">ms</span><span class="o">)</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span> <span class="n">downloading</span> <span class="n">http</span><span class="o">://</span><span class="n">repo</span><span class="o">.</span><span class="n">typesafe</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">typesafe</span><span class="o">/</span><span class="n">repo</span><span class="o">/</span><span class="n">commons</span><span class="o">-</span><span class="n">configuration</span><span class="o">/</span><span class="n">commons</span><span class="o">-</span><span class="n">configuration</span><span class="o">/</span><span class="mf">1.8</span><span class="o">/</span><span class="n">commons</span><span class="o">-</span><span class="n">configuration</span><span class="o">-</span><span class="mf">1.8</span><span class="o">.</span><span class="n">jar</span> <span class="o">...</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span>  <span class="o">[</span><span class="kt">SUCCESSFUL</span> <span class="o">]</span> <span class="n">commons</span><span class="o">-</span><span class="n">configuration</span><span class="k">#</span><span class="n">commons</span><span class="o">-</span><span class="n">configuration</span><span class="o">;</span><span class="mf">1.8</span><span class="o">!</span><span class="n">commons</span><span class="o">-</span><span class="n">configuration</span><span class="o">.</span><span class="n">jar</span> <span class="o">(</span><span class="mi">8191</span><span class="n">ms</span><span class="o">)</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span> <span class="n">downloading</span> <span class="n">http</span><span class="o">://</span><span class="n">repo</span><span class="o">.</span><span class="n">typesafe</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">typesafe</span><span class="o">/</span><span class="n">repo</span><span class="o">/</span><span class="n">org</span><span class="o">/</span><span class="n">apache</span><span class="o">/</span><span class="n">commons</span><span class="o">/</span><span class="n">commons</span><span class="o">-</span><span class="n">math3</span><span class="o">/</span><span class="mf">3.1</span><span class="o">.</span><span class="mi">1</span><span class="o">/</span><span class="n">commons</span><span class="o">-</span><span class="n">math3</span><span class="o">-</span><span class="mf">3.1</span><span class="o">.</span><span class="mf">1.</span><span class="n">jar</span> <span class="o">...</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span>  <span class="o">[</span><span class="kt">SUCCESSFUL</span> <span class="o">]</span> <span class="n">org</span><span class="o">.</span><span class="n">apache</span><span class="o">.</span><span class="n">commons</span><span class="k">#</span><span class="n">commons</span><span class="o">-</span><span class="n">math3</span><span class="o">;</span><span class="mf">3.1</span><span class="o">.</span><span class="mi">1</span><span class="o">!</span><span class="n">commons</span><span class="o">-</span><span class="n">math3</span><span class="o">.</span><span class="n">jar</span> <span class="o">(</span><span class="mi">21990</span><span class="n">ms</span><span class="o">)</span>
+</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span> <span class="nc">Done</span> <span class="n">updating</span><span class="o">.</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">resolvers</span> <span class="o">++=</span> <span class="nc">Seq</span><span class="o">(</span>
+</span><span class='line'>  <span class="s">&quot;Typesafe Repository&quot;</span> <span class="n">at</span> <span class="s">&quot;http://repo.typesafe.com/typesafe/releases&quot;</span><span class="o">,</span>
+</span><span class='line'>  <span class="s">&quot;Typesafe repo&quot;</span> <span class="n">at</span> <span class="s">&quot;http://repo.typesafe.com/typesafe/repo&quot;</span><span class="o">,</span>
+</span><span class='line'>  <span class="s">&quot;Sonatype Snapshots&quot;</span> <span class="n">at</span> <span class="s">&quot;http://oss.sonatype.org/content/repositories/snapshots&quot;</span><span class="o">,</span>
+</span><span class='line'>  <span class="s">&quot;Sonatype Releases&quot;</span> <span class="n">at</span> <span class="s">&quot;http://oss.sonatype.org/content/repositories/releases&quot;</span>
+</span><span class='line'><span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="L............"></a>
+<h2>色々試す</h2>
+
+<p>こんなcsvファイルを読み込む</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">$</span> <span class="n">curl</span> <span class="o">-</span><span class="n">s</span> <span class="n">http</span><span class="o">://</span><span class="n">hojin</span><span class="o">.</span><span class="n">ctot</span><span class="o">.</span><span class="n">jp</span><span class="o">/</span><span class="n">markets</span><span class="o">/</span><span class="nc">CSV</span><span class="o">/</span><span class="mi">01</span><span class="nc">_USDJPY_D</span><span class="o">.</span><span class="n">csv</span> <span class="o">|</span> <span class="n">sed</span> <span class="o">-</span><span class="n">e</span> <span class="err">&#39;</span><span class="mi">1</span><span class="n">d</span><span class="err">&#39;</span> <span class="o">&gt;</span> <span class="n">data</span><span class="o">.</span><span class="n">csv</span>
+</span><span class='line'><span class="n">$</span> <span class="n">head</span> <span class="n">data</span><span class="o">.</span><span class="n">csv</span>
+</span><span class='line'><span class="s">&quot;01&quot;</span><span class="o">,</span><span class="s">&quot;2013/01/30&quot;</span><span class="o">,</span><span class="mf">90.71</span><span class="o">,</span><span class="mf">91.41</span><span class="o">,</span><span class="mf">90.66</span><span class="o">,</span><span class="mf">91.08</span>
+</span><span class='line'><span class="s">&quot;01&quot;</span><span class="o">,</span><span class="s">&quot;2013/01/29&quot;</span><span class="o">,</span><span class="mf">90.85</span><span class="o">,</span><span class="mf">91.01</span><span class="o">,</span><span class="mf">90.33</span><span class="o">,</span><span class="mf">90.71</span>
+</span><span class='line'><span class="s">&quot;01&quot;</span><span class="o">,</span><span class="s">&quot;2013/01/28&quot;</span><span class="o">,</span><span class="mf">91.03</span><span class="o">,</span><span class="mf">91.25</span><span class="o">,</span><span class="mf">90.56</span><span class="o">,</span><span class="mf">90.84</span>
+</span><span class='line'><span class="s">&quot;01&quot;</span><span class="o">,</span><span class="s">&quot;2013/01/25&quot;</span><span class="o">,</span><span class="mf">90.32</span><span class="o">,</span><span class="mf">91.19</span><span class="o">,</span><span class="mf">90.29</span><span class="o">,</span><span class="mf">90.9</span>
+</span><span class='line'><span class="s">&quot;01&quot;</span><span class="o">,</span><span class="s">&quot;2013/01/24&quot;</span><span class="o">,</span><span class="mf">88.61</span><span class="o">,</span><span class="mf">90.55</span><span class="o">,</span><span class="mf">88.42</span><span class="o">,</span><span class="mf">90.32</span>
+</span><span class='line'><span class="s">&quot;01&quot;</span><span class="o">,</span><span class="s">&quot;2013/01/23&quot;</span><span class="o">,</span><span class="mf">88.7</span><span class="o">,</span><span class="mf">88.79</span><span class="o">,</span><span class="mf">88.06</span><span class="o">,</span><span class="mf">88.61</span>
+</span><span class='line'><span class="s">&quot;01&quot;</span><span class="o">,</span><span class="s">&quot;2013/01/22&quot;</span><span class="o">,</span><span class="mf">89.61</span><span class="o">,</span><span class="mf">90.09</span><span class="o">,</span><span class="mf">88.36</span><span class="o">,</span><span class="mf">88.7</span>
+</span><span class='line'><span class="s">&quot;01&quot;</span><span class="o">,</span><span class="s">&quot;2013/01/21&quot;</span><span class="o">,</span><span class="mf">90.103</span><span class="o">,</span><span class="mf">90.25</span><span class="o">,</span><span class="mf">89.34</span><span class="o">,</span><span class="mf">89.64</span>
+</span><span class='line'><span class="s">&quot;01&quot;</span><span class="o">,</span><span class="s">&quot;2013/01/18&quot;</span><span class="o">,</span><span class="mf">89.87</span><span class="o">,</span><span class="mf">90.2</span><span class="o">,</span><span class="mf">89.64</span><span class="o">,</span><span class="mf">90.09</span>
+</span><span class='line'><span class="s">&quot;01&quot;</span><span class="o">,</span><span class="s">&quot;2013/01/17&quot;</span><span class="o">,</span><span class="mf">88.37</span><span class="o">,</span><span class="mf">90.12</span><span class="o">,</span><span class="mf">88.13</span><span class="o">,</span><span class="mf">89.86</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>CsvParser.parsePar</code>はCSVデータをパラレルで読み込んでFrameデータを作成する。
+引数の1つ目はパースの種類で<a href="http://saddle.github.io/api/index.html#org.saddle.io.CsvParser$">以下の4つがある</a>。</p>
+
+<ol>
+<li>parseDouble</li>
+<li>parseFloat</li>
+<li>parseInt</li>
+<li>parseLong</li>
+</ol>
+
+
+<p>引数の2つ目は抽出する列で、ゼロから初めてリストで指定する。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">scala</span><span class="o">&gt;</span> <span class="k">import</span> <span class="nn">org.saddle.io._</span>
+</span><span class='line'><span class="k">import</span> <span class="nn">org.saddle.io._</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">scala</span><span class="o">&gt;</span> <span class="k">val</span> <span class="n">csvfile</span> <span class="k">=</span> <span class="nc">CsvFile</span><span class="o">(</span><span class="s">&quot;/tmp/data.csv&quot;</span><span class="o">)</span>
+</span><span class='line'><span class="n">csvfile</span><span class="k">:</span> <span class="kt">org.saddle.io.CsvFile</span> <span class="o">=</span> <span class="nc">CsvFile</span><span class="o">(/</span><span class="n">tmp</span><span class="o">/</span><span class="n">data</span><span class="o">.</span><span class="n">csv</span><span class="o">,</span>  <span class="n">encoding</span><span class="k">:</span> <span class="kt">UTF-</span><span class="err">8</span><span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">scala</span><span class="o">&gt;</span> <span class="k">val</span> <span class="n">data</span> <span class="k">=</span> <span class="nc">CsvParser</span><span class="o">.</span><span class="n">parsePar</span><span class="o">(</span><span class="nc">CsvParser</span><span class="o">.</span><span class="n">parseDouble</span><span class="o">,</span> <span class="nc">List</span><span class="o">(</span><span class="mi">2</span><span class="o">,</span><span class="mi">3</span><span class="o">,</span><span class="mi">4</span><span class="o">))(</span><span class="n">csvfile</span><span class="o">)</span>
+</span><span class='line'><span class="n">data</span><span class="k">:</span> <span class="kt">org.saddle.io.ParsedData</span><span class="o">[</span><span class="kt">Double</span><span class="o">]</span> <span class="k">=</span>
+</span><span class='line'><span class="nc">ParsedData</span><span class="o">([</span><span class="err">3</span> <span class="kt">x</span> <span class="err">1</span><span class="o">]</span>
+</span><span class='line'><span class="mf">90.71</span>
+</span><span class='line'><span class="mf">91.41</span>
+</span><span class='line'><span class="mf">90.66</span>
+</span><span class='line'><span class="o">,</span><span class="nc">Vector</span><span class="o">([</span><span class="err">199</span> <span class="kt">x</span> <span class="err">1</span><span class="o">]</span>
+</span><span class='line'><span class="mf">90.8000</span>
+</span><span class='line'><span class="mf">91.0000</span>
+</span><span class='line'><span class="mf">90.3000</span>
+</span><span class='line'><span class="mf">88.6000</span>
+</span><span class='line'><span class="mf">88.0000</span>
+</span><span class='line'> <span class="o">...</span>
+</span><span class='line'><span class="mf">79.0000</span>
+</span><span class='line'><span class="mf">80.0000</span>
+</span><span class='line'><span class="mf">80.9000</span>
+</span><span class='line'><span class="mf">81.3000</span>
+</span><span class='line'><span class="mf">81.0000</span>
+</span><span class='line'><span class="o">,</span> <span class="o">[</span><span class="err">199</span> <span class="kt">x</span> <span class="err">1</span><span class="o">]</span>
+</span><span class='line'><span class="mf">91.0100</span>
+</span><span class='line'><span class="mf">91.2500</span>
+</span><span class='line'><span class="mf">91.1900</span>
+</span><span class='line'><span class="mf">90.5500</span>
+</span><span class='line'><span class="mf">88.7900</span>
+</span><span class='line'> <span class="o">...</span>
+</span><span class='line'><span class="mf">80.2900</span>
+</span><span class='line'><span class="mf">80.3800</span>
+</span><span class='line'><span class="mf">81.4400</span>
+</span><span class='line'><span class="mf">81.4100</span>
+</span><span class='line'><span class="mf">81.6800</span>
+</span><span class='line'><span class="o">,</span> <span class="o">[</span><span class="err">199</span> <span class="kt">x</span> <span class="err">1</span><span class="o">]</span>
+</span><span class='line'>
+</span><span class='line'><span class="mf">90.3300</span>
+</span><span class='line'><span class="mf">90.5600</span>
+</span><span class='line'><span class="mf">90.2900</span>
+</span><span class='line'><span class="mf">88.4200</span>
+</span><span class='line'><span class="mf">88.0600</span>
+</span><span class='line'> <span class="o">...</span>
+</span><span class='line'><span class="mf">79.6300</span>
+</span><span class='line'><span class="mf">79.7300</span>
+</span><span class='line'><span class="mf">80.2100</span>
+</span><span class='line'><span class="mf">80.6600</span>
+</span><span class='line'><span class="mf">81.0700</span>
+</span><span class='line'><span class="o">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ヘッダーなしのフレームデータにする。<code>toFrame</code>だと1行めがヘッダー扱いされる(<a href="http://saddle.github.io/api/index.html#org.saddle.io.ParsedData">ここ参照</a>)。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">scala</span><span class="o">&gt;</span> <span class="k">val</span> <span class="n">framedata</span> <span class="k">=</span> <span class="n">data</span><span class="o">.</span><span class="n">toFrameNoHeader</span>
+</span><span class='line'><span class="n">framedata</span><span class="k">:</span> <span class="kt">org.saddle.Frame</span><span class="o">[</span><span class="kt">Int</span>,<span class="kt">Int</span>,<span class="kt">Double</span><span class="o">]</span> <span class="k">=</span>
+</span><span class='line'><span class="o">[</span><span class="err">199</span> <span class="kt">x</span> <span class="err">3</span><span class="o">]</span>
+</span><span class='line'>             <span class="mi">0</span>       <span class="mi">1</span>       <span class="mi">2</span>
+</span><span class='line'>       <span class="o">-------</span> <span class="o">-------</span> <span class="o">-------</span>
+</span><span class='line'>  <span class="mi">0</span> <span class="o">-&gt;</span> <span class="mf">90.8000</span> <span class="mf">91.0100</span> <span class="mf">90.3300</span>
+</span><span class='line'>  <span class="mi">1</span> <span class="o">-&gt;</span> <span class="mf">91.0000</span> <span class="mf">91.2500</span> <span class="mf">90.5600</span>
+</span><span class='line'>  <span class="mi">2</span> <span class="o">-&gt;</span> <span class="mf">90.3000</span> <span class="mf">91.1900</span> <span class="mf">90.2900</span>
+</span><span class='line'>  <span class="mi">3</span> <span class="o">-&gt;</span> <span class="mf">88.6000</span> <span class="mf">90.5500</span> <span class="mf">88.4200</span>
+</span><span class='line'>  <span class="mi">4</span> <span class="o">-&gt;</span> <span class="mf">88.0000</span> <span class="mf">88.7900</span> <span class="mf">88.0600</span>
+</span><span class='line'><span class="o">...</span>
+</span><span class='line'><span class="mi">194</span> <span class="o">-&gt;</span> <span class="mf">79.0000</span> <span class="mf">80.2900</span> <span class="mf">79.6300</span>
+</span><span class='line'><span class="mi">195</span> <span class="o">-&gt;</span> <span class="mf">80.0000</span> <span class="mf">80.3800</span> <span class="mf">79.7300</span>
+</span><span class='line'><span class="mi">196</span> <span class="o">-&gt;</span> <span class="mf">80.9000</span> <span class="mf">81.4400</span> <span class="mf">80.2100</span>
+</span><span class='line'><span class="mi">197</span> <span class="o">-&gt;</span> <span class="mf">81.3000</span> <span class="mf">81.4100</span> <span class="mf">80.6600</span>
+</span><span class='line'><span class="mi">198</span> <span class="o">-&gt;</span> <span class="mf">81.0000</span> <span class="mf">81.6800</span> <span class="mf">81.0700</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>指定行を取り出す。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">scala</span><span class="o">&gt;</span> <span class="n">framedata</span><span class="o">.</span><span class="n">row</span><span class="o">(</span><span class="mi">2</span><span class="o">)</span>
+</span><span class='line'><span class="n">res38</span><span class="k">:</span> <span class="kt">org.saddle.Frame</span><span class="o">[</span><span class="kt">Int</span>,<span class="kt">Int</span>,<span class="kt">Double</span><span class="o">]</span> <span class="k">=</span>
+</span><span class='line'><span class="o">[</span><span class="err">1</span> <span class="kt">x</span> <span class="err">3</span><span class="o">]</span>
+</span><span class='line'>           <span class="mi">0</span>       <span class="mi">1</span>       <span class="mi">2</span>
+</span><span class='line'>     <span class="o">-------</span> <span class="o">-------</span> <span class="o">-------</span>
+</span><span class='line'><span class="mi">2</span> <span class="o">-&gt;</span> <span class="mf">90.3000</span> <span class="mf">91.1900</span> <span class="mf">90.2900</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>指定範囲の行を取り出す。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">scala</span><span class="o">&gt;</span> <span class="n">framedata</span><span class="o">.</span><span class="n">rowAt</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="mi">2</span><span class="o">)</span>
+</span><span class='line'><span class="n">res40</span><span class="k">:</span> <span class="kt">org.saddle.Frame</span><span class="o">[</span><span class="kt">Int</span>,<span class="kt">Int</span>,<span class="kt">Double</span><span class="o">]</span> <span class="k">=</span>
+</span><span class='line'><span class="o">[</span><span class="err">2</span> <span class="kt">x</span> <span class="err">3</span><span class="o">]</span>
+</span><span class='line'>           <span class="mi">0</span>       <span class="mi">1</span>       <span class="mi">2</span>
+</span><span class='line'>     <span class="o">-------</span> <span class="o">-------</span> <span class="o">-------</span>
+</span><span class='line'><span class="mi">1</span> <span class="o">-&gt;</span> <span class="mf">91.0000</span> <span class="mf">91.2500</span> <span class="mf">90.5600</span>
+</span><span class='line'><span class="mi">2</span> <span class="o">-&gt;</span> <span class="mf">90.3000</span> <span class="mf">91.1900</span> <span class="mf">90.2900</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="n">scala</span><span class="o">&gt;</span> <span class="n">framedata</span><span class="o">.</span><span class="n">rowAt</span><span class="o">(</span><span class="mi">1</span> <span class="o">-&gt;</span> <span class="mi">5</span><span class="o">)</span>
+</span><span class='line'><span class="n">res41</span><span class="k">:</span> <span class="kt">org.saddle.Frame</span><span class="o">[</span><span class="kt">Int</span>,<span class="kt">Int</span>,<span class="kt">Double</span><span class="o">]</span> <span class="k">=</span>
+</span><span class='line'><span class="o">[</span><span class="err">5</span> <span class="kt">x</span> <span class="err">3</span><span class="o">]</span>
+</span><span class='line'>           <span class="mi">0</span>       <span class="mi">1</span>       <span class="mi">2</span>
+</span><span class='line'>     <span class="o">-------</span> <span class="o">-------</span> <span class="o">-------</span>
+</span><span class='line'><span class="mi">1</span> <span class="o">-&gt;</span> <span class="mf">91.0000</span> <span class="mf">91.2500</span> <span class="mf">90.5600</span>
+</span><span class='line'><span class="mi">2</span> <span class="o">-&gt;</span> <span class="mf">90.3000</span> <span class="mf">91.1900</span> <span class="mf">90.2900</span>
+</span><span class='line'><span class="mi">3</span> <span class="o">-&gt;</span> <span class="mf">88.6000</span> <span class="mf">90.5500</span> <span class="mf">88.4200</span>
+</span><span class='line'><span class="mi">4</span> <span class="o">-&gt;</span> <span class="mf">88.0000</span> <span class="mf">88.7900</span> <span class="mf">88.0600</span>
+</span><span class='line'><span class="mi">5</span> <span class="o">-&gt;</span> <span class="mf">89.6000</span> <span class="mf">90.0900</span> <span class="mf">88.3600</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>指定列を取り出す。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">scala</span><span class="o">&gt;</span> <span class="n">framedata</span><span class="o">.</span><span class="n">col</span><span class="o">(</span><span class="mi">1</span><span class="o">)</span>
+</span><span class='line'><span class="n">res39</span><span class="k">:</span> <span class="kt">org.saddle.Frame</span><span class="o">[</span><span class="kt">Int</span>,<span class="kt">Int</span>,<span class="kt">Double</span><span class="o">]</span> <span class="k">=</span>
+</span><span class='line'><span class="o">[</span><span class="err">199</span> <span class="kt">x</span> <span class="err">1</span><span class="o">]</span>
+</span><span class='line'>             <span class="mi">1</span>
+</span><span class='line'>       <span class="o">-------</span>
+</span><span class='line'>  <span class="mi">0</span> <span class="o">-&gt;</span> <span class="mf">91.0100</span>
+</span><span class='line'>  <span class="mi">1</span> <span class="o">-&gt;</span> <span class="mf">91.2500</span>
+</span><span class='line'>  <span class="mi">2</span> <span class="o">-&gt;</span> <span class="mf">91.1900</span>
+</span><span class='line'>  <span class="mi">3</span> <span class="o">-&gt;</span> <span class="mf">90.5500</span>
+</span><span class='line'>  <span class="mi">4</span> <span class="o">-&gt;</span> <span class="mf">88.7900</span>
+</span><span class='line'><span class="o">...</span>
+</span><span class='line'><span class="mi">194</span> <span class="o">-&gt;</span> <span class="mf">80.2900</span>
+</span><span class='line'><span class="mi">195</span> <span class="o">-&gt;</span> <span class="mf">80.3800</span>
+</span><span class='line'><span class="mi">196</span> <span class="o">-&gt;</span> <span class="mf">81.4400</span>
+</span><span class='line'><span class="mi">197</span> <span class="o">-&gt;</span> <span class="mf">81.4100</span>
+</span><span class='line'><span class="mi">198</span> <span class="o">-&gt;</span> <span class="mf">81.6800</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>指定範囲の列を取り出す。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">scala</span><span class="o">&gt;</span> <span class="n">framedata</span><span class="o">.</span><span class="n">colAt</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="mi">2</span><span class="o">)</span>
+</span><span class='line'><span class="n">res42</span><span class="k">:</span> <span class="kt">org.saddle.Frame</span><span class="o">[</span><span class="kt">Int</span>,<span class="kt">Int</span>,<span class="kt">Double</span><span class="o">]</span> <span class="k">=</span>
+</span><span class='line'><span class="o">[</span><span class="err">199</span> <span class="kt">x</span> <span class="err">2</span><span class="o">]</span>
+</span><span class='line'>             <span class="mi">1</span>       <span class="mi">2</span>
+</span><span class='line'>       <span class="o">-------</span> <span class="o">-------</span>
+</span><span class='line'>  <span class="mi">0</span> <span class="o">-&gt;</span> <span class="mf">91.0100</span> <span class="mf">90.3300</span>
+</span><span class='line'>  <span class="mi">1</span> <span class="o">-&gt;</span> <span class="mf">91.2500</span> <span class="mf">90.5600</span>
+</span><span class='line'>  <span class="mi">2</span> <span class="o">-&gt;</span> <span class="mf">91.1900</span> <span class="mf">90.2900</span>
+</span><span class='line'>  <span class="mi">3</span> <span class="o">-&gt;</span> <span class="mf">90.5500</span> <span class="mf">88.4200</span>
+</span><span class='line'>  <span class="mi">4</span> <span class="o">-&gt;</span> <span class="mf">88.7900</span> <span class="mf">88.0600</span>
+</span><span class='line'><span class="o">...</span>
+</span><span class='line'><span class="mi">194</span> <span class="o">-&gt;</span> <span class="mf">80.2900</span> <span class="mf">79.6300</span>
+</span><span class='line'><span class="mi">195</span> <span class="o">-&gt;</span> <span class="mf">80.3800</span> <span class="mf">79.7300</span>
+</span><span class='line'><span class="mi">196</span> <span class="o">-&gt;</span> <span class="mf">81.4400</span> <span class="mf">80.2100</span>
+</span><span class='line'><span class="mi">197</span> <span class="o">-&gt;</span> <span class="mf">81.4100</span> <span class="mf">80.6600</span>
+</span><span class='line'><span class="mi">198</span> <span class="o">-&gt;</span> <span class="mf">81.6800</span> <span class="mf">81.0700</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="n">scala</span><span class="o">&gt;</span> <span class="n">framedata</span><span class="o">.</span><span class="n">colAt</span><span class="o">(</span><span class="mi">1</span> <span class="o">-&gt;</span> <span class="mi">2</span><span class="o">)</span>
+</span><span class='line'><span class="n">res43</span><span class="k">:</span> <span class="kt">org.saddle.Frame</span><span class="o">[</span><span class="kt">Int</span>,<span class="kt">Int</span>,<span class="kt">Double</span><span class="o">]</span> <span class="k">=</span>
+</span><span class='line'><span class="o">[</span><span class="err">199</span> <span class="kt">x</span> <span class="err">2</span><span class="o">]</span>
+</span><span class='line'>             <span class="mi">1</span>       <span class="mi">2</span>
+</span><span class='line'>       <span class="o">-------</span> <span class="o">-------</span>
+</span><span class='line'>  <span class="mi">0</span> <span class="o">-&gt;</span> <span class="mf">91.0100</span> <span class="mf">90.3300</span>
+</span><span class='line'>  <span class="mi">1</span> <span class="o">-&gt;</span> <span class="mf">91.2500</span> <span class="mf">90.5600</span>
+</span><span class='line'>  <span class="mi">2</span> <span class="o">-&gt;</span> <span class="mf">91.1900</span> <span class="mf">90.2900</span>
+</span><span class='line'>  <span class="mi">3</span> <span class="o">-&gt;</span> <span class="mf">90.5500</span> <span class="mf">88.4200</span>
+</span><span class='line'>  <span class="mi">4</span> <span class="o">-&gt;</span> <span class="mf">88.7900</span> <span class="mf">88.0600</span>
+</span><span class='line'><span class="o">...</span>
+</span><span class='line'><span class="mi">194</span> <span class="o">-&gt;</span> <span class="mf">80.2900</span> <span class="mf">79.6300</span>
+</span><span class='line'><span class="mi">195</span> <span class="o">-&gt;</span> <span class="mf">80.3800</span> <span class="mf">79.7300</span>
+</span><span class='line'><span class="mi">196</span> <span class="o">-&gt;</span> <span class="mf">81.4400</span> <span class="mf">80.2100</span>
+</span><span class='line'><span class="mi">197</span> <span class="o">-&gt;</span> <span class="mf">81.4100</span> <span class="mf">80.6600</span>
+</span><span class='line'><span class="mi">198</span> <span class="o">-&gt;</span> <span class="mf">81.6800</span> <span class="mf">81.0700</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>セルを指定して取り出す。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">scala</span><span class="o">&gt;</span> <span class="n">framedata</span><span class="o">.</span><span class="n">at</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="mi">2</span><span class="o">)</span>
+</span><span class='line'><span class="n">res44</span><span class="k">:</span> <span class="kt">org.saddle.scalar.Scalar</span><span class="o">[</span><span class="kt">Double</span><span class="o">]</span> <span class="k">=</span> <span class="mf">90.56</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>連続した指定範囲のセルを取り出す。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">scala</span><span class="o">&gt;</span> <span class="n">framedata</span><span class="o">.</span><span class="n">at</span><span class="o">(</span><span class="mi">2</span> <span class="o">-&gt;</span> <span class="mi">4</span><span class="o">,</span> <span class="mi">1</span> <span class="o">-&gt;</span> <span class="mi">2</span><span class="o">)</span>
+</span><span class='line'><span class="n">res52</span><span class="k">:</span> <span class="kt">org.saddle.Frame</span><span class="o">[</span><span class="kt">Int</span>,<span class="kt">Int</span>,<span class="kt">Double</span><span class="o">]</span> <span class="k">=</span>
+</span><span class='line'><span class="o">[</span><span class="err">3</span> <span class="kt">x</span> <span class="err">2</span><span class="o">]</span>
+</span><span class='line'>           <span class="mi">1</span>       <span class="mi">2</span>
+</span><span class='line'>     <span class="o">-------</span> <span class="o">-------</span>
+</span><span class='line'><span class="mi">2</span> <span class="o">-&gt;</span> <span class="mf">91.1900</span> <span class="mf">90.2900</span>
+</span><span class='line'><span class="mi">3</span> <span class="o">-&gt;</span> <span class="mf">90.5500</span> <span class="mf">88.4200</span>
+</span><span class='line'><span class="mi">4</span> <span class="o">-&gt;</span> <span class="mf">88.7900</span> <span class="mf">88.0600</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>飛び石で指定した範囲のセルを取り出す。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">scala</span><span class="o">&gt;</span> <span class="n">framedata</span><span class="o">.</span><span class="n">at</span><span class="o">(</span><span class="nc">Array</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="mi">3</span><span class="o">,</span> <span class="mi">7</span><span class="o">),</span> <span class="nc">Array</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="mi">2</span><span class="o">))</span>
+</span><span class='line'><span class="n">res55</span><span class="k">:</span> <span class="kt">org.saddle.Frame</span><span class="o">[</span><span class="kt">Int</span>,<span class="kt">Int</span>,<span class="kt">Double</span><span class="o">]</span> <span class="k">=</span>
+</span><span class='line'><span class="o">[</span><span class="err">3</span> <span class="kt">x</span> <span class="err">2</span><span class="o">]</span>
+</span><span class='line'>           <span class="mi">0</span>       <span class="mi">2</span>
+</span><span class='line'>     <span class="o">-------</span> <span class="o">-------</span>
+</span><span class='line'><span class="mi">1</span> <span class="o">-&gt;</span> <span class="mf">91.0000</span> <span class="mf">90.5600</span>
+</span><span class='line'><span class="mi">3</span> <span class="o">-&gt;</span> <span class="mf">88.6000</span> <span class="mf">88.4200</span>
+</span><span class='line'><span class="mi">7</span> <span class="o">-&gt;</span> <span class="mf">89.8000</span> <span class="mf">89.6400</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>指定した値以下のデータの個数を数える。<code>mask</code>は指定した式が<code>True</code>となる値を<code>NA</code>にする。<code>count</code>は<code>NA</code>ではない有効なデータの個数を数える。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">scala</span><span class="o">&gt;</span> <span class="n">framedata</span><span class="o">.</span><span class="n">mask</span><span class="o">(</span><span class="k">_</span> <span class="o">&gt;</span> <span class="mi">80</span><span class="o">).</span><span class="n">count</span>
+</span><span class='line'><span class="n">res71</span><span class="k">:</span> <span class="kt">org.saddle.Series</span><span class="o">[</span><span class="kt">Int</span>,<span class="kt">Int</span><span class="o">]</span> <span class="k">=</span>
+</span><span class='line'><span class="o">[</span><span class="err">3</span> <span class="kt">x</span> <span class="err">1</span><span class="o">]</span>
+</span><span class='line'><span class="mi">0</span> <span class="o">-&gt;</span> <span class="mi">132</span>
+</span><span class='line'><span class="mi">1</span> <span class="o">-&gt;</span> <span class="mi">116</span>
+</span><span class='line'><span class="mi">2</span> <span class="o">-&gt;</span> <span class="mi">138</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>各列の総和と平均</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="o">[</span><span class="kt">sgyk@fujishima</span><span class="o">]</span> <span class="mi">13</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">08</span> <span class="mi">0</span><span class="k">:</span><span class="err">36</span><span class="kt">:</span><span class="err">36</span> <span class="kt">/tmp</span>
+</span><span class='line'><span class="n">$</span> <span class="n">awk</span> <span class="o">-</span><span class="n">F</span><span class="s">&quot;,&quot;</span> <span class="-Symbol">&#39;BEGIN</span><span class="o">{</span><span class="n">sum3</span><span class="k">=</span><span class="mi">0</span><span class="o">;</span><span class="n">sum4</span><span class="k">=</span><span class="mi">0</span><span class="o">;</span><span class="n">sum5</span><span class="k">=</span><span class="mi">0</span><span class="o">}{</span><span class="n">sum3</span> <span class="k">=</span> <span class="n">sum3</span> <span class="o">+</span> <span class="n">$3</span><span class="o">;</span><span class="n">sum4</span> <span class="k">=</span> <span class="n">sum4</span> <span class="o">+</span> <span class="n">$4</span><span class="o">;</span><span class="n">sum5</span> <span class="k">=</span> <span class="n">sum5</span> <span class="o">+</span> <span class="n">$5</span><span class="o">;}</span><span class="nc">END</span><span class="o">{</span><span class="n">print</span> <span class="n">sum3</span><span class="s">&quot;\n&quot;</span><span class="n">sum4</span><span class="s">&quot;\n&quot;</span><span class="n">sum5</span><span class="o">}</span><span class="err">&#39;</span> <span class="n">data</span><span class="o">.</span><span class="n">csv</span>
+</span><span class='line'><span class="mf">16154.1</span>
+</span><span class='line'><span class="mf">16214.9</span>
+</span><span class='line'><span class="mf">16099.1</span>
+</span><span class='line'><span class="o">[</span><span class="kt">sgyk@fujishima</span><span class="o">]</span> <span class="mi">13</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">08</span> <span class="mi">0</span><span class="k">:</span><span class="err">37</span><span class="kt">:</span><span class="err">55</span> <span class="kt">/tmp</span>
+</span><span class='line'><span class="n">$</span> <span class="n">awk</span> <span class="o">-</span><span class="n">F</span><span class="s">&quot;,&quot;</span> <span class="-Symbol">&#39;BEGIN</span><span class="o">{</span><span class="n">sum3</span><span class="k">=</span><span class="mi">0</span><span class="o">;</span><span class="n">sum4</span><span class="k">=</span><span class="mi">0</span><span class="o">;</span><span class="n">sum5</span><span class="k">=</span><span class="mi">0</span><span class="o">}{</span><span class="n">sum3</span> <span class="k">=</span> <span class="n">sum3</span> <span class="o">+</span> <span class="n">$3</span><span class="o">;</span><span class="n">sum4</span> <span class="k">=</span> <span class="n">sum4</span> <span class="o">+</span> <span class="n">$4</span><span class="o">;</span><span class="n">sum5</span> <span class="k">=</span> <span class="n">sum5</span> <span class="o">+</span> <span class="n">$5</span><span class="o">;}</span><span class="nc">END</span><span class="o">{</span><span class="n">print</span> <span class="n">sum3</span><span class="o">/</span><span class="nc">NR</span><span class="s">&quot;\n&quot;</span><span class="n">sum4</span><span class="o">/</span><span class="nc">NR</span><span class="s">&quot;\n&quot;</span><span class="n">sum5</span><span class="o">/</span><span class="nc">NR</span><span class="o">}</span><span class="err">&#39;</span> <span class="n">data</span><span class="o">.</span><span class="n">csv</span>
+</span><span class='line'><span class="mf">80.7703</span>
+</span><span class='line'><span class="mf">81.0747</span>
+</span><span class='line'><span class="mf">80.4957</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">scala</span><span class="o">&gt;</span> <span class="n">framedata</span><span class="o">.</span><span class="n">reduce</span><span class="o">(</span><span class="k">_</span><span class="o">.</span><span class="n">sum</span><span class="o">)</span>
+</span><span class='line'><span class="n">res120</span><span class="k">:</span> <span class="kt">org.saddle.Series</span><span class="o">[</span><span class="kt">Int</span>,<span class="kt">Double</span><span class="o">]</span> <span class="k">=</span>
+</span><span class='line'><span class="o">[</span><span class="err">3</span> <span class="kt">x</span> <span class="err">1</span><span class="o">]</span>
+</span><span class='line'><span class="mi">0</span> <span class="o">-&gt;</span> <span class="mf">16045.4400</span>
+</span><span class='line'><span class="mi">1</span> <span class="o">-&gt;</span> <span class="mf">16123.5300</span>
+</span><span class='line'><span class="mi">2</span> <span class="o">-&gt;</span> <span class="mf">16008.4800</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="n">scala</span><span class="o">&gt;</span> <span class="n">framedata</span><span class="o">.</span><span class="n">reduce</span><span class="o">(</span><span class="k">_</span><span class="o">.</span><span class="n">mean</span><span class="o">)</span>
+</span><span class='line'><span class="n">res121</span><span class="k">:</span> <span class="kt">org.saddle.Series</span><span class="o">[</span><span class="kt">Int</span>,<span class="kt">Double</span><span class="o">]</span> <span class="k">=</span>
+</span><span class='line'><span class="o">[</span><span class="err">3</span> <span class="kt">x</span> <span class="err">1</span><span class="o">]</span>
+</span><span class='line'><span class="mi">0</span> <span class="o">-&gt;</span> <span class="mf">80.6304</span>
+</span><span class='line'><span class="mi">1</span> <span class="o">-&gt;</span> <span class="mf">81.0228</span>
+</span><span class='line'><span class="mi">2</span> <span class="o">-&gt;</span> <span class="mf">80.4446</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>なんか微妙に結果が合わない…。色々調べた結果、</p>
+
+<ul>
+<li>データ中にダブルクォーテーションが入っているとダブルクォーテーションの右隣りの列の値が正しく取れない？</li>
+<li><code>toFrameNoHeader</code>は本来列見出しになるはずだった1列目を破棄する。</li>
+</ul>
+
+
+<p>っぽい感じだったので、ちょっとデータからダブルクォーテーションを削除して、アテの見出しをつけるようにデータを修正した。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="o">[</span><span class="kt">sgyk@fujishima</span><span class="o">]</span> <span class="mi">13</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">08</span> <span class="mi">1</span><span class="k">:</span><span class="err">18</span><span class="kt">:</span><span class="err">37</span> <span class="kt">/tmp</span>
+</span><span class='line'><span class="n">$</span> <span class="n">awk</span> <span class="o">-</span><span class="n">F</span><span class="s">&quot;,&quot;</span> <span class="-Symbol">&#39;BEGIN</span><span class="o">{</span><span class="nc">NR</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">;</span><span class="n">sum3</span><span class="k">=</span><span class="mi">0</span><span class="o">;</span><span class="n">sum4</span><span class="k">=</span><span class="mi">0</span><span class="o">;</span><span class="n">sum5</span><span class="k">=</span><span class="mi">0</span><span class="o">}{</span><span class="n">sum3</span> <span class="k">=</span> <span class="n">sum3</span> <span class="o">+</span> <span class="n">$3</span><span class="o">;</span><span class="n">sum4</span> <span class="k">=</span> <span class="n">sum4</span> <span class="o">+</span> <span class="n">$4</span><span class="o">;</span><span class="n">sum5</span> <span class="k">=</span> <span class="n">sum5</span> <span class="o">+</span> <span class="n">$5</span><span class="o">;}</span><span class="nc">END</span><span class="o">{</span><span class="n">print</span> <span class="n">sum3</span><span class="s">&quot;\n&quot;</span><span class="n">sum4</span><span class="s">&quot;\n&quot;</span><span class="n">sum5</span><span class="o">}</span><span class="err">&#39;</span> <span class="n">data</span><span class="o">.</span><span class="n">csv</span>
+</span><span class='line'><span class="mf">16154.1</span>
+</span><span class='line'><span class="mf">16214.9</span>
+</span><span class='line'><span class="mf">16099.1</span>
+</span><span class='line'><span class="o">[</span><span class="kt">sgyk@fujishima</span><span class="o">]</span> <span class="mi">13</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">08</span> <span class="mi">1</span><span class="k">:</span><span class="err">18</span><span class="kt">:</span><span class="err">50</span> <span class="kt">/tmp</span>
+</span><span class='line'><span class="n">$</span> <span class="n">awk</span> <span class="o">-</span><span class="n">F</span><span class="s">&quot;,&quot;</span> <span class="-Symbol">&#39;BEGIN</span><span class="o">{</span><span class="nc">NR</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">;</span><span class="n">sum3</span><span class="k">=</span><span class="mi">0</span><span class="o">;</span><span class="n">sum4</span><span class="k">=</span><span class="mi">0</span><span class="o">;</span><span class="n">sum5</span><span class="k">=</span><span class="mi">0</span><span class="o">}{</span><span class="n">sum3</span> <span class="k">=</span> <span class="n">sum3</span> <span class="o">+</span> <span class="n">$3</span><span class="o">;</span><span class="n">sum4</span> <span class="k">=</span> <span class="n">sum4</span> <span class="o">+</span> <span class="n">$4</span><span class="o">;</span><span class="n">sum5</span> <span class="k">=</span> <span class="n">sum5</span> <span class="o">+</span> <span class="n">$5</span><span class="o">;}</span><span class="nc">END</span><span class="o">{</span><span class="n">print</span> <span class="n">sum3</span><span class="o">/(</span><span class="nc">NR</span><span class="o">-</span><span class="mi">1</span><span class="o">)</span><span class="s">&quot;\n&quot;</span><span class="n">sum4</span><span class="o">/(</span><span class="nc">NR</span><span class="o">-</span><span class="mi">1</span><span class="o">)</span><span class="s">&quot;\n&quot;</span><span class="n">sum5</span><span class="o">/(</span><span class="nc">NR</span><span class="o">-</span><span class="mi">1</span><span class="o">)}</span><span class="err">&#39;</span> <span class="n">data</span><span class="o">.</span><span class="n">csv</span>
+</span><span class='line'><span class="mf">80.7703</span>
+</span><span class='line'><span class="mf">81.0747</span>
+</span><span class='line'><span class="mf">80.4957</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">#</span> <span class="n">読み込み部分は省略</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">scala</span><span class="o">&gt;</span> <span class="k">val</span> <span class="n">framedata</span> <span class="k">=</span> <span class="n">data</span><span class="o">.</span><span class="n">toFrameNoHeader</span>
+</span><span class='line'><span class="n">framedata</span><span class="k">:</span> <span class="kt">org.saddle.Frame</span><span class="o">[</span><span class="kt">Int</span>,<span class="kt">Int</span>,<span class="kt">Double</span><span class="o">]</span> <span class="k">=</span>
+</span><span class='line'><span class="o">[</span><span class="err">200</span> <span class="kt">x</span> <span class="err">3</span><span class="o">]</span>
+</span><span class='line'>             <span class="mi">0</span>       <span class="mi">1</span>       <span class="mi">2</span>
+</span><span class='line'>       <span class="o">-------</span> <span class="o">-------</span> <span class="o">-------</span>
+</span><span class='line'>  <span class="mi">0</span> <span class="o">-&gt;</span> <span class="mf">90.7100</span> <span class="mf">91.4100</span> <span class="mf">90.6600</span>
+</span><span class='line'>  <span class="mi">1</span> <span class="o">-&gt;</span> <span class="mf">90.8500</span> <span class="mf">91.0100</span> <span class="mf">90.3300</span>
+</span><span class='line'>  <span class="mi">2</span> <span class="o">-&gt;</span> <span class="mf">91.0300</span> <span class="mf">91.2500</span> <span class="mf">90.5600</span>
+</span><span class='line'>  <span class="mi">3</span> <span class="o">-&gt;</span> <span class="mf">90.3200</span> <span class="mf">91.1900</span> <span class="mf">90.2900</span>
+</span><span class='line'>  <span class="mi">4</span> <span class="o">-&gt;</span> <span class="mf">88.6100</span> <span class="mf">90.5500</span> <span class="mf">88.4200</span>
+</span><span class='line'><span class="o">...</span>
+</span><span class='line'><span class="mi">195</span> <span class="o">-&gt;</span> <span class="mf">79.8000</span> <span class="mf">80.2900</span> <span class="mf">79.6300</span>
+</span><span class='line'><span class="mi">196</span> <span class="o">-&gt;</span> <span class="mf">80.3000</span> <span class="mf">80.3800</span> <span class="mf">79.7300</span>
+</span><span class='line'><span class="mi">197</span> <span class="o">-&gt;</span> <span class="mf">80.9700</span> <span class="mf">81.4400</span> <span class="mf">80.2100</span>
+</span><span class='line'><span class="mi">198</span> <span class="o">-&gt;</span> <span class="mf">81.3200</span> <span class="mf">81.4100</span> <span class="mf">80.6600</span>
+</span><span class='line'><span class="mi">199</span> <span class="o">-&gt;</span> <span class="mf">81.3000</span> <span class="mf">81.6800</span> <span class="mf">81.0700</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="n">scala</span><span class="o">&gt;</span> <span class="n">framedata</span><span class="o">.</span><span class="n">sum</span>
+</span><span class='line'><span class="n">res152</span><span class="k">:</span> <span class="kt">org.saddle.Series</span><span class="o">[</span><span class="kt">Int</span>,<span class="kt">Double</span><span class="o">]</span> <span class="k">=</span>
+</span><span class='line'><span class="o">[</span><span class="err">3</span> <span class="kt">x</span> <span class="err">1</span><span class="o">]</span>
+</span><span class='line'><span class="mi">0</span> <span class="o">-&gt;</span> <span class="mf">16154.0530</span>
+</span><span class='line'><span class="mi">1</span> <span class="o">-&gt;</span> <span class="mf">16214.9400</span>
+</span><span class='line'><span class="mi">2</span> <span class="o">-&gt;</span> <span class="mf">16099.1400</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="n">scala</span><span class="o">&gt;</span> <span class="n">framedata</span><span class="o">.</span><span class="n">mean</span>
+</span><span class='line'><span class="n">res153</span><span class="k">:</span> <span class="kt">org.saddle.Series</span><span class="o">[</span><span class="kt">Int</span>,<span class="kt">Double</span><span class="o">]</span> <span class="k">=</span>
+</span><span class='line'><span class="o">[</span><span class="err">3</span> <span class="kt">x</span> <span class="err">1</span><span class="o">]</span>
+</span><span class='line'><span class="mi">0</span> <span class="o">-&gt;</span> <span class="mf">80.7703</span>
+</span><span class='line'><span class="mi">1</span> <span class="o">-&gt;</span> <span class="mf">81.0747</span>
+</span><span class='line'><span class="mi">2</span> <span class="o">-&gt;</span> <span class="mf">80.4957</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>あとはもう少しSQLっぽい操作ができるようになれば、結構便利そう（Saddleじゃなくて自分がって意味で）。</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2013-04-09T21:41:00+09:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>9</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>9:41 pm</span></time>
+      <span class="categories">full history <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/commit/master/source/_posts/2013-04-09-scala-saddle.markdown">here</a></span>
+
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/03/31/twitter-hosebird/" title="Previous Post: Hosebird Clientを試す">&laquo; Hosebird Clientを試す</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/04/15/lean-analytics/" title="Next Post: リーン・アナリティクス入門に行ってきた">リーン・アナリティクス入門に行ってきた &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

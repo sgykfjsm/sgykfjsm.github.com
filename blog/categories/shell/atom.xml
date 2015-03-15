@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: shell | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.com/blog/categories/shell/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.com/"/>
+  <updated>2015-03-16T03:15:42+09:00</updated>
+  <id>http://sgykfjsm.github.com/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[sudoでulimitをしたら「sudo: ulimit -Sn: コマンドが見つかりません」と言われた]]></title>
+    <link href="http://sgykfjsm.github.com/blog/2014/02/05/sudo-ulimit/"/>
+    <updated>2014-02-05T20:26:00+09:00</updated>
+    <id>http://sgykfjsm.github.com/blog/2014/02/05/sudo-ulimit</id>
+    <content type="html"><![CDATA[<p>elasticsearchの調子が悪かったので、いろいろ調べていた。その途中でnofilesの上限を調べようと思って、以下のようにコマンドを叩いたらコマンドが見つからないって言われた。</p>
+
+<!-- more -->
+
+
+<pre><code>$ sudo -E -u elasticsearch 'ulimit -Sn'
+sudo: ulimit -Sn: コマンドが見つかりません
+</code></pre>
+
+<p>で、あれ？って思っておもむろに確認してみたら、ulimitは<code>cd</code>とか<code>echo</code>のようなビルトイン関数だった。</p>
+
+<pre><code>$ which ulimit
+/usr/bin/which: no ulimit in (~/bin:/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/opt/aws/bin:/home/fujishima/bin)
+$ whereis ulimit
+ulimit: /usr/include/ulimit.h /usr/share/man/man1/ulimit.1.gz /usr/share/man/man3p/ulimit.3p.gz /usr/share/man/man1p/ulimit.1p.gz /usr/share/man/man3/ulimit.3.gz
+</code></pre>
+
+<p>なので、以下のようにして実行した。</p>
+
+<pre><code>$ sudo -u elasticsearch /bin/bash -c 'ulimit -n'
+32000
+</code></pre>
+
+<p>というメモでした。</p>
+]]></content>
+  </entry>
+  
+</feed>

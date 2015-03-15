@@ -1,0 +1,450 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Hosebird Clientを試す - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="Hosebird ClientはTwitter社製のJava HTTPクライアント
+Twitter社が作ってるぐらいだからTwitterとの連携が楽にできるんじゃないかと思って、Scalaでサンプルを試す。 hbcはhbc-coreとhbc-twitter4jの２つで構成されている。
+hbc- &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.com/blog/2013/03/31/twitter-hosebird">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.com" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">Hosebird Clientを試す</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2013-03-31T23:46:00+09:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>31</span><span class='date-suffix'>st</span>, <span class='date-year'>2013</span></span> <span class='time'>11:46 pm</span></time>
+        
+        
+          
+           | <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/edit/master/source/_posts/2013-03-31-twitter-hosebird.markdown">Edit</a>
+          
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p><a href="https://github.com/twitter/hbc">Hosebird Client</a>はTwitter社製のJava HTTPクライアント<br>
+Twitter社が作ってるぐらいだからTwitterとの連携が楽にできるんじゃないかと思って、Scalaでサンプルを試す。</p>
+
+<!-- more -->
+
+
+<p>hbcはhbc-coreとhbc-twitter4jの２つで構成されている。<br>
+hbc-coreはメッセージ・キューを使って、ナマのストリングメッセージをポーリングすることができる。<br>
+hbc-twitter4jはtwitter4jのリスナーを使って、メッセージキューの先頭に解析レイヤーを提供するデータ・モデルを提供している。</p>
+
+<p>とりあえず始める</p>
+
+<p>まずはhbcを取り込むためにbuild.sbtに以下の２行を追加</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">&quot;com.twitter&quot;</span> <span class="o">%</span> <span class="s">&quot;hbc-core&quot;</span> <span class="o">%</span> <span class="s">&quot;1.3.0&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">&quot;com.twitter&quot;</span> <span class="o">%</span> <span class="s">&quot;hbc-twitter4j&quot;</span> <span class="o">%</span> <span class="s">&quot;1.3.0&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>これを追加した後はsbtを起動し、モジュールをダウンロードする。
+intellijを使っている場合は、忘れずにgen-ideaをしておくこと。</p>
+
+<p><a href="https://github.com/twitter/hbc/blob/master/hbc-example/src/main/java/com/twitter/hbc/example/SampleStreamExample.java">SampleStreamExample</a>をScala風に写経してみる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">package</span> <span class="nn">hbc</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">import</span> <span class="nn">java.util.concurrent.</span><span class="o">{</span><span class="nc">TimeUnit</span><span class="o">,</span> <span class="nc">LinkedBlockingQueue</span><span class="o">}</span>
+</span><span class='line'><span class="k">import</span> <span class="nn">com.twitter.hbc.core.endpoint.StatusesSampleEndpoint</span>
+</span><span class='line'><span class="k">import</span> <span class="nn">com.twitter.hbc.httpclient.auth.OAuth1</span>
+</span><span class='line'><span class="k">import</span> <span class="nn">com.twitter.hbc.httpclient.BasicClient</span>
+</span><span class='line'><span class="k">import</span> <span class="nn">com.twitter.hbc.core.Constants</span>
+</span><span class='line'><span class="k">import</span> <span class="nn">com.twitter.hbc.core.processor.StringDelimitedProcessor</span>
+</span><span class='line'><span class="k">import</span> <span class="nn">com.twitter.hbc.ClientBuilder</span>
+</span><span class='line'><span class="k">import</span> <span class="nn">net.liftweb.json._</span>
+</span><span class='line'><span class="k">import</span> <span class="nn">net.liftweb.json.JsonAST.</span><span class="o">{</span><span class="nc">JString</span><span class="o">,</span> <span class="nc">JNothing</span><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">SampleStreamExample</span> <span class="o">{</span>
+</span><span class='line'>  <span class="k">def</span> <span class="n">hbc_oauth</span><span class="o">(</span><span class="n">consumerKey</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">consumerSecret</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span>
+</span><span class='line'>                <span class="n">token</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">secret</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">val</span> <span class="n">queue</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">LinkedBlockingQueue</span><span class="o">[</span><span class="kt">String</span><span class="o">](</span><span class="mi">10</span><span class="o">)</span>
+</span><span class='line'>    <span class="k">val</span> <span class="n">endpoint</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">StatusesSampleEndpoint</span><span class="o">()</span>
+</span><span class='line'>    <span class="c1">// see at https://dev.twitter.com/docs/streaming-apis/parameters#stall_warnings</span>
+</span><span class='line'>    <span class="n">endpoint</span><span class="o">.</span><span class="n">stallWarnings</span><span class="o">(</span><span class="kc">false</span><span class="o">)</span>
+</span><span class='line'>    <span class="k">val</span> <span class="n">auth</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">OAuth1</span><span class="o">(</span><span class="n">consumerKey</span><span class="o">,</span> <span class="n">consumerSecret</span><span class="o">,</span> <span class="n">token</span><span class="o">,</span> <span class="n">secret</span><span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">val</span> <span class="n">client</span><span class="k">:</span> <span class="kt">BasicClient</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ClientBuilder</span><span class="o">()</span>
+</span><span class='line'>      <span class="o">.</span><span class="n">name</span><span class="o">(</span><span class="s">&quot;sampleExamplClient&quot;</span><span class="o">)</span>
+</span><span class='line'>      <span class="o">.</span><span class="n">hosts</span><span class="o">(</span><span class="nc">Constants</span><span class="o">.</span><span class="nc">STREAM_HOST</span><span class="o">)</span>
+</span><span class='line'>      <span class="o">.</span><span class="n">endpoint</span><span class="o">(</span><span class="n">endpoint</span><span class="o">)</span>
+</span><span class='line'>      <span class="o">.</span><span class="n">authentication</span><span class="o">(</span><span class="n">auth</span><span class="o">)</span>
+</span><span class='line'>      <span class="o">.</span><span class="n">processor</span><span class="o">(</span><span class="k">new</span> <span class="nc">StringDelimitedProcessor</span><span class="o">(</span><span class="n">queue</span><span class="o">))</span>
+</span><span class='line'>      <span class="o">.</span><span class="n">build</span><span class="o">()</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">client</span><span class="o">.</span><span class="n">connect</span><span class="o">()</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">for</span> <span class="o">(</span><span class="n">i</span> <span class="k">&lt;-</span> <span class="mi">0</span> <span class="n">until</span> <span class="mi">10</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="k">if</span> <span class="o">(</span><span class="n">client</span><span class="o">.</span><span class="n">isDone</span><span class="o">)</span>
+</span><span class='line'>        <span class="n">println</span><span class="o">(</span><span class="s">&quot;Client connnection closed unexpectedly: %s&quot;</span><span class="o">.</span><span class="n">format</span><span class="o">(</span><span class="n">client</span><span class="o">.</span><span class="n">getExitEvent</span><span class="o">.</span><span class="n">getMessage</span><span class="o">))</span>
+</span><span class='line'>      <span class="k">else</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">val</span> <span class="n">msg</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">poll</span><span class="o">(</span><span class="mi">5</span><span class="o">,</span> <span class="nc">TimeUnit</span><span class="o">.</span><span class="nc">SECONDS</span><span class="o">)</span>
+</span><span class='line'>        <span class="k">val</span> <span class="n">res</span> <span class="k">=</span> <span class="n">parse</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span>
+</span><span class='line'><span class="c1">//        println(pretty(render(res)))</span>
+</span><span class='line'>        <span class="n">res</span> <span class="k">match</span> <span class="o">{</span>
+</span><span class='line'>          <span class="k">case</span> <span class="n">r</span> <span class="k">if</span> <span class="o">(</span><span class="n">r</span> <span class="o">\</span> <span class="s">&quot;delete&quot;</span> <span class="o">==</span> <span class="nc">JNothing</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="o">{</span>
+</span><span class='line'>            <span class="c1">// http://stackoverflow.com/questions/4169153/what-is-the-most-straightforward-way-to-parse-json-in-scala/4169292#4169292</span>
+</span><span class='line'>            <span class="k">val</span> <span class="nc">JString</span><span class="o">(</span><span class="n">created_at</span><span class="o">)</span> <span class="k">=</span> <span class="n">r</span> <span class="o">\</span> <span class="s">&quot;created_at&quot;</span>
+</span><span class='line'>            <span class="k">val</span> <span class="nc">JString</span><span class="o">(</span><span class="n">text</span><span class="o">)</span> <span class="k">=</span> <span class="n">r</span> <span class="o">\</span> <span class="s">&quot;text&quot;</span>
+</span><span class='line'>            <span class="k">val</span> <span class="nc">JString</span><span class="o">(</span><span class="n">name</span><span class="o">)</span> <span class="k">=</span> <span class="n">r</span> <span class="o">\</span> <span class="s">&quot;user&quot;</span> <span class="o">\</span> <span class="s">&quot;name&quot;</span>
+</span><span class='line'>            <span class="k">val</span> <span class="nc">JString</span><span class="o">(</span><span class="n">screen_name</span><span class="o">)</span> <span class="k">=</span> <span class="n">r</span> <span class="o">\</span> <span class="s">&quot;user&quot;</span> <span class="o">\</span> <span class="s">&quot;screen_name&quot;</span>
+</span><span class='line'>            <span class="n">println</span><span class="o">(</span><span class="s">&quot;%s(%s):\n  %s(%s)&quot;</span><span class="o">.</span><span class="n">format</span><span class="o">(</span><span class="n">screen_name</span><span class="o">,</span> <span class="n">name</span><span class="o">,</span> <span class="n">text</span><span class="o">,</span> <span class="n">created_at</span><span class="o">))</span>
+</span><span class='line'>          <span class="o">}</span>
+</span><span class='line'>          <span class="k">case</span> <span class="n">r</span> <span class="k">if</span> <span class="o">(</span><span class="n">r</span> <span class="o">\</span> <span class="s">&quot;delete&quot;</span> <span class="o">!=</span> <span class="nc">JNothing</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">println</span><span class="o">(</span><span class="s">&quot;Sorry.this tweet has deleted.&quot;</span><span class="o">)</span>
+</span><span class='line'>          <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="n">println</span><span class="o">(</span><span class="s">&quot;Did not recieve a message in 5 seconds&quot;</span><span class="o">)</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="n">client</span><span class="o">.</span><span class="n">stop</span><span class="o">()</span>
+</span><span class='line'>    <span class="n">println</span><span class="o">(</span><span class="s">&quot;The client read %d messages!&quot;</span><span class="o">.</span><span class="n">format</span><span class="o">(</span><span class="n">client</span><span class="o">.</span><span class="n">getStatsTracker</span><span class="o">.</span><span class="n">getNumMessages</span><span class="o">))</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>以下のスクリプトをMainにして、これをキックするようにする。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">package</span> <span class="nn">hbc</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nc">Object</span> <span class="nc">Run</span> <span class="k">extends</span> <span class="nc">App</span> <span class="o">{</span>
+</span><span class='line'>  <span class="k">val</span> <span class="n">consumerKey</span> <span class="k">=</span> <span class="s">&quot;xxxxxxxxxxxxxxxxxxxxxx&quot;</span>
+</span><span class='line'>  <span class="k">val</span> <span class="n">consumerSecret</span> <span class="k">=</span> <span class="s">&quot;xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&quot;</span>
+</span><span class='line'>  <span class="k">val</span> <span class="n">token</span> <span class="k">=</span> <span class="s">&quot;xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&quot;</span>
+</span><span class='line'>  <span class="k">val</span> <span class="n">tokenSecret</span> <span class="k">=</span> <span class="s">&quot;xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&quot;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">val</span> <span class="n">sse</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">SampleStreamExample</span>
+</span><span class='line'>  <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">sse</span><span class="o">.</span><span class="n">hbc_oauth</span><span class="o">(</span><span class="n">consumerKey</span><span class="o">,</span> <span class="n">consumerSecret</span><span class="o">,</span> <span class="n">token</span><span class="o">,</span> <span class="n">tokenSecret</span><span class="o">)</span>
+</span><span class='line'>  <span class="o">}</span> <span class="k">catch</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">case</span> <span class="n">e</span><span class="k">:</span> <span class="kt">InterruptedException</span> <span class="o">=&gt;</span> <span class="n">println</span><span class="o">(</span><span class="n">e</span><span class="o">)</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>なんということでしょう。サンプルのJavaコードそのままです。<br>
+Scala力が低すぎる…。個人的には<code>for (i &lt;- 0 until 10)</code>のところをどうにかしたい。このままだとあんまりにもアレなので、後半のfor文で特定のフィールドを取り出してみた。<br>
+微妙にハマったのは、StatusesSampleEndpointはStreaming APIが垂れ流しているのをそのまま受け取っているだけなので、時々以下のような削除したレスポンスが流れてくる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="o">{</span>
+</span><span class='line'>  <span class="s">&quot;delete&quot;</span><span class="k">:</span><span class="o">{</span>
+</span><span class='line'>    <span class="err">&quot;</span><span class="kt">status</span><span class="err">&quot;</span><span class="kt">:</span><span class="o">{</span>
+</span><span class='line'>      <span class="err">&quot;</span><span class="kt">id</span><span class="err">&quot;</span><span class="kt">:</span><span class="err">318163799519674370</span><span class="o">,</span>
+</span><span class='line'>      <span class="err">&quot;</span><span class="kt">user_id</span><span class="err">&quot;</span><span class="kt">:</span><span class="err">29877342</span><span class="o">,</span>
+</span><span class='line'>      <span class="err">&quot;</span><span class="kt">id_str</span><span class="err">&quot;</span><span class="kt">:</span><span class="err">&quot;318163799519674370&quot;</span><span class="o">,</span>
+</span><span class='line'>      <span class="s">&quot;user_id_str&quot;</span><span class="k">:</span><span class="err">&quot;29877342&quot;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>この場合、case文にあるようなガードをつけていないと、<code>r \ "created_at"</code>などをして値を取り出すときにMatch Errorが発生してしまう。<br>
+また、これはHosebirdとは関係ないけど、時々ある特定のフィールドが欠損してしまう場合、以下のようにしておくと良いかもしれない。他の方法があれば教えて欲しい…。<br></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">val</span> <span class="n">created_at</span> <span class="k">=</span> <span class="o">(</span><span class="n">r</span> <span class="o">\</span> <span class="s">&quot;created_at&quot;</span><span class="o">).</span><span class="n">toOpt</span><span class="o">.</span><span class="n">getOrElse</span><span class="o">(</span><span class="nc">JString</span><span class="o">(</span><span class="s">&quot;nothing created_at&quot;</span><span class="o">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>また、case文の最後をアンダースコアでマッチングしているが、サンプルを見るとこの部分に該当するのは<code>if (msg == null)</code>という部分。だからといって<code>case null</code>などとやると以下のようなWarningが出てしまう。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="o">[</span><span class="kt">warn</span><span class="o">]</span> <span class="o">/</span><span class="nc">Users</span><span class="o">/</span><span class="n">sgyk</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">script</span><span class="o">/</span><span class="n">scala</span><span class="o">/</span><span class="n">scala_example</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">scala</span><span class="o">/</span><span class="n">hbc</span><span class="o">/</span><span class="nc">SampleStreamExample</span><span class="o">.</span><span class="n">scala</span><span class="k">:</span><span class="err">46</span><span class="kt">:</span> <span class="kt">match</span> <span class="kt">is</span> <span class="kt">not</span> <span class="kt">exhaustive!</span>
+</span><span class='line'><span class="o">[</span><span class="kt">warn</span><span class="o">]</span> <span class="n">missing</span> <span class="n">combination</span>         <span class="nc">JArray</span>
+</span><span class='line'><span class="o">[</span><span class="kt">warn</span><span class="o">]</span> <span class="n">missing</span> <span class="n">combination</span>          <span class="nc">JBool</span>
+</span><span class='line'><span class="o">[</span><span class="kt">warn</span><span class="o">]</span> <span class="n">missing</span> <span class="n">combination</span>        <span class="nc">JDouble</span>
+</span><span class='line'><span class="o">[</span><span class="kt">warn</span><span class="o">]</span> <span class="n">missing</span> <span class="n">combination</span>         <span class="nc">JField</span>
+</span><span class='line'><span class="o">[</span><span class="kt">warn</span><span class="o">]</span> <span class="n">missing</span> <span class="n">combination</span>           <span class="nc">JInt</span>
+</span><span class='line'><span class="o">[</span><span class="kt">warn</span><span class="o">]</span> <span class="n">missing</span> <span class="n">combination</span>       <span class="nc">JNothing</span>
+</span><span class='line'><span class="o">[</span><span class="kt">warn</span><span class="o">]</span> <span class="n">missing</span> <span class="n">combination</span>        <span class="nc">JObject</span>
+</span><span class='line'><span class="o">[</span><span class="kt">warn</span><span class="o">]</span> <span class="n">missing</span> <span class="n">combination</span>        <span class="nc">JString</span>
+</span><span class='line'><span class="o">[</span><span class="kt">warn</span><span class="o">]</span>         <span class="n">res</span> <span class="k">match</span> <span class="o">{</span>
+</span><span class='line'><span class="o">[</span><span class="kt">warn</span><span class="o">]</span>         <span class="o">^</span>
+</span><span class='line'><span class="o">[</span><span class="kt">warn</span><span class="o">]</span> <span class="n">one</span> <span class="n">warning</span> <span class="n">found</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>つまり、マッチングのパターンが足りないよということだけど、だからといってそのまま対応するのはちょっとアレなので、アンダースコアで逃げた。<br>
+本当なら<a href="http://d.hatena.ne.jp/xuwei/20120104/1325635980">このブログ記事</a>のようにcase classにapplyしたかったけど、そもそもtweetのフィールド数が22個に収まるはずが無いので諦めた。何かうまい方法あるかな？</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2013-03-31T23:46:00+09:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>31</span><span class='date-suffix'>st</span>, <span class='date-year'>2013</span></span> <span class='time'>11:46 pm</span></time>
+      <span class="categories">full history <a href="https://github.com/sgykfjsm/sgykfjsm.github.com/commit/master/source/_posts/2013-03-31-twitter-hosebird.markdown">here</a></span>
+
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/scala/'>scala</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/03/20/mysql-jp/" title="Previous Post: MyNA(日本MySQLユーザ会)会 2013年3月に参加した">&laquo; MyNA(日本MySQLユーザ会)会 2013年3月に参加した</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/04/09/scala-saddle/" title="Next Post: Saddleを試す">Saddleを試す &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
