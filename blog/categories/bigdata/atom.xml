@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: bigdata | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/bigdata/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/bigdata/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[ITフォーラムセッション 「ビッグデータ活用実務フォーラム」に行ってきた。]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/02/04/big-data-forum/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/02/04/big-data-forum/"/>
     <updated>2014-02-04T11:39:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/02/04/big-data-forum</id>
+    <id>http://sgykfjsm.github.io/blog/2014/02/04/big-data-forum</id>
     <content type="html"><![CDATA[<p><a href="http://www.ipsj.or.jp/event/sj/sj2014/itforum_big_data_program.html?utm_content=buffer1396a&amp;utm_medium=social&amp;utm_source=twitter.com&amp;utm_campaign=buffer">ITフォーラムセッション 「ビッグデータ活用実務フォーラム」</a>に行ってきた。短い時間に対して、とても豪華なスピーカーだったので、これは行くしかないなーという感じで行ってきた。各セッション30分なので、とても密度が濃かった。</p>
 
 <p>以下はメモ。聞きながらなので、乱文乱筆ご容赦。</p>

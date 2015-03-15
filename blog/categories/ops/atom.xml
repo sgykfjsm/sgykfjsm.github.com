@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: ops | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/ops/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/ops/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[AnsibleでMySQLをインストールする。]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2015/02/17/install-mysql-with-ansible/"/>
+    <link href="http://sgykfjsm.github.io/blog/2015/02/17/install-mysql-with-ansible/"/>
     <updated>2015-02-17T09:19:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2015/02/17/install-mysql-with-ansible</id>
+    <id>http://sgykfjsm.github.io/blog/2015/02/17/install-mysql-with-ansible</id>
     <content type="html"><![CDATA[<p>AWSなんかを使ってると、イチからMySQLなどの基本的なミドルウェアをセットアップすることは減ってくる。そんな中、AnsibleでMySQLをインストールする事になったのだけど、意外と忘れてたりAnsibleで作業するのと手作業で進めることの差異でちょっと詰まったりしたので、ここに備忘しておく。</p>
 
 <!-- more -->
@@ -253,9 +253,9 @@ exit
   
   <entry>
     <title type="html"><![CDATA[Beanstalk管理下のインスタンスを安全に再起動する]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2015/02/13/dereg-instance-under-beanstalk/"/>
+    <link href="http://sgykfjsm.github.io/blog/2015/02/13/dereg-instance-under-beanstalk/"/>
     <updated>2015-02-13T18:40:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2015/02/13/dereg-instance-under-beanstalk</id>
+    <id>http://sgykfjsm.github.io/blog/2015/02/13/dereg-instance-under-beanstalk</id>
     <content type="html"><![CDATA[<p>現在のBeanstalkでインスタンスが再起動する場合は主に以下の３つがある。</p>
 
 <ul>
@@ -376,9 +376,9 @@ exit
   
   <entry>
     <title type="html"><![CDATA[起動に失敗したインスタンスを調査する例]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2015/02/13/how-to-analysis-unlaunched-instance/"/>
+    <link href="http://sgykfjsm.github.io/blog/2015/02/13/how-to-analysis-unlaunched-instance/"/>
     <updated>2015-02-13T03:43:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2015/02/13/how-to-analysis-unlaunched-instance</id>
+    <id>http://sgykfjsm.github.io/blog/2015/02/13/how-to-analysis-unlaunched-instance</id>
     <content type="html"><![CDATA[<p>先日、とあるサービスで利用しているBeanstalk環境でインスタンスが起動に失敗した。ログを見ると、S3からリソースの取得に失敗していたようだ。<br>ネットワーク接続の状態としては、AWS内のネットワークでは疎通可能だが、インターネットを経由した通信は不可、という状況。具体的には、例えばAWSのインスタンスからはsshログイン可能だが、グローバルからのsshログインはできないといったような感じ。色々調べたけど、不意に調査対象のインスタンスがTerminateしてしまい、結局原因がわからないままになってしまった。</p>
 
 <p>調査はAWS Supportとやりとりしながら行ったのだけれども、色々と情報収集を都度指示されて捗らなかった。<br>なので、ここには次また事象が再発した場合に備えて、障害発生時に取得しておきべきこと、確認すべきことを整理する。</p>
@@ -477,9 +477,9 @@ exit
   
   <entry>
     <title type="html"><![CDATA[Amazon RDSのMySQLでオンラインメンテをどうやればいいかを調べた]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/01/26/online-maintenance-on-rds-mysql/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/01/26/online-maintenance-on-rds-mysql/"/>
     <updated>2014-01-26T20:28:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/01/26/online-maintenance-on-rds-mysql</id>
+    <id>http://sgykfjsm.github.io/blog/2014/01/26/online-maintenance-on-rds-mysql</id>
     <content type="html"><![CDATA[<p>RDSのMySQLでオンラインメンテ、つまり無停止でのスキーマ変更などをどうやれば良いか、という話。 今までは色々小細工をして生のALTER文を発行していたけど、さすがにロック時間とかが気になり始めたので調べた次第。 ざっとググると、<a href="http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html">pt-online-schema-change</a>というツールを使うと良さそうだったので、ここにその作業ログを残す。 以下は参考にしたブログ記事など。</p>
 
 <ul>

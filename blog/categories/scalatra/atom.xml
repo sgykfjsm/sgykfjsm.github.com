@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: scalatra | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/scalatra/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/scalatra/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Scalatraでいろいろやる その３]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/03/17/scalatra-tutorial-003/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/03/17/scalatra-tutorial-003/"/>
     <updated>2013-03-17T23:37:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/03/17/scalatra-tutorial-003</id>
+    <id>http://sgykfjsm.github.io/blog/2013/03/17/scalatra-tutorial-003</id>
     <content type="html"><![CDATA[<p>今までServlet内にベタ書きしていたHTMLを外出しする。</p>
 
 <!-- more -->
@@ -92,7 +92,7 @@ Scamlに似てるけど変数に%シンボルがつかないのでちょっと�
 
 <p><p>You submitted: &lt;%= param %></p>
 <hr/>
-<a href="http://sgykfjsm.github.com/">Beck To Index</a>
+<a href="http://sgykfjsm.github.io/">Beck To Index</a>
 &#8220;`</p>
 
 <p>一行目でServletから受け取る値を宣言して、それを<code>&lt;%= 変数名 %></code>で使用する。</p>
@@ -261,9 +261,9 @@ class $_scalate_$param_ssp extends _root_.org.fusesource.scalate.Template {
   
   <entry>
     <title type="html"><![CDATA[scalatraでいろいろやる その２]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/02/26/scalatra-tutorial-002/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/02/26/scalatra-tutorial-002/"/>
     <updated>2013-02-26T00:40:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/02/26/scalatra-tutorial-002</id>
+    <id>http://sgykfjsm.github.io/blog/2013/02/26/scalatra-tutorial-002</id>
     <content type="html"><![CDATA[<p><a href="http://sgykfjsm.github.com/blog/2013/02/22/scalatra-tutorial-001/">前回</a>ので簡単な環境設定を終えたので、今回は簡単にGET/POSTを試す</p>
 
 <!-- more -->
@@ -314,7 +314,7 @@ post("/post") {
               &lt;input type="submit" value="送信" /&gt;
             &lt;/form&gt;
             &lt;hr/&gt;
-            &lt;a href="http://sgykfjsm.github.com/"&gt;Beck To Index&lt;/a&gt;
+            &lt;a href="http://sgykfjsm.github.io/"&gt;Beck To Index&lt;/a&gt;
           &lt;/body&gt;
         &lt;/html&gt;
     }
@@ -327,7 +327,7 @@ post("/post") {
         &lt;h1&gt;Scalatra GET Tutorial&lt;/h1&gt;
         &lt;p&gt;You submitted: {params("param")}&lt;/p&gt;
         &lt;hr/&gt;
-        &lt;a href="http://sgykfjsm.github.com/"&gt;Beck To Index&lt;/a&gt;
+        &lt;a href="http://sgykfjsm.github.io/"&gt;Beck To Index&lt;/a&gt;
       &lt;/body&gt;
     &lt;/html&gt;
   }
@@ -383,9 +383,9 @@ post("/post") {
   
   <entry>
     <title type="html"><![CDATA[scalatraでいろいろやる その１]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/02/22/scalatra-tutorial-001/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/02/22/scalatra-tutorial-001/"/>
     <updated>2013-02-22T00:08:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/02/22/scalatra-tutorial-001</id>
+    <id>http://sgykfjsm.github.io/blog/2013/02/22/scalatra-tutorial-001</id>
     <content type="html"><![CDATA[<a name="Set.up"></a>
 <h2>Set up</h2>
 
@@ -566,9 +566,9 @@ Finding identity service: null
   
   <entry>
     <title type="html"><![CDATA[Scalatraについて調べた]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/02/20/scalatra-introduction/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/02/20/scalatra-introduction/"/>
     <updated>2013-02-20T23:19:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/02/20/scalatra-introduction</id>
+    <id>http://sgykfjsm.github.io/blog/2013/02/20/scalatra-introduction</id>
     <content type="html"><![CDATA[<p>最近、PHPの<a href="http://silex.sensiolabs.org/">Silex</a>を再び触り始めたこともあって、Scalaのマイクロフレームワークをちょっと探してみたら、<a href="http://www.scalatra.org/">Scalatra</a>というものを見つけた。</p>
 
 <blockquote><p>Scalatra is a simple, accessible and free web micro-framework.</p>

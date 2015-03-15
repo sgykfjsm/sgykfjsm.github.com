@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: 勉強会 | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/mian-qiang-hui/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/mian-qiang-hui/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[リーン・アナリティクス入門に行ってきた]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/04/15/lean-analytics/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/04/15/lean-analytics/"/>
     <updated>2013-04-15T16:17:56+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/04/15/lean-analytics</id>
+    <id>http://sgykfjsm.github.io/blog/2013/04/15/lean-analytics</id>
     <content type="html"><![CDATA[<p>URL: <a href="http://peatix.com/event/11791">http://peatix.com/event/11791</a></p>
 
 <p>Open NetWork Labにて行われた標記の勉強会に行ってきた。</p>

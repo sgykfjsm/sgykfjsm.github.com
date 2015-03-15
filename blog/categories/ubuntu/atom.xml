@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: ubuntu | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/ubuntu/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/ubuntu/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[mesosをDEBパッケージからインストールする]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/01/09/install-mesos-with-deb/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/01/09/install-mesos-with-deb/"/>
     <updated>2014-01-09T06:48:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/01/09/install-mesos-with-deb</id>
+    <id>http://sgykfjsm.github.io/blog/2014/01/09/install-mesos-with-deb</id>
     <content type="html"><![CDATA[<p>mesosをインストールする場合、ソースをコンパイルしてインストールすることが公式の<a href="http://mesos.apache.org/gettingstarted/">Getting Started with Apache Mesos</a>に記載されているが、この方法だとコンパイルに非常に時間がかかる（10分から20分ぐらい）ので、<a href="http://mesosphere.io/downloads/">mesosphereが提供しているパッケージ</a>を利用したほうが良い。<br>ここでは、パッケージからインストールする手順をまとめる。</p>
 
 <!-- more -->

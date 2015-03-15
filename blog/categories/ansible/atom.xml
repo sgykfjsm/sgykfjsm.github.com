@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: ansible | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/ansible/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/ansible/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[AnsibleでMySQLをインストールする。]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2015/02/17/install-mysql-with-ansible/"/>
+    <link href="http://sgykfjsm.github.io/blog/2015/02/17/install-mysql-with-ansible/"/>
     <updated>2015-02-17T09:19:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2015/02/17/install-mysql-with-ansible</id>
+    <id>http://sgykfjsm.github.io/blog/2015/02/17/install-mysql-with-ansible</id>
     <content type="html"><![CDATA[<p>AWSなんかを使ってると、イチからMySQLなどの基本的なミドルウェアをセットアップすることは減ってくる。そんな中、AnsibleでMySQLをインストールする事になったのだけど、意外と忘れてたりAnsibleで作業するのと手作業で進めることの差異でちょっと詰まったりしたので、ここに備忘しておく。</p>
 
 <!-- more -->

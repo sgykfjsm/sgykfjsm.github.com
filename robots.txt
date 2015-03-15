@@ -1,4 +1,4 @@
 User-agent: *
 Disallow:
 
-Sitemap: http://sgykfjsm.github.com/sitemap.xml
+Sitemap: http://sgykfjsm.github.io/sitemap.xml

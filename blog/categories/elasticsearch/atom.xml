@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: elasticsearch | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/elasticsearch/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/elasticsearch/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[sudoでulimitをしたら「sudo: ulimit -Sn: コマンドが見つかりません」と言われた]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/02/05/sudo-ulimit/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/02/05/sudo-ulimit/"/>
     <updated>2014-02-05T20:26:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/02/05/sudo-ulimit</id>
+    <id>http://sgykfjsm.github.io/blog/2014/02/05/sudo-ulimit</id>
     <content type="html"><![CDATA[<p>elasticsearchの調子が悪かったので、いろいろ調べていた。その途中でnofilesの上限を調べようと思って、以下のようにコマンドを叩いたらコマンドが見つからないって言われた。</p>
 
 <!-- more -->

@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: tutorial | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/tutorial/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/tutorial/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[scalatraでいろいろやる その１]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/02/22/scalatra-tutorial-001/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/02/22/scalatra-tutorial-001/"/>
     <updated>2013-02-22T00:08:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/02/22/scalatra-tutorial-001</id>
+    <id>http://sgykfjsm.github.io/blog/2013/02/22/scalatra-tutorial-001</id>
     <content type="html"><![CDATA[<a name="Set.up"></a>
 <h2>Set up</h2>
 

@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: awk | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/awk/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/awk/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[区切り文字がASCII 001なファイルを扱う]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/04/29/ascii-delimiter/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/04/29/ascii-delimiter/"/>
     <updated>2013-04-29T00:20:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/04/29/ascii-delimiter</id>
+    <id>http://sgykfjsm.github.io/blog/2013/04/29/ascii-delimiter</id>
     <content type="html"><![CDATA[<p>awsのhiveでS3に直接ファイルを出力すると区切り文字がASCII 001(Ctrl + A)になる。<br>
 ASCII文字なので、普通にcatしてもパッと見は区切りが無いように見えるがvimなどで開いてみると以下のように見える。<br></p>
 

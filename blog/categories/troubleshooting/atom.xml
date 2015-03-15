@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: troubleshooting | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/troubleshooting/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/troubleshooting/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[起動に失敗したインスタンスを調査する例]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2015/02/13/how-to-analysis-unlaunched-instance/"/>
+    <link href="http://sgykfjsm.github.io/blog/2015/02/13/how-to-analysis-unlaunched-instance/"/>
     <updated>2015-02-13T03:43:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2015/02/13/how-to-analysis-unlaunched-instance</id>
+    <id>http://sgykfjsm.github.io/blog/2015/02/13/how-to-analysis-unlaunched-instance</id>
     <content type="html"><![CDATA[<p>先日、とあるサービスで利用しているBeanstalk環境でインスタンスが起動に失敗した。ログを見ると、S3からリソースの取得に失敗していたようだ。<br>ネットワーク接続の状態としては、AWS内のネットワークでは疎通可能だが、インターネットを経由した通信は不可、という状況。具体的には、例えばAWSのインスタンスからはsshログイン可能だが、グローバルからのsshログインはできないといったような感じ。色々調べたけど、不意に調査対象のインスタンスがTerminateしてしまい、結局原因がわからないままになってしまった。</p>
 
 <p>調査はAWS Supportとやりとりしながら行ったのだけれども、色々と情報収集を都度指示されて捗らなかった。<br>なので、ここには次また事象が再発した場合に備えて、障害発生時に取得しておきべきこと、確認すべきことを整理する。</p>

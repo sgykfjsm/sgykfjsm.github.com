@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: play! | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/play/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/play/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Play!のDB設定について]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/04/09/about-db-configuration-in-play/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/04/09/about-db-configuration-in-play/"/>
     <updated>2014-04-09T00:27:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/04/09/about-db-configuration-in-play</id>
+    <id>http://sgykfjsm.github.io/blog/2014/04/09/about-db-configuration-in-play</id>
     <content type="html"><![CDATA[<p>自分が開発したわけでもないのだけれど、APIのパフォーマンスをどうにかしろ、チューニングしろと言われた。チューニング対象のAPIは<a href="http://www.playframework.com/">Play!</a>を利用しており、DBのI/Oにパフォーマンスが強く依存するので、まずはDB周りのパラメータをしらべて改善していくことにした。</p>
 
 <!-- more -->

@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: dynamodb | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/dynamodb/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/dynamodb/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[DynamoDBをEMRで扱うときに気をつけること]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/08/31/elasticemapreduce-with-dynamodb/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/08/31/elasticemapreduce-with-dynamodb/"/>
     <updated>2013-08-31T03:57:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/08/31/elasticemapreduce-with-dynamodb</id>
+    <id>http://sgykfjsm.github.io/blog/2013/08/31/elasticemapreduce-with-dynamodb</id>
     <content type="html"><![CDATA[<p>実際に検証したわけではないが、経験的にDynamoDBをEMRで扱うときには以下の点に気を付ける必要がある。</p>
 
 <!-- more -->

@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: jenkins | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/jenkins/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/jenkins/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[jenkinsでのテスト自動化いろいろ]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/01/13/auto-test-on-jenkins/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/01/13/auto-test-on-jenkins/"/>
     <updated>2014-01-13T12:28:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/01/13/auto-test-on-jenkins</id>
+    <id>http://sgykfjsm.github.io/blog/2014/01/13/auto-test-on-jenkins</id>
     <content type="html"><![CDATA[<p>jenkins上でテストを実行したい、自動化したいというリクエストが来たので、その設定方法をまとめた。</p>
 
 <p>今回はplay2.2.1のscalaをサンプルプロジェクトととした。</p>
@@ -386,9 +386,9 @@ vagrant@precise:~/play-2.2.1/framework$ find . -maxdepth 1 -type f | grep -v '.b
   
   <entry>
     <title type="html"><![CDATA[第7回Jenkins勉強会に参加した]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/02/04/jenkins-study/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/02/04/jenkins-study/"/>
     <updated>2013-02-04T08:44:55+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/02/04/jenkins-study</id>
+    <id>http://sgykfjsm.github.io/blog/2013/02/04/jenkins-study</id>
     <content type="html"><![CDATA[<p>概要(<a href="http://connpass.com/event/1690/">http://connpass.com/event/1690/</a> からコピペ)</p>
 
 <blockquote><p>Jenkins勉強会も回を重ね、ついに7回目となりました。今回は、これまであまり事例が出てこなかった組み込み系、もしくはC/C++のプロジェクトでJenkinsを利用している方からの発表を中心にお送りいたします。

@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: scala | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/scala/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/scala/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[jenkinsでのテスト自動化いろいろ]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/01/13/auto-test-on-jenkins/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/01/13/auto-test-on-jenkins/"/>
     <updated>2014-01-13T12:28:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/01/13/auto-test-on-jenkins</id>
+    <id>http://sgykfjsm.github.io/blog/2014/01/13/auto-test-on-jenkins</id>
     <content type="html"><![CDATA[<p>jenkins上でテストを実行したい、自動化したいというリクエストが来たので、その設定方法をまとめた。</p>
 
 <p>今回はplay2.2.1のscalaをサンプルプロジェクトととした。</p>
@@ -386,9 +386,9 @@ vagrant@precise:~/play-2.2.1/framework$ find . -maxdepth 1 -type f | grep -v '.b
   
   <entry>
     <title type="html"><![CDATA[業務システムエンジニアのためのHTML5勉強会#04に参加した]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/09/10/html5-with-java-meetup/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/09/10/html5-with-java-meetup/"/>
     <updated>2013-09-10T00:05:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/09/10/html5-with-java-meetup</id>
+    <id>http://sgykfjsm.github.io/blog/2013/09/10/html5-with-java-meetup</id>
     <content type="html"><![CDATA[<p><a href="http://atnd.org/events/42782">業務システムエンジニアのためのHTML5勉強会#04 Web✕Java - HTML5で進化したWeb標準を、Java技術でどう扱うのか？ -</a>という勉強会に参加した。これはそのメモ。メモを取ったのは一部のみ。</p>
 
 <!--more -->
@@ -623,9 +623,9 @@ vagrant@precise:~/play-2.2.1/framework$ find . -maxdepth 1 -type f | grep -v '.b
   
   <entry>
     <title type="html"><![CDATA[Hosebird Clientを試す]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/03/31/twitter-hosebird/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/03/31/twitter-hosebird/"/>
     <updated>2013-03-31T23:46:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/03/31/twitter-hosebird</id>
+    <id>http://sgykfjsm.github.io/blog/2013/03/31/twitter-hosebird</id>
     <content type="html"><![CDATA[<p><a href="https://github.com/twitter/hbc">Hosebird Client</a>はTwitter社製のJava HTTPクライアント<br>
 Twitter社が作ってるぐらいだからTwitterとの連携が楽にできるんじゃないかと思って、Scalaでサンプルを試す。</p>
 
@@ -775,9 +775,9 @@ Scala力が低すぎる…。個人的には<code>for (i &lt;- 0 until 10)</code
   
   <entry>
     <title type="html"><![CDATA[com.typesafe.akka#akka-actor;2.0.5: not found]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/03/18/not-found-akka/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/03/18/not-found-akka/"/>
     <updated>2013-03-18T02:12:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/03/18/not-found-akka</id>
+    <id>http://sgykfjsm.github.io/blog/2013/03/18/not-found-akka</id>
     <content type="html"><![CDATA[<p>Scaltraをいじってたらsbtでこんなエラーが出た時の対処法</p>
 
 <!-- more -->
@@ -799,9 +799,9 @@ Scala力が低すぎる…。個人的には<code>for (i &lt;- 0 until 10)</code
   
   <entry>
     <title type="html"><![CDATA[Scalatraでいろいろやる その３]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/03/17/scalatra-tutorial-003/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/03/17/scalatra-tutorial-003/"/>
     <updated>2013-03-17T23:37:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/03/17/scalatra-tutorial-003</id>
+    <id>http://sgykfjsm.github.io/blog/2013/03/17/scalatra-tutorial-003</id>
     <content type="html"><![CDATA[<p>今までServlet内にベタ書きしていたHTMLを外出しする。</p>
 
 <!-- more -->
@@ -876,7 +876,7 @@ Scamlに似てるけど変数に%シンボルがつかないのでちょっと�
 
 <p><p>You submitted: &lt;%= param %></p>
 <hr/>
-<a href="http://sgykfjsm.github.com/">Beck To Index</a>
+<a href="http://sgykfjsm.github.io/">Beck To Index</a>
 &#8220;`</p>
 
 <p>一行目でServletから受け取る値を宣言して、それを<code>&lt;%= 変数名 %></code>で使用する。</p>

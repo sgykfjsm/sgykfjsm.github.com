@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: linux | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/linux/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/linux/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA['-rwxr-sr-x'というパーミッション設定]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/04/01/whats-is-rwxr-sr-x/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/04/01/whats-is-rwxr-sr-x/"/>
     <updated>2014-04-01T19:26:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/04/01/whats-is-rwxr-sr-x</id>
+    <id>http://sgykfjsm.github.io/blog/2014/04/01/whats-is-rwxr-sr-x</id>
     <content type="html"><![CDATA[<p>とある事情でサーバの調査をしていたら、以下の様なパーミッション設定を見かけた。</p>
 
 <pre><code>$ ls -l /usr/sbin/sendmail.sendmail

@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: ec2 | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/ec2/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/ec2/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[ec2にcouchbaseをインストールする。ついでにPython SDKとtd-agentも。]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/08/18/couchbase-on-ec2-with-td-agent/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/08/18/couchbase-on-ec2-with-td-agent/"/>
     <updated>2013-08-18T22:46:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/08/18/couchbase-on-ec2-with-td-agent</id>
+    <id>http://sgykfjsm.github.io/blog/2013/08/18/couchbase-on-ec2-with-td-agent</id>
     <content type="html"><![CDATA[<a name="L......"></a>
 <h2>目的</h2>
 
@@ -558,9 +558,9 @@ unable to execute /usr/bin/clang: No such file or directory
 </span><span class='line'>  
 </span><span class='line'>  &lt;entry&gt;
 </span><span class='line'>    &lt;title type="html"&gt;&lt;![CDATA[ec2にfluentdをインストールする]]&gt;&lt;/title&gt;
-</span><span class='line'>    &lt;link href="http://sgykfjsm.github.com/blog/2013/08/11/fluentd-on-ec2-with-s3/"/&gt;
+</span><span class='line'>    &lt;link href="http://sgykfjsm.github.io/blog/2013/08/11/fluentd-on-ec2-with-s3/"/&gt;
 </span><span class='line'>    &lt;updated&gt;2013-08-11T02:23:00+09:00&lt;/updated&gt;
-</span><span class='line'>    &lt;id&gt;http://sgykfjsm.github.com/blog/2013/08/11/fluentd-on-ec2-with-s3&lt;/id&gt;
+</span><span class='line'>    &lt;id&gt;http://sgykfjsm.github.io/blog/2013/08/11/fluentd-on-ec2-with-s3&lt;/id&gt;
 </span><span class='line'>    &lt;content type="html"&gt;&lt;![CDATA[&lt;a name="L......"&gt;&lt;/a&gt;
 </span><span class='line'>&lt;h2&gt;目的&lt;/h2&gt;
 </span><span class='line'>

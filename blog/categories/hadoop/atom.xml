@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: hadoop | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/hadoop/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/hadoop/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[mesos上にHadoopをインストールする]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/01/10/install-hadoop-on-mesos/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/01/10/install-hadoop-on-mesos/"/>
     <updated>2014-01-10T00:51:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/01/10/install-hadoop-on-mesos</id>
+    <id>http://sgykfjsm.github.io/blog/2014/01/10/install-hadoop-on-mesos</id>
     <content type="html"><![CDATA[<p>前回、mesosをDEBパッケージを使ってインストールする方法を示した。これを前提としてmesosが動いているクラスタにHadoopをインストールし、wordcountをchrnosを通じて動かすところまでの手順を示す。</p>
 
 <p>ちなみに見てくれている人の時間をムダにしないために言うと、一部を除けば普通の手順(Clouderaのチュートリアルとか)でやれば大抵は普通に動くはず。なのでHadoopに詳しい人は、<a href="https://www.google.co.jp/search?q=hadoop+mesos&amp;oq=hadoop+mesos&amp;aqs=chrome..69i57j69i60l3j0l2.2556j0j7&amp;sourceid=chrome&amp;espv=210&amp;es_sm=91&amp;ie=UTF-8">「Hadoop mesos」でググったほう</a>が良いと思う。ここではSparkの利用を見越しての設定を行なうのと、とHadoopもmesosもあまり詳しくない人向けに記述する。Chronosについては、まぁついでにというレベルだし、実際非常に導入が楽なので、<a href="http://airbnb.github.io/chronos/#Quick%20Start">公式のQuick Start</a>でも見たほうが良い。</p>

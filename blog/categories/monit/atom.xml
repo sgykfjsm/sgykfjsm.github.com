@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: monit | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/monit/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/monit/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[td-agentの監視・復旧の仕組みを整える]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/11/13/td-agent_with_monit/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/11/13/td-agent_with_monit/"/>
     <updated>2013-11-13T21:26:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/11/13/td-agent_with_monit</id>
+    <id>http://sgykfjsm.github.io/blog/2013/11/13/td-agent_with_monit</id>
     <content type="html"><![CDATA[<p>ここで紹介されている仕組みを自分のところにも導入したくなったのでやってみる。</p>
 
 <iframe src="http://www.slideshare.net/slideshow/embed_code/14046820" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen> </iframe>

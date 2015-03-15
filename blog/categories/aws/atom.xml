@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: aws | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/aws/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/aws/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[AWS BeanstalkでDockerをカスタムAMIで使う。]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2015/03/14/custom-docker-ami-on-beanstalk/"/>
+    <link href="http://sgykfjsm.github.io/blog/2015/03/14/custom-docker-ami-on-beanstalk/"/>
     <updated>2015-03-14T23:11:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2015/03/14/custom-docker-ami-on-beanstalk</id>
+    <id>http://sgykfjsm.github.io/blog/2015/03/14/custom-docker-ami-on-beanstalk</id>
     <content type="html"><![CDATA[<p>既知の通り、BeanstalkでDockerを使うことができるが、通常の使い方だとインスタンスが配備される度にDocker ImageをPull、BuildしてからRunする。初期配備時は問題ないが、スケールアウトの観点で見た場合、非常にもたつくことがある。また、Docker Imageが大きい(800MB以上ぐらい？)と、devicemapper errorでBuildに失敗することが多い（ような気がする）。単にBuildに失敗しただけであれば切り離せば良いが、複数台のうちいくつかがBuildに失敗しただけでは検知が難しく、そのまま生き残ってしまうとムダなコストが発生する。</p>
 
 <p>上記のような認識でいたため、これまではBeanstalkでDockerを運用することにはあまり乗り気ではなかった。しかし、同僚からの意見で予めデプロイしておいたカスタムAMIを使うのはどうか、という意見があり、検証することにした。</p>
@@ -846,9 +846,9 @@ Pulling repository sgykfjsm/play-scala-intro
   
   <entry>
     <title type="html"><![CDATA[Beanstalk管理下のインスタンスを安全に再起動する]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2015/02/13/dereg-instance-under-beanstalk/"/>
+    <link href="http://sgykfjsm.github.io/blog/2015/02/13/dereg-instance-under-beanstalk/"/>
     <updated>2015-02-13T18:40:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2015/02/13/dereg-instance-under-beanstalk</id>
+    <id>http://sgykfjsm.github.io/blog/2015/02/13/dereg-instance-under-beanstalk</id>
     <content type="html"><![CDATA[<p>現在のBeanstalkでインスタンスが再起動する場合は主に以下の３つがある。</p>
 
 <ul>
@@ -969,9 +969,9 @@ Pulling repository sgykfjsm/play-scala-intro
   
   <entry>
     <title type="html"><![CDATA[起動に失敗したインスタンスを調査する例]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2015/02/13/how-to-analysis-unlaunched-instance/"/>
+    <link href="http://sgykfjsm.github.io/blog/2015/02/13/how-to-analysis-unlaunched-instance/"/>
     <updated>2015-02-13T03:43:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2015/02/13/how-to-analysis-unlaunched-instance</id>
+    <id>http://sgykfjsm.github.io/blog/2015/02/13/how-to-analysis-unlaunched-instance</id>
     <content type="html"><![CDATA[<p>先日、とあるサービスで利用しているBeanstalk環境でインスタンスが起動に失敗した。ログを見ると、S3からリソースの取得に失敗していたようだ。<br>ネットワーク接続の状態としては、AWS内のネットワークでは疎通可能だが、インターネットを経由した通信は不可、という状況。具体的には、例えばAWSのインスタンスからはsshログイン可能だが、グローバルからのsshログインはできないといったような感じ。色々調べたけど、不意に調査対象のインスタンスがTerminateしてしまい、結局原因がわからないままになってしまった。</p>
 
 <p>調査はAWS Supportとやりとりしながら行ったのだけれども、色々と情報収集を都度指示されて捗らなかった。<br>なので、ここには次また事象が再発した場合に備えて、障害発生時に取得しておきべきこと、確認すべきことを整理する。</p>
@@ -1070,9 +1070,9 @@ Pulling repository sgykfjsm/play-scala-intro
   
   <entry>
     <title type="html"><![CDATA[DynamoDBをEMRで扱うときに気をつけること]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/08/31/elasticemapreduce-with-dynamodb/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/08/31/elasticemapreduce-with-dynamodb/"/>
     <updated>2013-08-31T03:57:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/08/31/elasticemapreduce-with-dynamodb</id>
+    <id>http://sgykfjsm.github.io/blog/2013/08/31/elasticemapreduce-with-dynamodb</id>
     <content type="html"><![CDATA[<p>実際に検証したわけではないが、経験的にDynamoDBをEMRで扱うときには以下の点に気を付ける必要がある。</p>
 
 <!-- more -->

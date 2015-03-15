@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: java | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/java/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/java/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[業務システムエンジニアのためのHTML5勉強会#04に参加した]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/09/10/html5-with-java-meetup/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/09/10/html5-with-java-meetup/"/>
     <updated>2013-09-10T00:05:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/09/10/html5-with-java-meetup</id>
+    <id>http://sgykfjsm.github.io/blog/2013/09/10/html5-with-java-meetup</id>
     <content type="html"><![CDATA[<p><a href="http://atnd.org/events/42782">業務システムエンジニアのためのHTML5勉強会#04 Web✕Java - HTML5で進化したWeb標準を、Java技術でどう扱うのか？ -</a>という勉強会に参加した。これはそのメモ。メモを取ったのは一部のみ。</p>
 
 <!--more -->

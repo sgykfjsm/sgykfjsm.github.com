@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[AWS BeanstalkでDockerをカスタムAMIで使う。]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2015/03/14/custom-docker-ami-on-beanstalk/"/>
+    <link href="http://sgykfjsm.github.io/blog/2015/03/14/custom-docker-ami-on-beanstalk/"/>
     <updated>2015-03-14T23:11:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2015/03/14/custom-docker-ami-on-beanstalk</id>
+    <id>http://sgykfjsm.github.io/blog/2015/03/14/custom-docker-ami-on-beanstalk</id>
     <content type="html"><![CDATA[<p>既知の通り、BeanstalkでDockerを使うことができるが、通常の使い方だとインスタンスが配備される度にDocker ImageをPull、BuildしてからRunする。初期配備時は問題ないが、スケールアウトの観点で見た場合、非常にもたつくことがある。また、Docker Imageが大きい(800MB以上ぐらい？)と、devicemapper errorでBuildに失敗することが多い（ような気がする）。単にBuildに失敗しただけであれば切り離せば良いが、複数台のうちいくつかがBuildに失敗しただけでは検知が難しく、そのまま生き残ってしまうとムダなコストが発生する。</p>
 
 <p>上記のような認識でいたため、これまではBeanstalkでDockerを運用することにはあまり乗り気ではなかった。しかし、同僚からの意見で予めデプロイしておいたカスタムAMIを使うのはどうか、という意見があり、検証することにした。</p>
@@ -867,9 +867,9 @@
   
   <entry>
     <title type="html"><![CDATA[AnsibleでMySQLをインストールする。]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2015/02/17/install-mysql-with-ansible/"/>
+    <link href="http://sgykfjsm.github.io/blog/2015/02/17/install-mysql-with-ansible/"/>
     <updated>2015-02-17T09:19:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2015/02/17/install-mysql-with-ansible</id>
+    <id>http://sgykfjsm.github.io/blog/2015/02/17/install-mysql-with-ansible</id>
     <content type="html"><![CDATA[<p>AWSなんかを使ってると、イチからMySQLなどの基本的なミドルウェアをセットアップすることは減ってくる。そんな中、AnsibleでMySQLをインストールする事になったのだけど、意外と忘れてたりAnsibleで作業するのと手作業で進めることの差異でちょっと詰まったりしたので、ここに備忘しておく。</p>
 
 <!-- more -->
@@ -1246,9 +1246,9 @@
   
   <entry>
     <title type="html"><![CDATA[sbtから起動させる処理にコマンドラインから引数を渡す]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2015/02/15/pass-params-to-sbt-on-cli/"/>
+    <link href="http://sgykfjsm.github.io/blog/2015/02/15/pass-params-to-sbt-on-cli/"/>
     <updated>2015-02-15T02:02:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2015/02/15/pass-params-to-sbt-on-cli</id>
+    <id>http://sgykfjsm.github.io/blog/2015/02/15/pass-params-to-sbt-on-cli</id>
     <content type="html"><![CDATA[<p>以下はskinny frameworkをつかって処理を書いているが、sbtからの起動させる際にはskinny frameworkを使ってるかどうかは関係ないはず。</p>
 
 <!-- more -->
@@ -1312,9 +1312,9 @@
   
   <entry>
     <title type="html"><![CDATA[Beanstalk管理下のインスタンスを安全に再起動する]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2015/02/13/dereg-instance-under-beanstalk/"/>
+    <link href="http://sgykfjsm.github.io/blog/2015/02/13/dereg-instance-under-beanstalk/"/>
     <updated>2015-02-13T18:40:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2015/02/13/dereg-instance-under-beanstalk</id>
+    <id>http://sgykfjsm.github.io/blog/2015/02/13/dereg-instance-under-beanstalk</id>
     <content type="html"><![CDATA[<p>現在のBeanstalkでインスタンスが再起動する場合は主に以下の３つがある。</p>
 
 <ul>
@@ -1435,9 +1435,9 @@
   
   <entry>
     <title type="html"><![CDATA[起動に失敗したインスタンスを調査する例]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2015/02/13/how-to-analysis-unlaunched-instance/"/>
+    <link href="http://sgykfjsm.github.io/blog/2015/02/13/how-to-analysis-unlaunched-instance/"/>
     <updated>2015-02-13T03:43:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2015/02/13/how-to-analysis-unlaunched-instance</id>
+    <id>http://sgykfjsm.github.io/blog/2015/02/13/how-to-analysis-unlaunched-instance</id>
     <content type="html"><![CDATA[<p>先日、とあるサービスで利用しているBeanstalk環境でインスタンスが起動に失敗した。ログを見ると、S3からリソースの取得に失敗していたようだ。<br>ネットワーク接続の状態としては、AWS内のネットワークでは疎通可能だが、インターネットを経由した通信は不可、という状況。具体的には、例えばAWSのインスタンスからはsshログイン可能だが、グローバルからのsshログインはできないといったような感じ。色々調べたけど、不意に調査対象のインスタンスがTerminateしてしまい、結局原因がわからないままになってしまった。</p>
 
 <p>調査はAWS Supportとやりとりしながら行ったのだけれども、色々と情報収集を都度指示されて捗らなかった。<br>なので、ここには次また事象が再発した場合に備えて、障害発生時に取得しておきべきこと、確認すべきことを整理する。</p>
@@ -1536,9 +1536,9 @@
   
   <entry>
     <title type="html"><![CDATA[Play!のDB設定について]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/04/09/about-db-configuration-in-play/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/04/09/about-db-configuration-in-play/"/>
     <updated>2014-04-09T00:27:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/04/09/about-db-configuration-in-play</id>
+    <id>http://sgykfjsm.github.io/blog/2014/04/09/about-db-configuration-in-play</id>
     <content type="html"><![CDATA[<p>自分が開発したわけでもないのだけれど、APIのパフォーマンスをどうにかしろ、チューニングしろと言われた。チューニング対象のAPIは<a href="http://www.playframework.com/">Play!</a>を利用しており、DBのI/Oにパフォーマンスが強く依存するので、まずはDB周りのパラメータをしらべて改善していくことにした。</p>
 
 <!-- more -->
@@ -1814,9 +1814,9 @@ BoneCPの接続数を計算する場合は<code>maxConnectionsPerPartition * par
   
   <entry>
     <title type="html"><![CDATA['-rwxr-sr-x'というパーミッション設定]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/04/01/whats-is-rwxr-sr-x/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/04/01/whats-is-rwxr-sr-x/"/>
     <updated>2014-04-01T19:26:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/04/01/whats-is-rwxr-sr-x</id>
+    <id>http://sgykfjsm.github.io/blog/2014/04/01/whats-is-rwxr-sr-x</id>
     <content type="html"><![CDATA[<p>とある事情でサーバの調査をしていたら、以下の様なパーミッション設定を見かけた。</p>
 
 <pre><code>$ ls -l /usr/sbin/sendmail.sendmail
@@ -1848,9 +1848,9 @@ BoneCPの接続数を計算する場合は<code>maxConnectionsPerPartition * par
   
   <entry>
     <title type="html"><![CDATA[LAST_INSERT_ID()の返り値の型はバージョンによって違う]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/03/02/about-last-insert-id-with-mysql5-dot-5-5-dot-6/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/03/02/about-last-insert-id-with-mysql5-dot-5-5-dot-6/"/>
     <updated>2014-03-02T07:30:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/03/02/about-last-insert-id-with-mysql5-dot-5-5-dot-6</id>
+    <id>http://sgykfjsm.github.io/blog/2014/03/02/about-last-insert-id-with-mysql5-dot-5-5-dot-6</id>
     <content type="html"><![CDATA[<p>昨日、MySQLのバージョンを5.5.27から5.6.13に上げてテストしてたら<code>LAST_INSERT_ID</code>を使っているとこでエラーが出た。それで、ドキュメントを見ていたら以下の様な記述があった。</p>
 
 <!-- more -->
@@ -1956,9 +1956,9 @@ mysql [localhost] {msandbox} (test) &gt; desc t2;
   
   <entry>
     <title type="html"><![CDATA[markdownをプレビューする]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/03/01/how-to-preview-markdown-on-cli/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/03/01/how-to-preview-markdown-on-cli/"/>
     <updated>2014-03-01T09:43:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/03/01/how-to-preview-markdown-on-cli</id>
+    <id>http://sgykfjsm.github.io/blog/2014/03/01/how-to-preview-markdown-on-cli</id>
     <content type="html"><![CDATA[<p>Macではプレビュー機能があるけど、markdownだとレンダリングされずにそのままが表示される。 ので、ちゃんとレンダリングされた状態でプレビューできるようにする。また、いつもvimを使って作業しているので、コマンドラインからプレビューできるようにする。</p>
 
 <p>ただ、今回はlynxを使ってプレビューするので、あまり一般的なやり方ではないと思う。</p>
@@ -2005,9 +2005,9 @@ markdown_preview() {
   
   <entry>
     <title type="html"><![CDATA[sudoでulimitをしたら「sudo: ulimit -Sn: コマンドが見つかりません」と言われた]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/02/05/sudo-ulimit/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/02/05/sudo-ulimit/"/>
     <updated>2014-02-05T20:26:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/02/05/sudo-ulimit</id>
+    <id>http://sgykfjsm.github.io/blog/2014/02/05/sudo-ulimit</id>
     <content type="html"><![CDATA[<p>elasticsearchの調子が悪かったので、いろいろ調べていた。その途中でnofilesの上限を調べようと思って、以下のようにコマンドを叩いたらコマンドが見つからないって言われた。</p>
 
 <!-- more -->
@@ -2037,9 +2037,9 @@ ulimit: /usr/include/ulimit.h /usr/share/man/man1/ulimit.1.gz /usr/share/man/man
   
   <entry>
     <title type="html"><![CDATA[ITフォーラムセッション 「ビッグデータ活用実務フォーラム」に行ってきた。]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/02/04/big-data-forum/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/02/04/big-data-forum/"/>
     <updated>2014-02-04T11:39:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/02/04/big-data-forum</id>
+    <id>http://sgykfjsm.github.io/blog/2014/02/04/big-data-forum</id>
     <content type="html"><![CDATA[<p><a href="http://www.ipsj.or.jp/event/sj/sj2014/itforum_big_data_program.html?utm_content=buffer1396a&amp;utm_medium=social&amp;utm_source=twitter.com&amp;utm_campaign=buffer">ITフォーラムセッション 「ビッグデータ活用実務フォーラム」</a>に行ってきた。短い時間に対して、とても豪華なスピーカーだったので、これは行くしかないなーという感じで行ってきた。各セッション30分なので、とても密度が濃かった。</p>
 
 <p>以下はメモ。聞きながらなので、乱文乱筆ご容赦。</p>
@@ -2456,9 +2456,9 @@ ulimit: /usr/include/ulimit.h /usr/share/man/man1/ulimit.1.gz /usr/share/man/man
   
   <entry>
     <title type="html"><![CDATA[MySQLのALTERで'The table '#sql-xxxx' is full'と言われたら]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/01/28/table-is-full-when-alter/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/01/28/table-is-full-when-alter/"/>
     <updated>2014-01-28T09:44:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/01/28/table-is-full-when-alter</id>
+    <id>http://sgykfjsm.github.io/blog/2014/01/28/table-is-full-when-alter</id>
     <content type="html"><![CDATA[<p>とりあえず、DBの空き容量とALTERしようとしているテーブルの容量を確認する。</p>
 
 <!-- more -->
@@ -2484,9 +2484,9 @@ ulimit: /usr/include/ulimit.h /usr/share/man/man1/ulimit.1.gz /usr/share/man/man
   
   <entry>
     <title type="html"><![CDATA[Amazon RDSのMySQLでオンラインメンテをどうやればいいかを調べた]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/01/26/online-maintenance-on-rds-mysql/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/01/26/online-maintenance-on-rds-mysql/"/>
     <updated>2014-01-26T20:28:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/01/26/online-maintenance-on-rds-mysql</id>
+    <id>http://sgykfjsm.github.io/blog/2014/01/26/online-maintenance-on-rds-mysql</id>
     <content type="html"><![CDATA[<p>RDSのMySQLでオンラインメンテ、つまり無停止でのスキーマ変更などをどうやれば良いか、という話。 今までは色々小細工をして生のALTER文を発行していたけど、さすがにロック時間とかが気になり始めたので調べた次第。 ざっとググると、<a href="http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html">pt-online-schema-change</a>というツールを使うと良さそうだったので、ここにその作業ログを残す。 以下は参考にしたブログ記事など。</p>
 
 <ul>
@@ -2645,9 +2645,9 @@ Writing MYMETA.yml and MYMETA.json
   
   <entry>
     <title type="html"><![CDATA[jenkinsでのテスト自動化いろいろ]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/01/13/auto-test-on-jenkins/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/01/13/auto-test-on-jenkins/"/>
     <updated>2014-01-13T12:28:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/01/13/auto-test-on-jenkins</id>
+    <id>http://sgykfjsm.github.io/blog/2014/01/13/auto-test-on-jenkins</id>
     <content type="html"><![CDATA[<p>jenkins上でテストを実行したい、自動化したいというリクエストが来たので、その設定方法をまとめた。</p>
 
 <p>今回はplay2.2.1のscalaをサンプルプロジェクトととした。</p>
@@ -3020,9 +3020,9 @@ vagrant@precise:~/play-2.2.1/framework$ find . -maxdepth 1 -type f | grep -v '.b
   
   <entry>
     <title type="html"><![CDATA[mesos上にHadoopをインストールする]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/01/10/install-hadoop-on-mesos/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/01/10/install-hadoop-on-mesos/"/>
     <updated>2014-01-10T00:51:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/01/10/install-hadoop-on-mesos</id>
+    <id>http://sgykfjsm.github.io/blog/2014/01/10/install-hadoop-on-mesos</id>
     <content type="html"><![CDATA[<p>前回、mesosをDEBパッケージを使ってインストールする方法を示した。これを前提としてmesosが動いているクラスタにHadoopをインストールし、wordcountをchrnosを通じて動かすところまでの手順を示す。</p>
 
 <p>ちなみに見てくれている人の時間をムダにしないために言うと、一部を除けば普通の手順(Clouderaのチュートリアルとか)でやれば大抵は普通に動くはず。なのでHadoopに詳しい人は、<a href="https://www.google.co.jp/search?q=hadoop+mesos&amp;oq=hadoop+mesos&amp;aqs=chrome..69i57j69i60l3j0l2.2556j0j7&amp;sourceid=chrome&amp;espv=210&amp;es_sm=91&amp;ie=UTF-8">「Hadoop mesos」でググったほう</a>が良いと思う。ここではSparkの利用を見越しての設定を行なうのと、とHadoopもmesosもあまり詳しくない人向けに記述する。Chronosについては、まぁついでにというレベルだし、実際非常に導入が楽なので、<a href="http://airbnb.github.io/chronos/#Quick%20Start">公式のQuick Start</a>でも見たほうが良い。</p>
@@ -3797,23 +3797,23 @@ vagrat:master1:~/hadoop_home$ sudo -u mapred /usr/bin/hadoop dfs -copyFromLocal 
 
 <p>これだけみてもつまらないのだけど、この状態でmesosのWebUIにアクセスしてみるとActive Frameworksとして起動中のjobtrackerが登録されているのがわかる。</p>
 
-<p><img src="http://sgykfjsm.github.com/images/2014-01-11T01.44.51.png"></p>
+<p><img src="http://sgykfjsm.github.io/images/2014-01-11T01.44.51.png"></p>
 
 <p>ここからIDのリンクをクリックすると、以下の画面が出てスレーブノードでtasktrackerが起動していることがわかる。</p>
 
-<p><img src="http://sgykfjsm.github.com/images/2014-01-11T01.56.37.png"></p>
+<p><img src="http://sgykfjsm.github.io/images/2014-01-11T01.56.37.png"></p>
 
 <p>さらにTask_Tracker_1のリンクをクリックしたところ。</p>
 
-<p><img src="http://sgykfjsm.github.com/images/2014-01-11T1.59.59.png"></p>
+<p><img src="http://sgykfjsm.github.io/images/2014-01-11T1.59.59.png"></p>
 
 <p>そしてSandboxのリンクをクリックしたところ。HDFS上にアップした実行モジュールがダウンロードされて展開されていることがわかる。ちなみにこのリンクはローカルで名前解決できるようにしておかないと見れないので注意。</p>
 
-<p><img src="http://sgykfjsm.github.com/images/2014-01-11T2.02.44.png"></p>
+<p><img src="http://sgykfjsm.github.io/images/2014-01-11T2.02.44.png"></p>
 
 <p>ちなみにjobtrackerを終わらせるとTerminated Frameworksに移動する。</p>
 
-<p><img src="http://sgykfjsm.github.com/images/2014-01-11T2.51.43.png"></p>
+<p><img src="http://sgykfjsm.github.io/images/2014-01-11T2.51.43.png"></p>
 
 <p>これらのことから、HadoopのjobtrackerとtasktrackerはFrameworkとしてmesosに管理されていることがわかる。つまり、mesosのリソースとしてスレーブノードが管理されることでその上で走るjobtrackerなりtasktrackerも同様に管理されることになる？という理解でいいのだろうか？mesosを利用することでDCをまたいだHadoopジョブが可能になったりしてスケーラビリティが向上するとかの効用もきっとあるのだと思う。</p>
 
@@ -3825,9 +3825,9 @@ vagrat:master1:~/hadoop_home$ sudo -u mapred /usr/bin/hadoop dfs -copyFromLocal 
   
   <entry>
     <title type="html"><![CDATA[mesosをDEBパッケージからインストールする]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/01/09/install-mesos-with-deb/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/01/09/install-mesos-with-deb/"/>
     <updated>2014-01-09T06:48:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/01/09/install-mesos-with-deb</id>
+    <id>http://sgykfjsm.github.io/blog/2014/01/09/install-mesos-with-deb</id>
     <content type="html"><![CDATA[<p>mesosをインストールする場合、ソースをコンパイルしてインストールすることが公式の<a href="http://mesos.apache.org/gettingstarted/">Getting Started with Apache Mesos</a>に記載されているが、この方法だとコンパイルに非常に時間がかかる（10分から20分ぐらい）ので、<a href="http://mesosphere.io/downloads/">mesosphereが提供しているパッケージ</a>を利用したほうが良い。<br>ここでは、パッケージからインストールする手順をまとめる。</p>
 
 <!-- more -->
@@ -4172,9 +4172,9 @@ vagrant@master1:~$ sudo service mesos-slave start
   
   <entry>
     <title type="html"><![CDATA[fud_scala]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/11/28/fud-scala/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/11/28/fud-scala/"/>
     <updated>2013-11-28T19:35:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/11/28/fud-scala</id>
+    <id>http://sgykfjsm.github.io/blog/2013/11/28/fud-scala</id>
     <content type="html"><![CDATA[<a name="Scala.at.ISUCON"></a>
 <h1>Scala at ISUCON</h1>
 
@@ -4243,9 +4243,9 @@ OOPよりデータと手続きのほうが高速とはいえ、DDDはオブジ�
   
   <entry>
     <title type="html"><![CDATA[mysql_study]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/11/28/mysql-study/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/11/28/mysql-study/"/>
     <updated>2013-11-28T13:56:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/11/28/mysql-study</id>
+    <id>http://sgykfjsm.github.io/blog/2013/11/28/mysql-study</id>
     <content type="html"><![CDATA[<a name="L...................................."></a>
 <h1>データベース設計徹底指南</h1>
 
@@ -4439,9 +4439,9 @@ DB設計鉄則三箇条
   
   <entry>
     <title type="html"><![CDATA[td-agentの監視・復旧の仕組みを整える]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/11/13/td-agent_with_monit/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/11/13/td-agent_with_monit/"/>
     <updated>2013-11-13T21:26:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/11/13/td-agent_with_monit</id>
+    <id>http://sgykfjsm.github.io/blog/2013/11/13/td-agent_with_monit</id>
     <content type="html"><![CDATA[<p>ここで紹介されている仕組みを自分のところにも導入したくなったのでやってみる。</p>
 
 <iframe src="http://www.slideshare.net/slideshow/embed_code/14046820" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen> </iframe>
@@ -4993,9 +4993,9 @@ DB設計鉄則三箇条
   
   <entry>
     <title type="html"><![CDATA[MySQL Cluster Casual Talksに行ってきた]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/09/27/mysql-cluster-casual-talk/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/09/27/mysql-cluster-casual-talk/"/>
     <updated>2013-09-27T05:04:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/09/27/mysql-cluster-casual-talk</id>
+    <id>http://sgykfjsm.github.io/blog/2013/09/27/mysql-cluster-casual-talk</id>
     <content type="html"><![CDATA[<p>MySQL Casual Talkと勘違いしてたけど、とても勉強になった。
 以下はメモ。</p>
 

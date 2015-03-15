@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: octpress | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/octpress/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/octpress/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[githubとoctpressでブログを構築する]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/02/04/first-post/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/02/04/first-post/"/>
     <updated>2013-02-04T05:43:23+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/02/04/first-post</id>
+    <id>http://sgykfjsm.github.io/blog/2013/02/04/first-post</id>
     <content type="html"><![CDATA[<p>ここのとおりに作業を進める</p>
 
 <ul>

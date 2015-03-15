@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: mysql | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/mysql/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/mysql/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[AnsibleでMySQLをインストールする。]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2015/02/17/install-mysql-with-ansible/"/>
+    <link href="http://sgykfjsm.github.io/blog/2015/02/17/install-mysql-with-ansible/"/>
     <updated>2015-02-17T09:19:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2015/02/17/install-mysql-with-ansible</id>
+    <id>http://sgykfjsm.github.io/blog/2015/02/17/install-mysql-with-ansible</id>
     <content type="html"><![CDATA[<p>AWSなんかを使ってると、イチからMySQLなどの基本的なミドルウェアをセットアップすることは減ってくる。そんな中、AnsibleでMySQLをインストールする事になったのだけど、意外と忘れてたりAnsibleで作業するのと手作業で進めることの差異でちょっと詰まったりしたので、ここに備忘しておく。</p>
 
 <!-- more -->
@@ -253,9 +253,9 @@ exit
   
   <entry>
     <title type="html"><![CDATA[LAST_INSERT_ID()の返り値の型はバージョンによって違う]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/03/02/about-last-insert-id-with-mysql5-dot-5-5-dot-6/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/03/02/about-last-insert-id-with-mysql5-dot-5-5-dot-6/"/>
     <updated>2014-03-02T07:30:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/03/02/about-last-insert-id-with-mysql5-dot-5-5-dot-6</id>
+    <id>http://sgykfjsm.github.io/blog/2014/03/02/about-last-insert-id-with-mysql5-dot-5-5-dot-6</id>
     <content type="html"><![CDATA[<p>昨日、MySQLのバージョンを5.5.27から5.6.13に上げてテストしてたら<code>LAST_INSERT_ID</code>を使っているとこでエラーが出た。それで、ドキュメントを見ていたら以下の様な記述があった。</p>
 
 <!-- more -->
@@ -361,9 +361,9 @@ mysql [localhost] {msandbox} (test) &gt; desc t2;
   
   <entry>
     <title type="html"><![CDATA[MySQLのALTERで'The table '#sql-xxxx' is full'と言われたら]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/01/28/table-is-full-when-alter/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/01/28/table-is-full-when-alter/"/>
     <updated>2014-01-28T09:44:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/01/28/table-is-full-when-alter</id>
+    <id>http://sgykfjsm.github.io/blog/2014/01/28/table-is-full-when-alter</id>
     <content type="html"><![CDATA[<p>とりあえず、DBの空き容量とALTERしようとしているテーブルの容量を確認する。</p>
 
 <!-- more -->
@@ -389,9 +389,9 @@ mysql [localhost] {msandbox} (test) &gt; desc t2;
   
   <entry>
     <title type="html"><![CDATA[Amazon RDSのMySQLでオンラインメンテをどうやればいいかを調べた]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2014/01/26/online-maintenance-on-rds-mysql/"/>
+    <link href="http://sgykfjsm.github.io/blog/2014/01/26/online-maintenance-on-rds-mysql/"/>
     <updated>2014-01-26T20:28:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2014/01/26/online-maintenance-on-rds-mysql</id>
+    <id>http://sgykfjsm.github.io/blog/2014/01/26/online-maintenance-on-rds-mysql</id>
     <content type="html"><![CDATA[<p>RDSのMySQLでオンラインメンテ、つまり無停止でのスキーマ変更などをどうやれば良いか、という話。 今までは色々小細工をして生のALTER文を発行していたけど、さすがにロック時間とかが気になり始めたので調べた次第。 ざっとググると、<a href="http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html">pt-online-schema-change</a>というツールを使うと良さそうだったので、ここにその作業ログを残す。 以下は参考にしたブログ記事など。</p>
 
 <ul>
@@ -550,9 +550,9 @@ Writing MYMETA.yml and MYMETA.json
   
   <entry>
     <title type="html"><![CDATA[MySQL Cluster Casual Talksに行ってきた]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/09/27/mysql-cluster-casual-talk/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/09/27/mysql-cluster-casual-talk/"/>
     <updated>2013-09-27T05:04:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/09/27/mysql-cluster-casual-talk</id>
+    <id>http://sgykfjsm.github.io/blog/2013/09/27/mysql-cluster-casual-talk</id>
     <content type="html"><![CDATA[<p>MySQL Casual Talkと勘違いしてたけど、とても勉強になった。
 以下はメモ。</p>
 

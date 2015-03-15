@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: s3 | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.com/blog/categories/s3/atom.xml" rel="self"/>
-  <link href="http://sgykfjsm.github.com/"/>
-  <updated>2015-03-16T03:15:42+09:00</updated>
-  <id>http://sgykfjsm.github.com/</id>
+  <link href="http://sgykfjsm.github.io/blog/categories/s3/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-03-16T03:25:00+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[ec2にfluentdをインストールする]]></title>
-    <link href="http://sgykfjsm.github.com/blog/2013/08/11/fluentd-on-ec2-with-s3/"/>
+    <link href="http://sgykfjsm.github.io/blog/2013/08/11/fluentd-on-ec2-with-s3/"/>
     <updated>2013-08-11T02:23:00+09:00</updated>
-    <id>http://sgykfjsm.github.com/blog/2013/08/11/fluentd-on-ec2-with-s3</id>
+    <id>http://sgykfjsm.github.io/blog/2013/08/11/fluentd-on-ec2-with-s3</id>
     <content type="html"><![CDATA[<a name="L......"></a>
 <h2>目的</h2>
 
