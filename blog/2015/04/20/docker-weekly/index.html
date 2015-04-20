@@ -1,0 +1,285 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>docker-weekly: April 16th, 2015 - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="最近、あんまりDockerの話題についていけていないのでDocker weeklyについて、ざっと内容をまとめるようにしてみる。いつまで続くかはわからないけど…。今回はDocker Weekly: April 16th, 2015について。 主な話題は以下の通り。 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.io/blog/2015/04/20/docker-weekly">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.io" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">docker-weekly: April 16th, 2015</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-04-20T23:28:28+09:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>20</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:28 pm</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>最近、あんまりDockerの話題についていけていないのでDocker weeklyについて、ざっと内容をまとめるようにしてみる。いつまで続くかはわからないけど…。今回は<a href="http://go.docker.com/webmail/44082/349477677/9bcd04c8938431b7e6ac4d9c2a270e1b">Docker Weekly: April 16th, 2015</a>について。</p>
+
+<!-- more -->
+
+
+<p>主な話題は以下の通り。誤訳もありえるので気になる部分はリンク先や原文にあたること。</p>
+
+<ul>
+<li>Docker Engineのv1.6のリリースと関連オーケストレーションツールのアップデート, Registry 2.0とWindows Client Preview
+
+<ul>
+<li><a href="https://blog.docker.com/2015/04/docker-release-1-6/">原文はここ</a></li>
+<li>コンテナやイメージにユーザが定義したメタデータを付与できるようになった
+
+<ul>
+<li>PRは<a href="https://github.com/docker/docker/pull/9882">https://github.com/docker/docker/pull/9882</a></li>
+<li>RancharOSでの使い方は<a href="http://rancher.com/docker-labels/">http://rancher.com/docker-labels/</a>を参照のこと。</li>
+</ul>
+</li>
+<li>Windows ClientのPreview版がリリースされた
+
+<ul>
+<li>MacのClient(boot2dockerのこと？)と同様の操作感らしい</li>
+<li>PRは<a href="https://github.com/docker/docker/pulls?q=is%3Apr+author%3Aahmetalpbalkan+is%3Aclosed">https://github.com/docker/docker/pulls?q=is%3Apr+author%3Aahmetalpbalkan+is%3Aclosed</a>を参照。</li>
+<li>詳細は<a href="http://azure.microsoft.com/blog/2015/04/16/docker-client-for-windows-is-now-available">Microsoftのブログ</a>にある。</li>
+</ul>
+</li>
+<li>Logging Driversの提供
+
+<ul>
+<li><code>docker run --log-driver</code>に続けて、<code>jdon-file</code>, <code>syslog</code>, <code>none</code>を選択できる。</li>
+<li>docker daemonのログ出力を止めてパフォーマンスの向上を図る<code>none</code>っていうのがアツいらしい。PRは<a href="https://github.com/docker/docker/pull/10568">こちら</a>と<a href="https://github.com/docker/docker/issues/7195">こちら</a>が関連してそう。</li>
+<li><code>syslog</code>のパッチは70行ぐらいで、将来的に他の実装を追加することがどれだけ簡単かを示す試金石になっている。PRは<a href="https://github.com/docker/docker/pull/11458">こちら</a>。</li>
+<li>ちなみに、さっそく<a href="https://github.com/docker/docker/pull/12540">Logger Driversにfluentdを入れようぜ！っていうProposal</a>がされている。</li>
+</ul>
+</li>
+<li>イメージの特定に<code>@digest</code>をつけることができるようになった
+
+<ul>
+<li>今まではpullしたイメージはImage IDが付与されていたが、これはimmutableじゃなかった。つまり、pullする度に変わってしまってて、イメージにパッチをあてたりアップデートを行なうときにはちょっと面倒だった。なぜなら、イメージに付与するtagではイメージの同一性を担保できないから。今回追加された<code>@digest</code>はimmutableであることが保障されるので、指定したDigestに指定したパッチを当てるなどの対応が可能になった。っていう理解であってるのだろうか…</li>
+<li>PRは<a href="https://github.com/docker/docker/pull/11109">https://github.com/docker/docker/pull/11109</a>。</li>
+<li>ドキュメントは[pull][<a href="http://docs.docker.com/reference/commandline/cli/#pull">http://docs.docker.com/reference/commandline/cli/#pull</a>]に記述がある。</li>
+<li>Digestをサポートしているのはv2 registryだけらしくて、DockerHubはサポートしているものの、一般的に使われるようになるにはまだ時間がかかりそう。</li>
+<li>ところでこのDigestはどうやって知ることができるのだろうか…</li>
+</ul>
+</li>
+<li><code>--cgroup-parent</code>オプションの提供
+
+<ul>
+<li>すでにカスタムnamespaceのサポートを行っていたが、v1.6からは任意のcgroupを親に指定することができるようになった。</li>
+<li>イマイチ有用性がわからない…。コンテナに使わせたいリソースを自分で調整したい時とか？</li>
+<li>PRは<a href="https://github.com/docker/docker/pull/11428">https://github.com/docker/docker/pull/11428</a>を参照。</li>
+</ul>
+</li>
+<li>ulimitsオプションの提供
+
+<ul>
+<li>runするコンテナに対してulimitを指定できるようになった。これは個人的には結構アツい。</li>
+<li>というのも、コンテナに対してulimitの上限をあげようとするにはホスト側を上げて、なおかつイメージにも同様の設定をしないとうまいこと調整出来なくて、けっこう苦労した思い出があるので。</li>
+<li>PRは<a href="https://github.com/docker/docker/pull/9437">https://github.com/docker/docker/pull/9437</a>。</li>
+</ul>
+</li>
+<li><code>commit --change</code>と<code>import --change</code>の提供
+
+<ul>
+<li>commitやimportのときにDockerfileに対してコマンドラインから変更を加えながら行なうことができる。</li>
+<li>イマイチうまく説明できないので、<a href="http://docs.docker.com/reference/commandline/cli/#commit">ドキュメント</a>を見たほうが良い。</li>
+<li>まだ試していないけど、&ndash;changeした内容はDockerfileに反映されるのかな？</li>
+<li>PRは<a href="https://github.com/docker/docker/pull/9123">こちら</a>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Series D Roundで$95M調達
+
+<ul>
+<li>Series Dっていうのが謎だったけど、4回目の投資をうけたってことなんかな？</li>
+<li>Docker的にはお金をGETできたんで、これからどんどんecosystemの充実とPlatformの推進をがんばりまっせーってことらしい。</li>
+</ul>
+</li>
+<li>DockerConがもうすぐ(News letter配信時点で67日後)
+
+<ul>
+<li>サンフランシスコで2015-06-22から2015-06-23にかけて行われるとのこと。</li>
+</ul>
+</li>
+<li>4/23でDockerが2周年
+
+<ul>
+<li>おめでとうございます。</li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2015-04-20T23:28:28+09:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>20</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:28 pm</span></time>
+      
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/docker/'>docker</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2015/03/14/custom-docker-ami-on-beanstalk/" title="Previous Post: AWS BeanstalkでDockerをカスタムAMIで使う。">&laquo; AWS BeanstalkでDockerをカスタムAMIで使う。</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

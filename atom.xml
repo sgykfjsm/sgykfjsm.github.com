@@ -4,7 +4,7 @@
   <title><![CDATA[sgykfjsm.github.com]]></title>
   <link href="http://sgykfjsm.github.io/atom.xml" rel="self"/>
   <link href="http://sgykfjsm.github.io/"/>
-  <updated>2015-03-16T03:40:50+09:00</updated>
+  <updated>2015-04-21T00:45:40+09:00</updated>
   <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
@@ -12,6 +12,108 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[docker-weekly: April 16th, 2015]]></title>
+    <link href="http://sgykfjsm.github.io/blog/2015/04/20/docker-weekly/"/>
+    <updated>2015-04-20T23:28:28+09:00</updated>
+    <id>http://sgykfjsm.github.io/blog/2015/04/20/docker-weekly</id>
+    <content type="html"><![CDATA[<p>最近、あんまりDockerの話題についていけていないのでDocker weeklyについて、ざっと内容をまとめるようにしてみる。いつまで続くかはわからないけど…。今回は<a href="http://go.docker.com/webmail/44082/349477677/9bcd04c8938431b7e6ac4d9c2a270e1b">Docker Weekly: April 16th, 2015</a>について。</p>
+
+<!-- more -->
+
+
+<p>主な話題は以下の通り。誤訳もありえるので気になる部分はリンク先や原文にあたること。</p>
+
+<ul>
+<li>Docker Engineのv1.6のリリースと関連オーケストレーションツールのアップデート, Registry 2.0とWindows Client Preview
+
+<ul>
+<li><a href="https://blog.docker.com/2015/04/docker-release-1-6/">原文はここ</a></li>
+<li>コンテナやイメージにユーザが定義したメタデータを付与できるようになった
+
+<ul>
+<li>PRは<a href="https://github.com/docker/docker/pull/9882">https://github.com/docker/docker/pull/9882</a></li>
+<li>RancharOSでの使い方は<a href="http://rancher.com/docker-labels/">http://rancher.com/docker-labels/</a>を参照のこと。</li>
+</ul>
+</li>
+<li>Windows ClientのPreview版がリリースされた
+
+<ul>
+<li>MacのClient(boot2dockerのこと？)と同様の操作感らしい</li>
+<li>PRは<a href="https://github.com/docker/docker/pulls?q=is%3Apr+author%3Aahmetalpbalkan+is%3Aclosed">https://github.com/docker/docker/pulls?q=is%3Apr+author%3Aahmetalpbalkan+is%3Aclosed</a>を参照。</li>
+<li>詳細は<a href="http://azure.microsoft.com/blog/2015/04/16/docker-client-for-windows-is-now-available">Microsoftのブログ</a>にある。</li>
+</ul>
+</li>
+<li>Logging Driversの提供
+
+<ul>
+<li><code>docker run --log-driver</code>に続けて、<code>jdon-file</code>, <code>syslog</code>, <code>none</code>を選択できる。</li>
+<li>docker daemonのログ出力を止めてパフォーマンスの向上を図る<code>none</code>っていうのがアツいらしい。PRは<a href="https://github.com/docker/docker/pull/10568">こちら</a>と<a href="https://github.com/docker/docker/issues/7195">こちら</a>が関連してそう。</li>
+<li><code>syslog</code>のパッチは70行ぐらいで、将来的に他の実装を追加することがどれだけ簡単かを示す試金石になっている。PRは<a href="https://github.com/docker/docker/pull/11458">こちら</a>。</li>
+<li>ちなみに、さっそく<a href="https://github.com/docker/docker/pull/12540">Logger Driversにfluentdを入れようぜ！っていうProposal</a>がされている。</li>
+</ul>
+</li>
+<li>イメージの特定に<code>@digest</code>をつけることができるようになった
+
+<ul>
+<li>今まではpullしたイメージはImage IDが付与されていたが、これはimmutableじゃなかった。つまり、pullする度に変わってしまってて、イメージにパッチをあてたりアップデートを行なうときにはちょっと面倒だった。なぜなら、イメージに付与するtagではイメージの同一性を担保できないから。今回追加された<code>@digest</code>はimmutableであることが保障されるので、指定したDigestに指定したパッチを当てるなどの対応が可能になった。っていう理解であってるのだろうか…</li>
+<li>PRは<a href="https://github.com/docker/docker/pull/11109">https://github.com/docker/docker/pull/11109</a>。</li>
+<li>ドキュメントは[pull][<a href="http://docs.docker.com/reference/commandline/cli/#pull">http://docs.docker.com/reference/commandline/cli/#pull</a>]に記述がある。</li>
+<li>Digestをサポートしているのはv2 registryだけらしくて、DockerHubはサポートしているものの、一般的に使われるようになるにはまだ時間がかかりそう。</li>
+<li>ところでこのDigestはどうやって知ることができるのだろうか…</li>
+</ul>
+</li>
+<li><code>--cgroup-parent</code>オプションの提供
+
+<ul>
+<li>すでにカスタムnamespaceのサポートを行っていたが、v1.6からは任意のcgroupを親に指定することができるようになった。</li>
+<li>イマイチ有用性がわからない…。コンテナに使わせたいリソースを自分で調整したい時とか？</li>
+<li>PRは<a href="https://github.com/docker/docker/pull/11428">https://github.com/docker/docker/pull/11428</a>を参照。</li>
+</ul>
+</li>
+<li>ulimitsオプションの提供
+
+<ul>
+<li>runするコンテナに対してulimitを指定できるようになった。これは個人的には結構アツい。</li>
+<li>というのも、コンテナに対してulimitの上限をあげようとするにはホスト側を上げて、なおかつイメージにも同様の設定をしないとうまいこと調整出来なくて、けっこう苦労した思い出があるので。</li>
+<li>PRは<a href="https://github.com/docker/docker/pull/9437">https://github.com/docker/docker/pull/9437</a>。</li>
+</ul>
+</li>
+<li><code>commit --change</code>と<code>import --change</code>の提供
+
+<ul>
+<li>commitやimportのときにDockerfileに対してコマンドラインから変更を加えながら行なうことができる。</li>
+<li>イマイチうまく説明できないので、<a href="http://docs.docker.com/reference/commandline/cli/#commit">ドキュメント</a>を見たほうが良い。</li>
+<li>まだ試していないけど、&ndash;changeした内容はDockerfileに反映されるのかな？</li>
+<li>PRは<a href="https://github.com/docker/docker/pull/9123">こちら</a>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Series D Roundで$95M調達
+
+<ul>
+<li>Series Dっていうのが謎だったけど、4回目の投資をうけたってことなんかな？</li>
+<li>Docker的にはお金をGETできたんで、これからどんどんecosystemの充実とPlatformの推進をがんばりまっせーってことらしい。</li>
+</ul>
+</li>
+<li>DockerConがもうすぐ(News letter配信時点で67日後)
+
+<ul>
+<li>サンフランシスコで2015-06-22から2015-06-23にかけて行われるとのこと。</li>
+</ul>
+</li>
+<li>4/23でDockerが2周年
+
+<ul>
+<li>おめでとうございます。</li>
+</ul>
+</li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[AWS BeanstalkでDockerをカスタムAMIで使う。]]></title>
@@ -4988,454 +5090,6 @@ DB設計鉄則三箇条
 
 
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[MySQL Cluster Casual Talksに行ってきた]]></title>
-    <link href="http://sgykfjsm.github.io/blog/2013/09/27/mysql-cluster-casual-talk/"/>
-    <updated>2013-09-27T05:04:00+09:00</updated>
-    <id>http://sgykfjsm.github.io/blog/2013/09/27/mysql-cluster-casual-talk</id>
-    <content type="html"><![CDATA[<p>MySQL Casual Talkと勘違いしてたけど、とても勉強になった。
-以下はメモ。</p>
-
-<!--more-->
-
-
-<a name="MySQL.Cluster......................5.6........................5.6............"></a>
-<h3>MySQL Cluster大地に立つ！ 「5.6とは違うのだよ、5.6とは！」</h3>
-
-<p>@RKajiyamaさん</p>
-
-<p>MySQLクラスタとは</p>
-
-<ul>
-<li>MySQL Cluster
-
-<ul>
-<li>独立した製品</li>
-<li>MySQLのクラスタリングのことではない</li>
-<li>v7.3
-
-<ul>
-<li>MySQL Serverとは違う。共通点はあるけど。</li>
-</ul>
-</li>
-<li>MySQL Serverとの最大の違いは分散型DBであること。
-
-<ul>
-<li>共有ディスクはいらない</li>
-<li>メモリが豊富で性能の優れたディスクを持つサーバ</li>
-</ul>
-</li>
-<li>全ノードがアクティブ</li>
-<li>シェアードナッシング
-
-<ul>
-<li>共有ディスクは不要</li>
-</ul>
-</li>
-<li>全オード多重化</li>
-<li>ノードを増やすことで負荷分散と多重化を図ることが可能
-
-<ul>
-<li>多重化はRAID0と同じ</li>
-</ul>
-</li>
-<li>アプリケーションレイヤから見るとACID KVSとして利用可能
-
-<ul>
-<li>MySQL Serverを経由せずにアプリケーションから直接Clusterにアクセスできる。</li>
-<li>ACIDを維持しても20M updates sec</li>
-</ul>
-</li>
-<li>主要な利用企業はzynga, NEC, at&amp;t, paypal, ericsson, cisco, vodafon, US Navyなど
-
-<ul>
-<li>PayPalは基盤をすべてMySQLで構築しているらしい</li>
-</ul>
-</li>
-<li>NoSQLとしてのMySQL
-
-<ul>
-<li>アプリケーションからはNoSQLのように見えるが、内部的にはコンテナテーブルによりデータがテーブルや絡むとマッピングされて、内部的にはRDBとして動作する。</li>
-</ul>
-</li>
-<li>Apps -> JPA -> Cluster JPA -> Cluster J -> JNI -> NDB API -> データレイヤがJavaのアクセス経路
-
-<ul>
-<li>ただしJOINなどの場合は自動的にJDBCに振り分けがされる。</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-
-
-<a name="MySQL.Cluster.........................................."></a>
-<h3>MySQL Clusterをカジュアルに使ってみよう！</h3>
-
-<p>@nippondanjiさん</p>
-
-<p>MySQL Clusterとは！</p>
-
-<ul>
-<li>MySQLのストレージエンジンとして使える
-
-<ul>
-<li>create table hoge (&hellip;) engnie ndb;</li>
-</ul>
-</li>
-<li>トランザクション対応</li>
-<li>並列分散型のDB</li>
-<li>HA機能</li>
-<li>ハイパフォーマンス</li>
-<li>コミュニティ版はGPLv2</li>
-<li>アプリケーションとデータノードの間にSQLノードをぶら下げる
-
-<ul>
-<li>255ノードまでぶら下げることが可能</li>
-<li>データノードは最大48ノード</li>
-</ul>
-</li>
-<li>速いか？
-
-<ul>
-<li>１台の性能ではInnoDBのほうが↑
-
-<ul>
-<li>NDB APIは爆速</li>
-</ul>
-</li>
-<li>ノードを並べてナンボ
-
-<ul>
-<li>データノード
-
-<ul>
-<li>負荷分散</li>
-<li>データ量の増加</li>
-</ul>
-</li>
-<li>SQLノード
-
-<ul>
-<li>SQL解析の負荷分散</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>ちょっとしか参照しない処理ではノードを増やしても性能は上がらない</li>
-</ul>
-</li>
-<li>高可用性
-
-<ul>
-<li>SPOFの排除</li>
-<li>HA機能搭載</li>
-<li>遠隔地へのレプリケーション</li>
-</ul>
-</li>
-<li>コモディティなハードウェアでも搭載可能</li>
-<li>ノードは３種類
-
-<ul>
-<li>管理ノード</li>
-<li>データノード</li>
-<li>SQLノード/APIノード</li>
-</ul>
-</li>
-<li>シェアードナッシング
-
-<ul>
-<li>同じノードグループ内でミラーリングし合う</li>
-<li>ミラーの相手側が落ちたとしても相手のプライマリや自分の中にレプリケーションデータを作成する</li>
-</ul>
-</li>
-<li>インストールのデモ
-
-<ul>
-<li>確かにカジュアルに使えそうにみえるが…</li>
-</ul>
-</li>
-<li>パフォーマンス・チューニング
-
-<ul>
-<li>最新バージョンを使う！</li>
-<li>バージョンが上がるほど高速化している</li>
-<li>v6.2 → SQLノードからデータノードへの接続を複数可</li>
-<li>V6.3 → スレッドのバインディング、TC選択のロジックを改善</li>
-<li>v7.0 → データノードがマルチスレッド化、メッセージ通信の改善、データノードのオンライン拡張</li>
-<li>v7.1 → ndbinfo, BLOBへのアクセス高速化</li>
-<li>v7.2 → MySQL5.5、pushdown join、memcachedの追加</li>
-<li>v7.3 → MysQL5.6 外部キー、NDB APIのボトルネック解消、Semi Joinの最適化</li>
-</ul>
-</li>
-<li>データノード数は最大48台
-
-<ul>
-<li>主キーを使った検索は速い、スケールする</li>
-<li>範囲検索（スキャン）は苦手、スケールしない（しづらい）
-
-<ul>
-<li>フェッチするレコード数が少ないと遅い</li>
-<li>フェッチするレコード数が多いとデータノードで並列処理がされるので、思ったより速い</li>
-</ul>
-</li>
-<li>ユーザ定義パーティションによりスキャンを克服する
-
-<ul>
-<li>外部キーを設定するイメージ</li>
-<li>スキャンがスケール</li>
-<li>特定のデータノードに問い合わせれば良くなるためJOINもスケールする</li>
-</ul>
-</li>
-<li>レプリケーションによるスケールアウト
-
-<ul>
-<li>レプリケーション先をInnoDBとすることでスキャンもスケールさせることができる</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>MySQL Clusterはインメモリデータベースだけれども
-
-<ul>
-<li>データの永続性のために沢山のI/Oが発生する
-
-<ul>
-<li>REDOログ</li>
-<li>LCP(local check point)</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>ディスク型テーブル
-
-<ul>
-<li>ディスクの性能に大きく影響する</li>
-<li>ベンチマーク上はHDDを利用するとスケールしなくなる</li>
-<li>インメモリ型だとCPUが貧弱でもスケールする</li>
-</ul>
-</li>
-<li>BLOBは苦手
-
-<ul>
-<li>内部的にBLOB用のテーブルが作成される
-
-<ul>
-<li>JOINが増えるのと同じ</li>
-<li>varcharで頑張ってみる。でもなるべく使わないほうが良い</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>NoSQLインターフェース
-
-<ul>
-<li>SQLよりも数段速い
-
-<ul>
-<li>NDB API</li>
-<li>Cluster J</li>
-<li>memcached</li>
-<li>java用のバインディング</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>MySQL Clusterは以下の場合に向いている
-
-<ul>
-<li>更新をスケールしたい</li>
-<li>HA機能が欲しい</li>
-<li>超絶高速なJOINが欲しい</li>
-<li>得意、不得意を踏まえて適切なスケールアウト戦略を選ぶべし</li>
-<li>NoSQL APIが豊富</li>
-</ul>
-</li>
-<li>管理ノードはSPOF？
-
-<ul>
-<li>管理ノードは２つ用意することが出来ない</li>
-<li>管理ノードは落ちても動作には影響しない</li>
-<li>SQLノードが管理ノードの代わりを果たす？←ちゃんと聞き取れなかった&hellip;</li>
-</ul>
-</li>
-</ul>
-
-
-<a name="MySQL.Cluster.....................................................................Version.7.3..............................................................."></a>
-<h3>MySQL Clusterと丸４年の付き合いを振り返ってのよもやま話と、Version 7.3への期待（もっとユーザが増えるといいな～）</h3>
-
-<p>@tsakuradaさん</p>
-
-<iframe src="http://www.slideshare.net/slideshow/embed_code/26575773" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen> </iframe>
-
-
-<p> <div style="margin-bottom:5px"> <strong> <a href="https://www.slideshare.net/TakeshiSakurada/mcct20130926-tsakuradac" title="MCCT20130926 tsakuradac" target="_blank">MCCT20130926 tsakuradac</a> </strong> from <strong><a href="http://www.slideshare.net/TakeshiSakurada" target="_blank">Takeshi Sakurada</a></strong> </div></p>
-
-<p>なぜMySQL Clusterを使うか？</p>
-
-<ul>
-<li>インメモリ型であること
-
-<ul>
-<li>確かに速いがioDrive + InnoDBの組み合わせでかなり高い性能がでるので、優位性は揺らぎつつ有るかも？</li>
-</ul>
-</li>
-<li>コモディティなサーバでもOK
-
-<ul>
-<li>結局メモリが必要なので安価でOKとは限らない</li>
-<li>スケールアウトが難しいケースはやはりある</li>
-</ul>
-</li>
-<li>高可用性
-
-<ul>
-<li>今でも優位性を保っているが、ポイントを押さえておかないと無意味になる。</li>
-</ul>
-</li>
-</ul>
-
-
-<p>改めて主張したい優位点</p>
-
-<ul>
-<li>GPLv2</li>
-<li>MySQL(InnoDB)との互換性がv7.3以降でかなり向上した</li>
-</ul>
-
-
-<p>導入 - どう使うか</p>
-
-<ul>
-<li>SQLノード、MGMノード、データノードの構成が設計のキモ</li>
-<li>それぞれを単体にしても動くけど、SPOFを排除するためには各ノードを複数配置するのが普通</li>
-<li>データ量が増えた
-
-<ul>
-<li>データノードのメモリを増やすか、データノードの数を増やす</li>
-<li>スケールアウトを考えてデータノードを増やすようにしたほうが良い</li>
-</ul>
-</li>
-<li>アクセス増えた
-
-<ul>
-<li>SQLノードを増やす</li>
-</ul>
-</li>
-<li>高可用性を活かすためには
-
-<ul>
-<li>ハードウェア構成上SPOFが無い様に２重化する</li>
-<li>多重化障害にどこまで対応するかは悩ましい</li>
-<li>実行中のクエリをキャンセルされた時には、エラーをキャッチして後続処理を適切に作りこむ必要がある
-
-<ul>
-<li>条件に応じた適切な処理をアプリケーションに実装するのがキモ</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>InnoDBと同じ感覚でテーブル設計していいのか？
-
-<ul>
-<li>やってみるのが一番</li>
-<li>いろんなかたちでベンチマークを取ってみる</li>
-</ul>
-</li>
-<li>バッチ処理のことも考えてInnoDBと組み合わせたい
-
-<ul>
-<li>高潰瘍性のレベルがInnoDB側に引っ張られることになる</li>
-<li>NDBとInnoDBはトランザクションの分離レベルが違うので、その点でも注意する必要がある。</li>
-</ul>
-</li>
-</ul>
-
-
-<p>運用 - 何が起きるか</p>
-
-<p>ハマりどころ</p>
-
-<ul>
-<li>GCP Stop!
-
-<ul>
-<li>Global check point</li>
-<li>これが無いと永続性が保たれなくなる</li>
-<li>これが何らかの理由で停止されるとデータノードがシャットダウンされてしまう</li>
-<li>一度のコミットにかかる時間が一定のしきい値を超過した場合にGCP Stopが発生してしまう。</li>
-<li>アプリ側でコミットにかかる時間を把握してクエリを発行する必要がある</li>
-<li>最新バージョンではこの閾値を無制限に指定できるので、それで逃げる必要がある。ただ、本当に以上が発生した場合にはDBが固まってしまうので、リスクとのトレードオフ。</li>
-</ul>
-</li>
-<li>ローリングリスタート
-
-<ul>
-<li>NDBのパラメータ変更を反映するためにデータノードの再起動が必要になる場合がある。</li>
-<li>再起動中にミラーリング相手が落ちてしまうと障害が発生してしまう。</li>
-<li>データノードが保有するデータ量が多いと再起動に時間がかかるため、多重障害の発生確率が高まってしまう。</li>
-<li>オンラインでのローリングリスタートはやはり怖い</li>
-<li>リスタート中はDDL文が発行できないなどの仕様上の制約がある。</li>
-<li>最新のバージョンでは起動も拘束しているが、メモリ上にデータを展開してインデックスの構築に時間がかかる。</li>
-</ul>
-</li>
-<li>ボトルネックが見えづらい
-
-<ul>
-<li>vmstatやiostatでは見えないところでボトルネックが発生していることがある。</li>
-<li>Slowログに主キーでのselectが出てくることがある。</li>
-<li>見えづらいというよりかは、確認ポイントが多い
-
-<ul>
-<li>データノードは？</li>
-<li>SQLノードは？</li>
-<li>NWは？</li>
-<li>ndbinfoは？</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>データのライフサイクルをどうするか？
-
-<ul>
-<li>メモリの節約のためにDELETE文を発行する必要があるが、DELETE文はやはりオソい</li>
-<li>DELETE文で空いた領域はデータノードを再起動しない限りは同じテーブル内でしか再利用できない。DROP TABLEしちゃえば良いらしい。</li>
-</ul>
-</li>
-<li>バックアップは良いけどリストアが…
-
-<ul>
-<li>NDBには専用のオンライン・バックアップ機能がある</li>
-<li>100GBぐらいをリストアすると半日以上かかる</li>
-</ul>
-</li>
-</ul>
-
-
-<p>まとめ</p>
-
-<ul>
-<li>高可用性システムを構築する上でMysQL Clusterはいい選択</li>
-<li>ただ色々考慮するポイントがある</li>
-</ul>
-
-
-<p>MySQL Cluster Auto Installerのデモ</p>
-
-<ul>
-<li>GUIでセットアップする Auto Installerがv7.3が付属するようになった</li>
-<li>マルチホストサポート</li>
-</ul>
-
-
-<hr />
-
-<p>うっかり間違えて参加したけど、とても勉強になるいい回だった。発表者はプレゼンなれしてるなーって感じでわかりやすかったし。<br>
-MySQL Clusterは話を聞いてると確かにCasualに使えそうだけど、改めてCasualをアピールしてるってことは実際には結構運用が大変なんだろーなーということは想像がつく。けど、面白そうだしこうゆう製品を扱う経験はエンジニアなら一度はしたいところ。</p>
 ]]></content>
   </entry>
   

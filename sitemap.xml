@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://sgykfjsm.github.io/blog/2015/04/20/docker-weekly/</loc>
+    <lastmod>2015-04-20T23:28:28+09:00</lastmod>
+  </url>
+  <url>
     <loc>http://sgykfjsm.github.io/blog/2015/03/14/custom-docker-ami-on-beanstalk/</loc>
     <lastmod>2015-03-14T23:11:00+09:00</lastmod>
   </url>
@@ -298,5 +302,17 @@
   </url>
   <url>
     <loc>http://sgykfjsm.github.io/blog/categories/docker/</loc>
+  </url>
+  <url>
+    <loc>http://sgykfjsm.github.io/page2/</loc>
+  </url>
+  <url>
+    <loc>http://sgykfjsm.github.io/page3/</loc>
+  </url>
+  <url>
+    <loc>http://sgykfjsm.github.io/page4/</loc>
+  </url>
+  <url>
+    <loc>http://sgykfjsm.github.io/page5/</loc>
   </url>
 </urlset>

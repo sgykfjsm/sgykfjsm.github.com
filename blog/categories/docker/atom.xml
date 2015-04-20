@@ -4,7 +4,7 @@
   <title><![CDATA[Category: docker | sgykfjsm.github.com]]></title>
   <link href="http://sgykfjsm.github.io/blog/categories/docker/atom.xml" rel="self"/>
   <link href="http://sgykfjsm.github.io/"/>
-  <updated>2015-03-16T03:40:50+09:00</updated>
+  <updated>2015-04-21T00:45:40+09:00</updated>
   <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
@@ -12,6 +12,108 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[docker-weekly: April 16th, 2015]]></title>
+    <link href="http://sgykfjsm.github.io/blog/2015/04/20/docker-weekly/"/>
+    <updated>2015-04-20T23:28:28+09:00</updated>
+    <id>http://sgykfjsm.github.io/blog/2015/04/20/docker-weekly</id>
+    <content type="html"><![CDATA[<p>最近、あんまりDockerの話題についていけていないのでDocker weeklyについて、ざっと内容をまとめるようにしてみる。いつまで続くかはわからないけど…。今回は<a href="http://go.docker.com/webmail/44082/349477677/9bcd04c8938431b7e6ac4d9c2a270e1b">Docker Weekly: April 16th, 2015</a>について。</p>
+
+<!-- more -->
+
+
+<p>主な話題は以下の通り。誤訳もありえるので気になる部分はリンク先や原文にあたること。</p>
+
+<ul>
+<li>Docker Engineのv1.6のリリースと関連オーケストレーションツールのアップデート, Registry 2.0とWindows Client Preview
+
+<ul>
+<li><a href="https://blog.docker.com/2015/04/docker-release-1-6/">原文はここ</a></li>
+<li>コンテナやイメージにユーザが定義したメタデータを付与できるようになった
+
+<ul>
+<li>PRは<a href="https://github.com/docker/docker/pull/9882">https://github.com/docker/docker/pull/9882</a></li>
+<li>RancharOSでの使い方は<a href="http://rancher.com/docker-labels/">http://rancher.com/docker-labels/</a>を参照のこと。</li>
+</ul>
+</li>
+<li>Windows ClientのPreview版がリリースされた
+
+<ul>
+<li>MacのClient(boot2dockerのこと？)と同様の操作感らしい</li>
+<li>PRは<a href="https://github.com/docker/docker/pulls?q=is%3Apr+author%3Aahmetalpbalkan+is%3Aclosed">https://github.com/docker/docker/pulls?q=is%3Apr+author%3Aahmetalpbalkan+is%3Aclosed</a>を参照。</li>
+<li>詳細は<a href="http://azure.microsoft.com/blog/2015/04/16/docker-client-for-windows-is-now-available">Microsoftのブログ</a>にある。</li>
+</ul>
+</li>
+<li>Logging Driversの提供
+
+<ul>
+<li><code>docker run --log-driver</code>に続けて、<code>jdon-file</code>, <code>syslog</code>, <code>none</code>を選択できる。</li>
+<li>docker daemonのログ出力を止めてパフォーマンスの向上を図る<code>none</code>っていうのがアツいらしい。PRは<a href="https://github.com/docker/docker/pull/10568">こちら</a>と<a href="https://github.com/docker/docker/issues/7195">こちら</a>が関連してそう。</li>
+<li><code>syslog</code>のパッチは70行ぐらいで、将来的に他の実装を追加することがどれだけ簡単かを示す試金石になっている。PRは<a href="https://github.com/docker/docker/pull/11458">こちら</a>。</li>
+<li>ちなみに、さっそく<a href="https://github.com/docker/docker/pull/12540">Logger Driversにfluentdを入れようぜ！っていうProposal</a>がされている。</li>
+</ul>
+</li>
+<li>イメージの特定に<code>@digest</code>をつけることができるようになった
+
+<ul>
+<li>今まではpullしたイメージはImage IDが付与されていたが、これはimmutableじゃなかった。つまり、pullする度に変わってしまってて、イメージにパッチをあてたりアップデートを行なうときにはちょっと面倒だった。なぜなら、イメージに付与するtagではイメージの同一性を担保できないから。今回追加された<code>@digest</code>はimmutableであることが保障されるので、指定したDigestに指定したパッチを当てるなどの対応が可能になった。っていう理解であってるのだろうか…</li>
+<li>PRは<a href="https://github.com/docker/docker/pull/11109">https://github.com/docker/docker/pull/11109</a>。</li>
+<li>ドキュメントは[pull][<a href="http://docs.docker.com/reference/commandline/cli/#pull">http://docs.docker.com/reference/commandline/cli/#pull</a>]に記述がある。</li>
+<li>Digestをサポートしているのはv2 registryだけらしくて、DockerHubはサポートしているものの、一般的に使われるようになるにはまだ時間がかかりそう。</li>
+<li>ところでこのDigestはどうやって知ることができるのだろうか…</li>
+</ul>
+</li>
+<li><code>--cgroup-parent</code>オプションの提供
+
+<ul>
+<li>すでにカスタムnamespaceのサポートを行っていたが、v1.6からは任意のcgroupを親に指定することができるようになった。</li>
+<li>イマイチ有用性がわからない…。コンテナに使わせたいリソースを自分で調整したい時とか？</li>
+<li>PRは<a href="https://github.com/docker/docker/pull/11428">https://github.com/docker/docker/pull/11428</a>を参照。</li>
+</ul>
+</li>
+<li>ulimitsオプションの提供
+
+<ul>
+<li>runするコンテナに対してulimitを指定できるようになった。これは個人的には結構アツい。</li>
+<li>というのも、コンテナに対してulimitの上限をあげようとするにはホスト側を上げて、なおかつイメージにも同様の設定をしないとうまいこと調整出来なくて、けっこう苦労した思い出があるので。</li>
+<li>PRは<a href="https://github.com/docker/docker/pull/9437">https://github.com/docker/docker/pull/9437</a>。</li>
+</ul>
+</li>
+<li><code>commit --change</code>と<code>import --change</code>の提供
+
+<ul>
+<li>commitやimportのときにDockerfileに対してコマンドラインから変更を加えながら行なうことができる。</li>
+<li>イマイチうまく説明できないので、<a href="http://docs.docker.com/reference/commandline/cli/#commit">ドキュメント</a>を見たほうが良い。</li>
+<li>まだ試していないけど、&ndash;changeした内容はDockerfileに反映されるのかな？</li>
+<li>PRは<a href="https://github.com/docker/docker/pull/9123">こちら</a>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Series D Roundで$95M調達
+
+<ul>
+<li>Series Dっていうのが謎だったけど、4回目の投資をうけたってことなんかな？</li>
+<li>Docker的にはお金をGETできたんで、これからどんどんecosystemの充実とPlatformの推進をがんばりまっせーってことらしい。</li>
+</ul>
+</li>
+<li>DockerConがもうすぐ(News letter配信時点で67日後)
+
+<ul>
+<li>サンフランシスコで2015-06-22から2015-06-23にかけて行われるとのこと。</li>
+</ul>
+</li>
+<li>4/23でDockerが2周年
+
+<ul>
+<li>おめでとうございます。</li>
+</ul>
+</li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[AWS BeanstalkでDockerをカスタムAMIで使う。]]></title>
