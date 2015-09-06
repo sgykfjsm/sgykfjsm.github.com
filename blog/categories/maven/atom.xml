@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: maven | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.io/blog/categories/maven/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-09-06T20:03:31+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Sonatype Nexusの始め方]]></title>
+    <link href="http://sgykfjsm.github.io/blog/2015/04/26/start-sonatype-nexus/"/>
+    <updated>2015-04-26T22:00:40+09:00</updated>
+    <id>http://sgykfjsm.github.io/blog/2015/04/26/start-sonatype-nexus</id>
+    <content type="html"><![CDATA[<p>自前でmavenリポジトリを運用する場合に、リポジトリ運用を楽にしてくれるソフトウェアがいくつかある。
+今回はおそらく良く使われているであろう<a href="http://www.sonatype.org/nexus/">Sonatype Nexus</a>のOSS版でmavenリポジトリを始める方法をメモする。</p>
+
+<!-- more -->
+
+
+<a name="L......................................."></a>
+<h2>ソフトウェアのダウンロード</h2>
+
+<p><a href="http://www.sonatype.org/nexus/go/">http://www.sonatype.org/nexus/go/</a>からtarかzipをダウンロードする。</p>
+
+<p>wgetなどではダウンロードできないので、事前にダウンロードしておく必要がある。ダウンロードしたら、展開する。</p>
+
+<pre><code>$ tar zxf ./nexus-2.11.2-06-bundle.tar.gz
+$ sudo mv ./nexus-2.11.2-06 /usr/local/
+$ sudo ln -sv /usr/local/nexus-2.11.2-06 /usr/local/nexus
+`/usr/local/nexus' -&gt; `/usr/local/nexus-2.11.2-06'
+</code></pre>
+
+<a name="L......"></a>
+<h2>設定</h2>
+
+<p>nexusを始める前に<a href="https://books.sonatype.com/nexus-book/reference/install-sect-service.html">3.7. Configuring Nexus as a Service</a>に書かれている設定を行う。なぜなら、配置した場所でnexusを起動するにはroot権限が必要だが、rootでサービスを起動させるのは推奨されていないから。</p>
+
+<pre><code>$ sudo useradd nexus -s /bin/false
+$ id nexus
+uid=501(nexus) gid=501(nexus) groups=501(nexus)
+$ sudo cp /usr/local/nexus/bin/nexus /etc/init.d/nexus
+$ sudo chmod 755 /etc/init.d/nexus
+$ sudo chown root /etc/init.d/nexus
+$ ls -l /etc/init.d/nexus
+-rwxr-xr-x 1 root root 14601 2015-04-21 00:56 /etc/init.d/nexus```
+</code></pre>
+
+<p>PIDファイルとlockファイルの配置場所の準備と、nexus関連のディレクトリの所有者をnexusユーザに変える。</p>
+
+<pre><code>$ sudo mkdir -pv -m 755 nexus
+mkdir: created directory `nexus’
+$ sudo chown -R nexus:nexus /usr/local/nexus-2.11.2-06
+$ sudo mkdir -pv /var/lock/nexus
+mkdir: created directory `/var/lock/nexus'
+$ sudo chown nexus:nexus /var/lock/nexus
+</code></pre>
+
+<p>設定ファイルを修正する。</p>
+
+<pre><code>$ sudo cp -p /usr/local/nexus/conf/nexus.properties /usr/local/nexus/conf/nexus.properties.org
+$ sudo vim /usr/local/nexus/conf/nexus.properties
+$ diff /usr/local/nexus/conf/nexus.properties.org /usr/local/nexus/conf/nexus.properties
+18a19
+&gt; bundleBasedir="/usr/local/nexus”
+25c26
+&lt; nexus-work=${bundleBasedir}/../sonatype-work/nexus
+---
+&gt; nexus-work=${bundleBasedir}/sonatype-work/nexus
+</code></pre>
+
+<p>起動スクリプトを修正する。</p>
+
+<pre><code>$ sudo vim /etc/init.d/nexus
+
+$ diff /usr/local/nexus/bin/nexus /etc/init.d/nexus
+11a12,15
+&gt; JAVA_HOME=/usr/lib/jvm/java-1.8.0
+&gt; PATH="${JAVA_HOME}/bin:${PATH}"
+&gt; export JAVA_HOME
+&gt; export PATH
+14c18
+&lt; NEXUS_HOME=".."
+---
+&gt; NEXUS_HOME="/usr/local/nexus"
+23c27
+&lt; #RUN_AS_USER=
+---
+&gt; RUN_AS_USER="nexus"
+34c38
+&lt; #PIDDIR="."
+---
+&gt; PIDDIR="/var/run/nexus"
+212c216
+&lt; LOCKDIR="/var/lock/subsys"
+---
+&gt; LOCKDIR="/var/lock/nexus"
+552c556
+&lt; exit 0
+\ No newline at end of file
+---
+&gt; exit 0
+</code></pre>
+
+<p>serviceに登録する。</p>
+
+<pre><code>$ cd /etc/init.d/
+$ sudo chkconfig --add nexus
+$ sudo chkconfig --levels 345 nexus on
+$ sudo chkconfig --list nexus
+nexus 0:off 1:off 2:on 3:on 4:on 5:on 6:off
+</code></pre>
+
+<p>起動する。</p>
+
+<pre><code>$ sudo service nexus start
+Starting Nexus OSS...
+Started Nexus OSS.
+</code></pre>
+
+<p>起動が正常にできることを確認できたら、ログインを試す。インストール直後に管理者権限でログインするには<code>admin/admin123</code>でログインすれば良い。ログイン後は以下の点を確認し、必要に応じて変更する。</p>
+
+<ul>
+<li>AdministratorのパスワードやE-mail Addressを変更する。</li>
+<li>SMTPの設定を変更する。</li>
+<li>デフォルトのProxyの設定を変更する。</li>
+<li>Maven CentralやApache Snapshot、Codehause Snapshotなどの大手リポジトリが保持するカタログINDEXをローカルにダウンロード出来るようにする。</li>
+<li>deployユーザ</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

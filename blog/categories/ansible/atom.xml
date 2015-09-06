@@ -4,7 +4,7 @@
   <title><![CDATA[Category: ansible | sgykfjsm.github.com]]></title>
   <link href="http://sgykfjsm.github.io/blog/categories/ansible/atom.xml" rel="self"/>
   <link href="http://sgykfjsm.github.io/"/>
-  <updated>2015-04-22T06:30:46+09:00</updated>
+  <updated>2015-09-06T20:03:31+09:00</updated>
   <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
@@ -172,9 +172,9 @@ exit
 
 <p>あと、他に何か書こうかと思ったけど、忘れたので、とりあえずMySQL56をインストールするためのplaybookを載っけてお茶を濁すことにする。</p>
 
-<pre><code class="yaml">---
+<pre><code>---
 - name: Install Official MySQL Repository
-  yum: name=""
+  yum: name={ { item | quote }} # 実際に使う時はスペースを削除すること
   with_items:
     - http://dev.mysql.com/get/mysql-community-release-el6-5.noarch.rpm
   sudo: yes
@@ -183,7 +183,7 @@ exit
     - mysql
 
 - name: Disable Official MySQL Repository
-  replace: dest="/etc/yum.repos.d/.repo" regexp="^enabled *= *1$" backup=yes replace='enabled=0'
+  replace: dest="/etc/yum.repos.d/{ { item }}.repo" regexp="^enabled *= *1$" backup=yes replace='enabled=0' # 実際に使う時はスペースを削除すること
   with_items:
     - mysql-community
     - mysql-community-source
@@ -193,7 +193,7 @@ exit
     - mysql
 
 - name: Install MySQL56
-  yum: name="" state=latest enablerepo=mysql56-community,remi
+  yum: name={ { item | quote }} state=latest enablerepo=mysql56-community,remi # 実際に使う時はスペースを削除すること
   with_items:
     - php56-php-mysqlnd # remi
     - mysql-community-client
@@ -202,7 +202,6 @@ exit
     - mysql-community-libs
     - mysql-community-server
     - MySQL-python # for remote-host
-
   sudo: yes
   tags:
     - mysql
@@ -214,7 +213,7 @@ exit
     - mysql
 
 - name: Execute mysql_secure_installation
-  script: secure_install.sh ""
+  script: secure_install.sh { { mysql_root_password.stdout | quote }} # 実際に使う時はスペースを削除すること
   sudo: yes
   register: result
   tags:
@@ -248,6 +247,8 @@ exit
   tags:
     - mysql
 </code></pre>
+
+<p>あんまりかっこよくないけど、Jekyllyがcodeブロック内の波括弧を解釈しようとして変な風になるので、スペースを入れてごまかしている。</p>
 ]]></content>
   </entry>
   

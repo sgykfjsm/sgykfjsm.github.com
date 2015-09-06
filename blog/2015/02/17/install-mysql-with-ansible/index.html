@@ -401,86 +401,84 @@
 <span class='line-number'>72</span>
 <span class='line-number'>73</span>
 <span class='line-number'>74</span>
-<span class='line-number'>75</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="nn">---</span>
-</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Install Official MySQL Repository</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">yum</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">name=&quot;&quot;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">with_items</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">http://dev.mysql.com/get/mysql-community-release-el6-5.noarch.rpm</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">yum</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>---
+</span><span class='line'>- name: Install Official MySQL Repository
+</span><span class='line'>  yum: <span class="nv">name</span><span class="o">={</span> <span class="o">{</span> item <span class="p">|</span> quote <span class="o">}}</span> <span class="c"># 実際に使う時はスペースを削除すること</span>
+</span><span class='line'>  with_items:
+</span><span class='line'>    - http://dev.mysql.com/get/mysql-community-release-el6-5.noarch.rpm
+</span><span class='line'>  sudo: yes
+</span><span class='line'>  tags:
+</span><span class='line'>    - yum
+</span><span class='line'>    - mysql
 </span><span class='line'>
-</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Disable Official MySQL Repository</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">replace</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">dest=&quot;/etc/yum.repos.d/.repo&quot; regexp=&quot;^enabled *= *1$&quot; backup=yes replace=&#39;enabled=0&#39;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">with_items</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community-source</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">yum</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</span><span class='line'>- name: Disable Official MySQL Repository
+</span><span class='line'>  replace: <span class="nv">dest</span><span class="o">=</span><span class="s2">&quot;/etc/yum.repos.d/{ { item }}.repo&quot;</span> <span class="nv">regexp</span><span class="o">=</span><span class="s2">&quot;^enabled *= *1$&quot;</span> <span class="nv">backup</span><span class="o">=</span>yes <span class="nv">replace</span><span class="o">=</span><span class="s1">&#39;enabled=0&#39;</span> <span class="c"># 実際に使う時はスペースを削除すること</span>
+</span><span class='line'>  with_items:
+</span><span class='line'>    - mysql-community
+</span><span class='line'>    - mysql-community-source
+</span><span class='line'>  sudo: yes
+</span><span class='line'>  tags:
+</span><span class='line'>    - yum
+</span><span class='line'>    - mysql
 </span><span class='line'>
-</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Install MySQL56</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">yum</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">name=&quot;&quot; state=latest enablerepo=mysql56-community,remi</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">with_items</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">php56-php-mysqlnd</span> <span class="c1"># remi</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community-client</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community-common</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community-devel</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community-libs</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community-server</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">MySQL-python</span> <span class="c1"># for remote-host</span>
+</span><span class='line'>- name: Install MySQL56
+</span><span class='line'>  yum: <span class="nv">name</span><span class="o">={</span> <span class="o">{</span> item <span class="p">|</span> quote <span class="o">}}</span> <span class="nv">state</span><span class="o">=</span>latest <span class="nv">enablerepo</span><span class="o">=</span>mysql56-community,remi <span class="c"># 実際に使う時はスペースを削除すること</span>
+</span><span class='line'>  with_items:
+</span><span class='line'>    - php56-php-mysqlnd <span class="c"># remi</span>
+</span><span class='line'>    - mysql-community-client
+</span><span class='line'>    - mysql-community-common
+</span><span class='line'>    - mysql-community-devel
+</span><span class='line'>    - mysql-community-libs
+</span><span class='line'>    - mysql-community-server
+</span><span class='line'>    - MySQL-python <span class="c"># for remote-host</span>
+</span><span class='line'>  sudo: yes
+</span><span class='line'>  tags:
+</span><span class='line'>    - mysql
 </span><span class='line'>
-</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</span><span class='line'>- name: Create root user password
+</span><span class='line'>  shell: cat /dev/urandom <span class="p">|</span> <span class="nv">LC_CTYPE</span><span class="o">=</span>C tr -dc <span class="s1">&#39;[:alnum:]&#39;</span> <span class="p">|</span> head -c 16
+</span><span class='line'>  register: mysql_root_password
+</span><span class='line'>  tags:
+</span><span class='line'>    - mysql
 </span><span class='line'>
-</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Create root user password</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">shell</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">cat /dev/urandom | LC_CTYPE=C tr -dc &#39;[:alnum:]&#39; | head -c 16</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">register</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mysql_root_password</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</span><span class='line'>- name: Execute mysql_secure_installation
+</span><span class='line'>  script: secure_install.sh <span class="o">{</span> <span class="o">{</span> mysql_root_password.stdout <span class="p">|</span> quote <span class="o">}}</span> <span class="c"># 実際に使う時はスペースを削除すること</span>
+</span><span class='line'>  sudo: yes
+</span><span class='line'>  register: result
+</span><span class='line'>  tags:
+</span><span class='line'>    - mysql
 </span><span class='line'>
-</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Execute mysql_secure_installation</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">script</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">secure_install.sh &quot;&quot;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">register</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">result</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
-</span><span class='line'>
-</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Add Line for include append config</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">lineinfile</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
-</span><span class='line'>    <span class="no">dest=/etc/my.cnf</span>
-</span><span class='line'>    <span class="no">line=&quot;!includedir /etc/my.cnf.d&quot;</span>
-</span><span class='line'>    <span class="no">backup=yes</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">register</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">result</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</span><span class='line'>- name: Add Line <span class="k">for</span> include append config
+</span><span class='line'>  lineinfile: &gt;
+</span><span class='line'>    <span class="nv">dest</span><span class="o">=</span>/etc/my.cnf
+</span><span class='line'>    <span class="nv">line</span><span class="o">=</span><span class="s2">&quot;!includedir /etc/my.cnf.d&quot;</span>
+</span><span class='line'>    <span class="nv">backup</span><span class="o">=</span>yes
+</span><span class='line'>  sudo: yes
+</span><span class='line'>  register: result
+</span><span class='line'>  tags:
+</span><span class='line'>    - mysql
 </span><span class='line'>
 </span><span class='line'>
-</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Copy my.cnf To /etc/my.cnf.d/login.cnf</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">template</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
-</span><span class='line'>    <span class="no">src=my.cnf.j2</span>
-</span><span class='line'>    <span class="no">dest=/etc/my.cnf.d/login.cnf</span>
-</span><span class='line'>    <span class="no">owner=root</span>
-</span><span class='line'>    <span class="no">group=root</span>
-</span><span class='line'>    <span class="no">mode=0600</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</span><span class='line'>- name: Copy my.cnf To /etc/my.cnf.d/login.cnf
+</span><span class='line'>  template: &gt;
+</span><span class='line'>    <span class="nv">src</span><span class="o">=</span>my.cnf.j2
+</span><span class='line'>    <span class="nv">dest</span><span class="o">=</span>/etc/my.cnf.d/login.cnf
+</span><span class='line'>    <span class="nv">owner</span><span class="o">=</span>root
+</span><span class='line'>    <span class="nv">group</span><span class="o">=</span>root
+</span><span class='line'>    <span class="nv">mode</span><span class="o">=</span>0600
+</span><span class='line'>  sudo: yes
+</span><span class='line'>  tags:
+</span><span class='line'>    - mysql
 </span><span class='line'>
-</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Add mysqld to StartUps on boot And Be Running</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">enabled=yes name=mysqld state=running</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</span><span class='line'>- name: Add mysqld to StartUps on boot And Be Running
+</span><span class='line'>  service: <span class="nv">enabled</span><span class="o">=</span>yes <span class="nv">name</span><span class="o">=</span>mysqld <span class="nv">state</span><span class="o">=</span>running
+</span><span class='line'>  sudo: yes
+</span><span class='line'>  tags:
+</span><span class='line'>    - mysql
 </span></code></pre></td></tr></table></div></figure>
 
 
-
+<p>あんまりかっこよくないけど、Jekyllyがcodeブロック内の波括弧を解釈しようとして変な風になるので、スペースを入れてごまかしている。</p>
 </div>
 
 

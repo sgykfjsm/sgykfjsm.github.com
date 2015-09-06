@@ -4,7 +4,7 @@
   <title><![CDATA[sgykfjsm.github.com]]></title>
   <link href="http://sgykfjsm.github.io/atom.xml" rel="self"/>
   <link href="http://sgykfjsm.github.io/"/>
-  <updated>2015-04-22T06:30:46+09:00</updated>
+  <updated>2015-09-06T20:03:31+09:00</updated>
   <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
@@ -12,6 +12,195 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Sonatype Nexusの始め方]]></title>
+    <link href="http://sgykfjsm.github.io/blog/2015/04/26/start-sonatype-nexus/"/>
+    <updated>2015-04-26T22:00:40+09:00</updated>
+    <id>http://sgykfjsm.github.io/blog/2015/04/26/start-sonatype-nexus</id>
+    <content type="html"><![CDATA[<p>自前でmavenリポジトリを運用する場合に、リポジトリ運用を楽にしてくれるソフトウェアがいくつかある。
+今回はおそらく良く使われているであろう<a href="http://www.sonatype.org/nexus/">Sonatype Nexus</a>のOSS版でmavenリポジトリを始める方法をメモする。</p>
+
+<!-- more -->
+
+
+<a name="L......................................."></a>
+<h2>ソフトウェアのダウンロード</h2>
+
+<p><a href="http://www.sonatype.org/nexus/go/">http://www.sonatype.org/nexus/go/</a>からtarかzipをダウンロードする。</p>
+
+<p>wgetなどではダウンロードできないので、事前にダウンロードしておく必要がある。ダウンロードしたら、展開する。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ tar zxf ./nexus-2.11.2-06-bundle.tar.gz
+</span><span class='line'>$ sudo mv ./nexus-2.11.2-06 /usr/local/
+</span><span class='line'>$ sudo ln -sv /usr/local/nexus-2.11.2-06 /usr/local/nexus
+</span><span class='line'>`/usr/local/nexus' -&gt; `/usr/local/nexus-2.11.2-06'</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="L......"></a>
+<h2>設定</h2>
+
+<p>nexusを始める前に<a href="https://books.sonatype.com/nexus-book/reference/install-sect-service.html">3.7. Configuring Nexus as a Service</a>に書かれている設定を行う。なぜなら、配置した場所でnexusを起動するにはroot権限が必要だが、rootでサービスを起動させるのは推奨されていないから。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ sudo useradd nexus -s /bin/false
+</span><span class='line'>$ id nexus
+</span><span class='line'>uid=501(nexus) gid=501(nexus) groups=501(nexus)
+</span><span class='line'>$ sudo cp /usr/local/nexus/bin/nexus /etc/init.d/nexus
+</span><span class='line'>$ sudo chmod 755 /etc/init.d/nexus
+</span><span class='line'>$ sudo chown root /etc/init.d/nexus
+</span><span class='line'>$ ls -l /etc/init.d/nexus
+</span><span class='line'>-rwxr-xr-x 1 root root 14601 2015-04-21 00:56 /etc/init.d/nexus```</span></code></pre></td></tr></table></div></figure>
+
+
+<p>PIDファイルとlockファイルの配置場所の準備と、nexus関連のディレクトリの所有者をnexusユーザに変える。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ sudo mkdir -pv -m 755 nexus
+</span><span class='line'>mkdir: created directory `nexus’
+</span><span class='line'>$ sudo chown -R nexus:nexus /usr/local/nexus-2.11.2-06
+</span><span class='line'>$ sudo mkdir -pv /var/lock/nexus
+</span><span class='line'>mkdir: created directory `/var/lock/nexus'
+</span><span class='line'>$ sudo chown nexus:nexus /var/lock/nexus</span></code></pre></td></tr></table></div></figure>
+
+
+<p>設定ファイルを修正する。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ sudo cp -p /usr/local/nexus/conf/nexus.properties /usr/local/nexus/conf/nexus.properties.org
+</span><span class='line'>$ sudo vim /usr/local/nexus/conf/nexus.properties
+</span><span class='line'>$ diff /usr/local/nexus/conf/nexus.properties.org /usr/local/nexus/conf/nexus.properties
+</span><span class='line'>18a19
+</span><span class='line'>&gt; bundleBasedir="/usr/local/nexus”
+</span><span class='line'>25c26
+</span><span class='line'>&lt; nexus-work=${bundleBasedir}/../sonatype-work/nexus
+</span><span class='line'>---
+</span><span class='line'>&gt; nexus-work=${bundleBasedir}/sonatype-work/nexus</span></code></pre></td></tr></table></div></figure>
+
+
+<p>起動スクリプトを修正する。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ sudo vim /etc/init.d/nexus
+</span><span class='line'>
+</span><span class='line'>$ diff /usr/local/nexus/bin/nexus /etc/init.d/nexus
+</span><span class='line'>11a12,15
+</span><span class='line'>&gt; JAVA_HOME=/usr/lib/jvm/java-1.8.0
+</span><span class='line'>&gt; PATH="${JAVA_HOME}/bin:${PATH}"
+</span><span class='line'>&gt; export JAVA_HOME
+</span><span class='line'>&gt; export PATH
+</span><span class='line'>14c18
+</span><span class='line'>&lt; NEXUS_HOME=".."
+</span><span class='line'>---
+</span><span class='line'>&gt; NEXUS_HOME="/usr/local/nexus"
+</span><span class='line'>23c27
+</span><span class='line'>&lt; #RUN_AS_USER=
+</span><span class='line'>---
+</span><span class='line'>&gt; RUN_AS_USER="nexus"
+</span><span class='line'>34c38
+</span><span class='line'>&lt; #PIDDIR="."
+</span><span class='line'>---
+</span><span class='line'>&gt; PIDDIR="/var/run/nexus"
+</span><span class='line'>212c216
+</span><span class='line'>&lt; LOCKDIR="/var/lock/subsys"
+</span><span class='line'>---
+</span><span class='line'>&gt; LOCKDIR="/var/lock/nexus"
+</span><span class='line'>552c556
+</span><span class='line'>&lt; exit 0
+</span><span class='line'>\ No newline at end of file
+</span><span class='line'>---
+</span><span class='line'>&gt; exit 0</span></code></pre></td></tr></table></div></figure>
+
+
+<p>serviceに登録する。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ cd /etc/init.d/
+</span><span class='line'>$ sudo chkconfig --add nexus
+</span><span class='line'>$ sudo chkconfig --levels 345 nexus on
+</span><span class='line'>$ sudo chkconfig --list nexus
+</span><span class='line'>nexus 0:off 1:off 2:on 3:on 4:on 5:on 6:off</span></code></pre></td></tr></table></div></figure>
+
+
+<p>起動する。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ sudo service nexus start
+</span><span class='line'>Starting Nexus OSS...
+</span><span class='line'>Started Nexus OSS.
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>起動が正常にできることを確認できたら、ログインを試す。インストール直後に管理者権限でログインするには<code>admin/admin123</code>でログインすれば良い。ログイン後は以下の点を確認し、必要に応じて変更する。</p>
+
+<ul>
+<li>AdministratorのパスワードやE-mail Addressを変更する。</li>
+<li>SMTPの設定を変更する。</li>
+<li>デフォルトのProxyの設定を変更する。</li>
+<li>Maven CentralやApache Snapshot、Codehause Snapshotなどの大手リポジトリが保持するカタログINDEXをローカルにダウンロード出来るようにする。</li>
+<li>deployユーザ</li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Pythonでコーディングするときの小ネタ]]></title>
@@ -1377,86 +1566,84 @@
 <span class='line-number'>72</span>
 <span class='line-number'>73</span>
 <span class='line-number'>74</span>
-<span class='line-number'>75</span>
-</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="nn">---</span>
-</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Install Official MySQL Repository</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">yum</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">name=&quot;&quot;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">with_items</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">http://dev.mysql.com/get/mysql-community-release-el6-5.noarch.rpm</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">yum</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>---
+</span><span class='line'>- name: Install Official MySQL Repository
+</span><span class='line'>  yum: <span class="nv">name</span><span class="o">={</span> <span class="o">{</span> item <span class="p">|</span> quote <span class="o">}}</span> <span class="c"># 実際に使う時はスペースを削除すること</span>
+</span><span class='line'>  with_items:
+</span><span class='line'>    - http://dev.mysql.com/get/mysql-community-release-el6-5.noarch.rpm
+</span><span class='line'>  sudo: yes
+</span><span class='line'>  tags:
+</span><span class='line'>    - yum
+</span><span class='line'>    - mysql
 </span><span class='line'>
-</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Disable Official MySQL Repository</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">replace</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">dest=&quot;/etc/yum.repos.d/.repo&quot; regexp=&quot;^enabled *= *1$&quot; backup=yes replace=&#39;enabled=0&#39;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">with_items</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community-source</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">yum</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</span><span class='line'>- name: Disable Official MySQL Repository
+</span><span class='line'>  replace: <span class="nv">dest</span><span class="o">=</span><span class="s2">&quot;/etc/yum.repos.d/{ { item }}.repo&quot;</span> <span class="nv">regexp</span><span class="o">=</span><span class="s2">&quot;^enabled *= *1$&quot;</span> <span class="nv">backup</span><span class="o">=</span>yes <span class="nv">replace</span><span class="o">=</span><span class="s1">&#39;enabled=0&#39;</span> <span class="c"># 実際に使う時はスペースを削除すること</span>
+</span><span class='line'>  with_items:
+</span><span class='line'>    - mysql-community
+</span><span class='line'>    - mysql-community-source
+</span><span class='line'>  sudo: yes
+</span><span class='line'>  tags:
+</span><span class='line'>    - yum
+</span><span class='line'>    - mysql
 </span><span class='line'>
-</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Install MySQL56</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">yum</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">name=&quot;&quot; state=latest enablerepo=mysql56-community,remi</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">with_items</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">php56-php-mysqlnd</span> <span class="c1"># remi</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community-client</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community-common</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community-devel</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community-libs</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql-community-server</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">MySQL-python</span> <span class="c1"># for remote-host</span>
+</span><span class='line'>- name: Install MySQL56
+</span><span class='line'>  yum: <span class="nv">name</span><span class="o">={</span> <span class="o">{</span> item <span class="p">|</span> quote <span class="o">}}</span> <span class="nv">state</span><span class="o">=</span>latest <span class="nv">enablerepo</span><span class="o">=</span>mysql56-community,remi <span class="c"># 実際に使う時はスペースを削除すること</span>
+</span><span class='line'>  with_items:
+</span><span class='line'>    - php56-php-mysqlnd <span class="c"># remi</span>
+</span><span class='line'>    - mysql-community-client
+</span><span class='line'>    - mysql-community-common
+</span><span class='line'>    - mysql-community-devel
+</span><span class='line'>    - mysql-community-libs
+</span><span class='line'>    - mysql-community-server
+</span><span class='line'>    - MySQL-python <span class="c"># for remote-host</span>
+</span><span class='line'>  sudo: yes
+</span><span class='line'>  tags:
+</span><span class='line'>    - mysql
 </span><span class='line'>
-</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</span><span class='line'>- name: Create root user password
+</span><span class='line'>  shell: cat /dev/urandom <span class="p">|</span> <span class="nv">LC_CTYPE</span><span class="o">=</span>C tr -dc <span class="s1">&#39;[:alnum:]&#39;</span> <span class="p">|</span> head -c 16
+</span><span class='line'>  register: mysql_root_password
+</span><span class='line'>  tags:
+</span><span class='line'>    - mysql
 </span><span class='line'>
-</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Create root user password</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">shell</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">cat /dev/urandom | LC_CTYPE=C tr -dc &#39;[:alnum:]&#39; | head -c 16</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">register</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mysql_root_password</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</span><span class='line'>- name: Execute mysql_secure_installation
+</span><span class='line'>  script: secure_install.sh <span class="o">{</span> <span class="o">{</span> mysql_root_password.stdout <span class="p">|</span> quote <span class="o">}}</span> <span class="c"># 実際に使う時はスペースを削除すること</span>
+</span><span class='line'>  sudo: yes
+</span><span class='line'>  register: result
+</span><span class='line'>  tags:
+</span><span class='line'>    - mysql
 </span><span class='line'>
-</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Execute mysql_secure_installation</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">script</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">secure_install.sh &quot;&quot;</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">register</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">result</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
-</span><span class='line'>
-</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Add Line for include append config</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">lineinfile</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
-</span><span class='line'>    <span class="no">dest=/etc/my.cnf</span>
-</span><span class='line'>    <span class="no">line=&quot;!includedir /etc/my.cnf.d&quot;</span>
-</span><span class='line'>    <span class="no">backup=yes</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">register</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">result</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</span><span class='line'>- name: Add Line <span class="k">for</span> include append config
+</span><span class='line'>  lineinfile: &gt;
+</span><span class='line'>    <span class="nv">dest</span><span class="o">=</span>/etc/my.cnf
+</span><span class='line'>    <span class="nv">line</span><span class="o">=</span><span class="s2">&quot;!includedir /etc/my.cnf.d&quot;</span>
+</span><span class='line'>    <span class="nv">backup</span><span class="o">=</span>yes
+</span><span class='line'>  sudo: yes
+</span><span class='line'>  register: result
+</span><span class='line'>  tags:
+</span><span class='line'>    - mysql
 </span><span class='line'>
 </span><span class='line'>
-</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Copy my.cnf To /etc/my.cnf.d/login.cnf</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">template</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
-</span><span class='line'>    <span class="no">src=my.cnf.j2</span>
-</span><span class='line'>    <span class="no">dest=/etc/my.cnf.d/login.cnf</span>
-</span><span class='line'>    <span class="no">owner=root</span>
-</span><span class='line'>    <span class="no">group=root</span>
-</span><span class='line'>    <span class="no">mode=0600</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</span><span class='line'>- name: Copy my.cnf To /etc/my.cnf.d/login.cnf
+</span><span class='line'>  template: &gt;
+</span><span class='line'>    <span class="nv">src</span><span class="o">=</span>my.cnf.j2
+</span><span class='line'>    <span class="nv">dest</span><span class="o">=</span>/etc/my.cnf.d/login.cnf
+</span><span class='line'>    <span class="nv">owner</span><span class="o">=</span>root
+</span><span class='line'>    <span class="nv">group</span><span class="o">=</span>root
+</span><span class='line'>    <span class="nv">mode</span><span class="o">=</span>0600
+</span><span class='line'>  sudo: yes
+</span><span class='line'>  tags:
+</span><span class='line'>    - mysql
 </span><span class='line'>
-</span><span class='line'><span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Add mysqld to StartUps on boot And Be Running</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">service</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">enabled=yes name=mysqld state=running</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">yes</span>
-</span><span class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span>
-</span><span class='line'>    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">mysql</span>
+</span><span class='line'>- name: Add mysqld to StartUps on boot And Be Running
+</span><span class='line'>  service: <span class="nv">enabled</span><span class="o">=</span>yes <span class="nv">name</span><span class="o">=</span>mysqld <span class="nv">state</span><span class="o">=</span>running
+</span><span class='line'>  sudo: yes
+</span><span class='line'>  tags:
+</span><span class='line'>    - mysql
 </span></code></pre></td></tr></table></div></figure>
 
 
-
+<p>あんまりかっこよくないけど、Jekyllyがcodeブロック内の波括弧を解釈しようとして変な風になるので、スペースを入れてごまかしている。</p>
 ]]></content>
   </entry>
   
@@ -4454,202 +4641,6 @@ DDDで書かれたコードならば、それを読めばドメインの概念�
 <p>コストがかかる。複雑でない問題には使わない。
 Cocを前提にするF/Wとは相性が悪い。F/Wと喧嘩しない方法を選ぶべき。
 OOPよりデータと手続きのほうが高速とはいえ、DDDはオブジェクト指向を使う。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[mysql_study]]></title>
-    <link href="http://sgykfjsm.github.io/blog/2013/11/28/mysql-study/"/>
-    <updated>2013-11-28T13:56:00+09:00</updated>
-    <id>http://sgykfjsm.github.io/blog/2013/11/28/mysql-study</id>
-    <content type="html"><![CDATA[<a name="L...................................."></a>
-<h1>データベース設計徹底指南</h1>
-
-<ul>
-<li>正しいデータ型を使うのが大事。</li>
-<li>テーブルが演算の単位となるので、ここの設計が非常に重要</li>
-<li>テーブルを正しく定義しないとまともなクエリがかけない</li>
-<li>データベースはリファクタリングが難しい
-
-<ul>
-<li>DDLに時間がかかる</li>
-<li>appへの影響範囲が大きい</li>
-<li>そもそものリファクタリングの方法がわからない</li>
-</ul>
-</li>
-<li>負債が溜まりすぎて首がまわらない</li>
-<li>なぜ技術的負債が溜まるか
-
-<ul>
-<li>データモデルに対する無理解</li>
-<li>リレーショナルモデルを知らなくても便利に使える</li>
-</ul>
-</li>
-<li>技術的負債が蓄積すると開発が難しくなる
-
-<ul>
-<li>テストが難しくなる</li>
-</ul>
-</li>
-<li><p>負債を溜めないようにするためにデータモデルをちゃんと理解する</p>
-
-<ul>
-<li>つまりリレーショナルモデルを理解する</li>
-</ul>
-</li>
-<li><p>リレーションとは</p>
-
-<ul>
-<li>ある物事に対する事実の集合</li>
-<li>テーブルはリレーションに近似する</li>
-<li>集合は
-
-<ul>
-<li>重複が無い</li>
-<li>NULLが無い</li>
-<li>要素間に順序が無い</li>
-</ul>
-</li>
-<li>リレーションは以下を持つ
-
-<ul>
-<li>見出し</li>
-<li>本体</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>SQLと対応する概念だが、性質は異なる</li>
-<li>リレーションはn次元空間にプロットされた点のようなものの集合</li>
-<li>データ型とはドメイン
-
-<ul>
-<li>属性が取りうる値の有限集合</li>
-<li>コンピュータで表現できるものなら要素は何でもOK</li>
-<li>NULLとポインタはNG</li>
-</ul>
-</li>
-</ul>
-
-
-<p>リレーションの演算
-- 演算の入力も結果もリレーション
-- 集合操作に基づく演算
-- 制限（要素を絞り込む）、射影（属性を絞り込む）、属性名変更（RENAME）、拡張（EXTEND、複数の要素を組み合わせて新しい要素を作り出す）、和(union)、積(intersect)、差(difference)、直積(product)、結合(join)
-- productとintersectはいずれもjoin
-  - 特殊なケース
-  - リレーショナルモデルにおいてはinnser joinがプリミティブ
-- Outer Joinはプリミティブではない
-  - UNION相当</p>
-
-<p>SQLと集合の演算
-- select / 射影
-- from / 直積
-- where / 制限</p>
-
-<p>リレーションの正規化
-- 正規化はデータベースの論理的な整合性を保つ
-- 正規化は矛盾を防ぐ
-  - 矛盾とは論理的な不整合
-- リレーションから重複を排除</p>
-
-<p>1NF
-- テーブルがリレーションであること
-- 繰り返しグループが発生していない
-- アトミックである
-- 主キーの一部に意味を持たせない
-  - アトミックでなくなる
-  - 値の一部に依存した処理が入り込む</p>
-
-<p>2NF
-- 候補キーの真部分集合から非キー属性へのFDを取り除いた状態
-- FDを解消する
-  必要な操作は射影 select ditinct
-  正規化によりテーブルが増えても問題ない。誤った手＝ブル設計によりクエリがスパゲッティになる方が問題になる。
-- BCNF
-  - ボイスコッド正規形の略
-  - 全ての自明でないFDが取り除かれた状態
-  - 残る</p>
-
-<!-- TODO: 正規化の話は途中聞きそびれたので資料を読み返すこと -->
-
-
-<p>グラフに対するクエリの問題点
-- グラフと供養の問題を表現できない
-- 何度joinすれば良いのかわからない
-- そもそもRDBは向いていないので、グラフデータベースを使うか、ストアドで頑張る</p>
-
-<p>ツリー
-- 閉路がなく、連結している
-- ツリーは特殊なグラフ
-- 多数の制約がある</p>
-
-<p>隣接リストモデル
-- 子ノードが親ノードのIDを持つ
-- 根ノードの親はNULL
-- 再起クエリまたはストアドプロシジャー</p>
-
-<p>パス列挙モデル
-- 寝ノードからのフルパスで経路を表現するモデル
-  - Like句で検索</p>
-
-<p>入れ子集合モデル</p>
-
-<p>クロージャーテーブルモデル
-- 祖先、子孫の関係にあるノードを全てリストアップ
-  - テーブルサイズは大
-  - 更新は容易</p>
-
-<p>上に挙げたどのモデルも決定打にはならなくて、どれも妥協案。要件次第で使い分けるべき
-- データサイズを気にしなければクロージャーテーブルがおすすめ
-- コンパクトさを重視するなら隣接リストモデル</p>
-
-<p>履歴データ
-- 実はリレーショナルモデルと非常に相性が悪い←結構意外
-- 履歴データとは時系列で並んだデータ</p>
-
-<p>問題点1. 時間軸との直交性
-- リレーションとはある時点での事実の集合
-- 履歴データは時間軸と直行していないので、クエリの実行タイミングによっては結果が異なる。
-- 行の意味が異なる。
-  - リレーションとは事実の集合
-- 特定の行だけに隠れた特別な意味がある
-  - 現在有効な価格かどうか</p>
-
-<p>履歴データ対策
-- テーブルを分割(対策1)
-  - 意味の異なるリレーションに分ける
-    - 意味の違いが解消
-    - 時間の直交性を持つことができるようになる
-  - 元のデータはUNIONで。
-  - 問題：外部キー制約が使えなくなる。
-  - 同じレコードが含まれていないという制約をつけるのが難しい。
-    - トリガーを使えば表現可能
-- 重複したデータを持つ(対策2)
-  - そもそも重複したデータがある。
-  - 直行しない
-  - 更新異常（矛盾）に注意
-- 擬似(pseudo)キーの利用
-  - 外部キーは使いたいけど、
-    - そもそも擬似キーは本質的に不要
-    - ディスクスペースが無駄
-    - 更新のオーバヘッドが増える
-  - joinが増える
-- 履歴の過去データにフラグを立てる？
-  - フラグは自動的に更新されない
-  - 本質的に不要なカラムを持つことになる。</p>
-
-<p>まとめ
-DB設計鉄則三箇条
-- リレーショナルモデルを理解する
-- リレーションを正規化する
-- リレーショナルモデルの限界を知る</p>
-
-<p>あえて非正規化することは無い
-- JOINの結果をキャッシュしておくことで代用できる。
-- RDBでマスタを持っておいて、ドキュメント型NoSQLDBに流し込むというのはアリ
-- 集計結果を持つようなテーブル（データウェアハウス的なもの）であればそもそも集合演算とは違ってそれは集計演算なので、それであれば非正規化というのはアリ。
-- ステータスを示すカラムもフラグなので、そうするぐらいならテーブルを分けたほうが良い。</p>
 ]]></content>
   </entry>
   
