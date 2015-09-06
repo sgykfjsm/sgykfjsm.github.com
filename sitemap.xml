@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://sgykfjsm.github.io/blog/2015/09/06/ci-with-golng-on-jenkins/</loc>
+    <lastmod>2015-09-06T20:03:54+09:00</lastmod>
+  </url>
+  <url>
     <loc>http://sgykfjsm.github.io/blog/2015/04/26/start-sonatype-nexus/</loc>
     <lastmod>2015-04-26T22:00:40+09:00</lastmod>
   </url>
@@ -321,15 +325,6 @@
     <loc>http://sgykfjsm.github.io/blog/categories/maven/</loc>
   </url>
   <url>
-    <loc>http://sgykfjsm.github.io/page2/</loc>
-  </url>
-  <url>
-    <loc>http://sgykfjsm.github.io/page3/</loc>
-  </url>
-  <url>
-    <loc>http://sgykfjsm.github.io/page4/</loc>
-  </url>
-  <url>
-    <loc>http://sgykfjsm.github.io/page5/</loc>
+    <loc>http://sgykfjsm.github.io/blog/categories/golang/</loc>
   </url>
 </urlset>
