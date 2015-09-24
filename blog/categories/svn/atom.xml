@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: svn | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.io/blog/categories/svn/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-09-25T02:35:23+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[svnのデータ移行手順を確認する]]></title>
+    <link href="http://sgykfjsm.github.io/blog/2015/09/13/svn-tutorial-for-me/"/>
+    <updated>2015-09-13T03:47:12+09:00</updated>
+    <id>http://sgykfjsm.github.io/blog/2015/09/13/svn-tutorial-for-me</id>
+    <content type="html"><![CDATA[<p>色々あってsvnを触ることになった。今回はその過程で知ったことをメモする。</p>
+
+<!-- more -->
+
+
+<p>なぜsvnを触ることになったのかというと、現在使っているsvnサーバを移行する必要が出てきたから。
+今回は作業手順の検証のために、移行元のsvnと同じバージョンのsvnをソースからコンパイルし、移行先のsvnを最新バージョンでコンパイルした。最新バージョンのsvnのコンパイルをするにあたって、<code>svnsync</code>をhttp経由で行なうために<a href="http://serf.apache.org/">Apache Serf</a>の導入手順も確認した。</p>
+
+<p>ソースコード中に出てくるsvnのコマンドについては、<a href="http://svnbook.red-bean.com/en/1.7/index.html">svnbook</a>を参照すれば良いと思う。コマンド名でなんとなくはわかると思うけど、一応ポインタとしてリンクを記載しておく。</p>
+
+<a name="Subversion1.7.9.................."></a>
+<h2>Subversion1.7.9をコンパイル</h2>
+
+<p>特にコレに関してはいうことは無いのだけれど、ポイントとしては、</p>
+
+<ul>
+<li><code>--without-berkeley-db</code>としてBerkeley DBを使わないようにしている</li>
+<li><code>--without-serf</code>となっていて、http経由でのsvn操作ができなくなっている</li>
+<li>SQLiteのバージョンは<em>最新版だとコンパイルできない</em>という点に注意する</li>
+</ul>
+
+
+<p>ということぐらい。あとは以下のソースコードの通り。</p>
+
+<script src="https://gist.github.com/sgykfjsm/9e06eda66014177a883d.js"></script>
+
+
+<a name="Subversion1.9.1.................."></a>
+<h2>Subversion1.9.1をコンパイル</h2>
+
+<p>コレを書いている時点では1.9.1が最新となっている。1.7.9との違いとしては、http経由でリポジトリにアクセスできるように（より厳密には、svnの各種コマンドがhttp形式のURLを解釈できるようにするために）Apache Serfのインストールを行っていること。そして、Apache Serfをインストールするために<a href="http://www.scons.org/">SCons</a>をインストールしている。</p>
+
+<p>Serfとは<a href="http://apr.apache.org/">Apache Portable Runtime</a>(APR)ライブラリ上で動くハイパフォーマンスなC言語ベースのHTTPクライアント。かつては<a href="http://code.google.com/p/serf/">Google Codeでホスティングされていた</a>が、今はApachプロジェクトとして運営されている。</p>
+
+<p>SerfはApache SubversionとApache OpenOfficeのデフォルトクライアントとして利用されている。</p>
+
+<p>Serfがちょっと面倒なのは、ビルドにSConsというものが必要になることだ。SCons自体はpythonで書かれているが、pipなどでインストールするのではなく、ソースコードを<a href="http://www.scons.org/download.php">http://www.scons.org/download.php</a>からダウンロードしてsetup.pyを実行すれば良い。よって、Serfのインストールは以下の様になる。</p>
+
+<p>SConsは<code>make</code>に代わる次世代のビルドツールを目指しているらしい。けど、あんまり耳にすることは無いですね…</p>
+
+<pre><code>cd /path/to/scons
+sudo python setup.py install
+
+cd /path/to/serf
+sudo scons PREFIX=/home/vagrant/apps/serf
+sudo scons install
+sudo scons -c
+</code></pre>
+
+<p>あとはv1.7.9とほぼ同様にすれば良いが、違いとしては、</p>
+
+<ul>
+<li>yumでopenssl-develをインストールしている</li>
+<li><code>--with-serf</code>でserfがインストールされているディレクトリを指定している</li>
+<li>subversionディレクトリに配置するSQLiteのディレクトリ名にバージョン名(ディレクトリ末尾の数字)を含めてはいけない</li>
+</ul>
+
+
+<p>ということぐらい。以下のソースコードを移行先となるサーバで実行し、svnクライアントを準備する。</p>
+
+<script src="https://gist.github.com/sgykfjsm/1dc5378d0258ae370fca.js"></script>
+
+
+<a name="svnsync.................."></a>
+<h2>svnsyncを試してみる</h2>
+
+<p>準備ができたら、<code>svnsync</code>を試してみる。移行元となるほうにはすでにダミーのソースコードをおいているので、それが移行先のサーバへコピーされれば成功となる。</p>
+
+<pre><code># これは一度だけ実行すればOK
+$ svnsync init file:///opt/svn/repository http://192.168.56.202/svn/
+# `svnsync init`した後に定期的に以下を実行すればOK
+$ svnsync sync file:///opt/svn/repository
+</code></pre>
+
+<p>ちゃんとsyncできていれば以下の様な標準出力が確認できるはず。
+<code>
+Transmitting file data ........................................
+Committed revision 1.
+Copied properties for revision 1.
+</code></p>
+
+<p>また、<code>svnlook info /opt/svn/repository</code>でリポジトリの情報を確認できることができるので、移行元と移行先それぞれの出力を見比べて、同期ができているかを確認することができる。</p>
+]]></content>
+  </entry>
+  
+</feed>

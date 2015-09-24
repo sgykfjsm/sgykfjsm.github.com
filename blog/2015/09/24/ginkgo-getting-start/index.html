@@ -1,0 +1,719 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Ginkgo 基本的な使い方編 - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="最近、golangでプログラムを書く機会が増えてきた。golangでTDDをする場合、標準のtestingパッケージを使うのが一般的なようだ。ただし、標準パッケージだけだとちょっとテストが書きづらいので、stretchr/testifyを使っている人も多いと思う。 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.io/blog/2015/09/24/ginkgo-getting-start">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.io" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">Ginkgo 基本的な使い方編</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-09-24T22:51:20+09:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>24</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>10:51 pm</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>最近、golangでプログラムを書く機会が増えてきた。golangでTDDをする場合、標準の<a href="https://golang.org/pkg/testing/">testingパッケージ</a>を使うのが一般的なようだ。ただし、標準パッケージだけだとちょっとテストが書きづらいので、<a href="https://github.com/stretchr/testify">stretchr/testify</a>を使っている人も多いと思う。</p>
+
+<p>関数のテストをしたいときは標準パッケージなりtestifyを使うなりで良いのだけど、振る舞いをテストしたい、つまりBDDをしたいなーと思った時にちょっと調べらたら<a href="http://onsi.github.io/ginkgo/">Ginkgo</a>というのが良さ気だったので、ちょっと試してみる。</p>
+
+<!-- more -->
+
+
+<a name="Ginkgo......"></a>
+<h2>Ginkgoとは</h2>
+
+<p>表現力があって包括的なテストを効率良く書くためのBDDスタイルのテストフレームワーク。<a href="http://github.com/onsi/gomega">Gomega</a>というMatcherライブラリと併用すると良い感じらしいけど、単体でも充分使えるらしい。</p>
+
+<p>今回はドキュメントに従い、GinkgoだけでなくGomegaもインストールした。</p>
+
+<a name="L.................."></a>
+<h2>インストール</h2>
+
+<p><code>go get</code>するだけ。ginkgoの実行バイナリが<code>${GOPATH}/bin</code>に、ソースコードはgomegaとともに<code>$GOPATH/src/github.com/onsi</code>にインストールされていることが確認できる。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ go get github.com/onsi/ginkgo/ginkgo
+</span><span class='line'>$ go get github.com/onsi/gomega
+</span><span class='line'>$ ls -l $GOPATH/bin
+</span><span class='line'>...
+</span><span class='line'>-rwxr-xr-x   1 sgyk  staff  11747788  9 24 23:00 ginkgo*
+</span><span class='line'>$ ls -l $GOPATH/src/github.com/onsi
+</span><span class='line'>...
+</span><span class='line'>drwxr-xr-x  16 sgyk  staff  544  9 24 23:00 ginkgo/
+</span><span class='line'>drwxr-xr-x  17 sgyk  staff  578  9 24 23:01 gomega/</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="L........."></a>
+<h2>始め方</h2>
+
+<p>こんなかんじで<code>ginkgo bootstrap</code>をすると、テストスイートを生成してくれる。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ mkdir ginkgo-study
+</span><span class='line'>$ cd $_
+</span><span class='line'>$ ginkgo bootstrap
+</span><span class='line'>Generating ginkgo test suite bootstrap for ginkgo_study in:
+</span><span class='line'>        ginkgo_study_suite_test.go
+</span><span class='line'>$ cat ginkgo_study_suite_test.go
+</span><span class='line'>package ginkgo_study_test
+</span><span class='line'>
+</span><span class='line'>import (
+</span><span class='line'>        . "github.com/onsi/ginkgo"
+</span><span class='line'>        . "github.com/onsi/gomega"
+</span><span class='line'>
+</span><span class='line'>        "testing"
+</span><span class='line'>)
+</span><span class='line'>
+</span><span class='line'>func TestGinkgoStudy(t *testing.T) {
+</span><span class='line'>        RegisterFailHandler(Fail)
+</span><span class='line'>        RunSpecs(t, "GinkgoStudy Suite")
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+
+
+<p>自動生成されたファイルは<code>ginkgo</code>でテストを走らせることができるし、Ginkgoは標準パッケージであるtestingにフックしているので、<code>go test</code>で実行させることも出来る。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ ginkgo
+</span><span class='line'>Running Suite: GinkgoStudy Suite
+</span><span class='line'>================================
+</span><span class='line'>Random Seed: 1443106503
+</span><span class='line'>Will run 0 of 0 specs
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>Ran 0 of 0 Specs in 0.000 seconds
+</span><span class='line'>SUCCESS! -- 0 Passed | 0 Failed | 0 Pending | 0 Skipped PASS
+</span><span class='line'>
+</span><span class='line'>Ginkgo ran 1 suite in 3.234616229s
+</span><span class='line'>Test Suite Passed</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ go test
+</span><span class='line'>Running Suite: GinkgoStudy Suite
+</span><span class='line'>================================
+</span><span class='line'>Random Seed: 1443106514
+</span><span class='line'>Will run 0 of 0 specs
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>Ran 0 of 0 Specs in 0.000 seconds
+</span><span class='line'>SUCCESS! -- 0 Passed | 0 Failed | 0 Pending | 0 Skipped PASS
+</span><span class='line'>ok      github.com/sgykfjsm/ginkgo-study        0.077s</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="L..................................................."></a>
+<h3>自動生成されたテストスイートの確認</h3>
+
+<p>まずは１行目。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>package ginkgo_study_test</span></code></pre></td></tr></table></div></figure>
+
+
+<p>このパッケージ名は<code>ginkgo bootstrap</code>が実行されたディレクトリ名を元に設定されている。今回は<code>ginkgo-study</code>というディレクトリの中で実行したので、<code>ginkgo_study_test</code>となっている。もちろん敢えて<code>ginkgo_study</code>など、別名に修正することは可能だが、テストコードと実コードとの切り分けの観点からすると、このままで良いだろう。</p>
+
+<p>続いて3行目から8行目について。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>import (
+</span><span class='line'>        . "github.com/onsi/ginkgo"
+</span><span class='line'>        . "github.com/onsi/gomega"
+</span><span class='line'>
+</span><span class='line'>        "testing"
+</span><span class='line'>)</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ドットインポートを使うことでginkgoとgomegaをtop levelでインポート、つまり修飾子なしで各パッケージの関数を使えるようにしている。詳しくはSOの<a href="http://stackoverflow.com/a/6478990">What does the &lsquo;.&rsquo; (dot or period) in a go import statement do?の回答</a>と公式ドキュメントの<a href="https://golang.org/ref/spec#Import_declarations">Import declarations</a>を参照のこと。</p>
+
+<p>ドットインポートをしたくない場合は、bootstrap実行時にオプション<code>--nodot</code>をつけることで回避できる。</p>
+
+<p>では最後に自動生成されたテスト関数を確認する。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>func TestGinkgoStudy(t *testing.T) {
+</span><span class='line'>        RegisterFailHandler(Fail)
+</span><span class='line'>        RunSpecs(t, "GinkgoStudy Suite")
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>TestGinkgoStudy</code>はもちろんただの関数名。引数に<code>t *testing.T</code>があることからわかるように<code>go test</code>でこの関数を実行することが出来る。</p>
+
+<p>11行目の<code>RegisterFailHandler</code>は、Ginkgoの<code>Fail</code>関数を引数にすることで、テストが失敗した際にGomegaへGinkgoの<code>Fail</code>関数を渡している。この<code>RegisterFailHandler</code>はGinkgoとGomegaの間の唯一の接点となっている。</p>
+
+<p>12行目の<code>RunSpec</code>でテストのスペック、つまりテストの内容を設定する。</p>
+
+<p>ドキュメントに沿って細かく見ていったけど、全体的に難しいことはあまり無いように見える。Ginkgo(に限らずBDD全般がそうだと思うけど)ではテストをどう実装するか、よりもどのようにテストを設計するかに注力しやすくなっている。</p>
+
+<a name="L.............................."></a>
+<h2>テストスペックを作る</h2>
+
+<p>テストスペックはテストスイートと同様にコマンドで自動生成出来る。と言っても、雛形だけど。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ ginkgo generate ginkgo_study
+</span><span class='line'>Generating ginkgo test for GinkgoStudy in:
+</span><span class='line'>  ginkgo_study_test.go
+</span><span class='line'>
+</span><span class='line'>$ cat ginkgo_study_test.go
+</span><span class='line'>package ginkgo_study_test
+</span><span class='line'>
+</span><span class='line'>import (
+</span><span class='line'>        . "github.com/sgykfjsm/ginkgo-study"
+</span><span class='line'>
+</span><span class='line'>        . "github.com/onsi/ginkgo"
+</span><span class='line'>        . "github.com/onsi/gomega"
+</span><span class='line'>)
+</span><span class='line'>
+</span><span class='line'>var _ = Describe("GinkgoStudy", func() {
+</span><span class='line'>
+</span><span class='line'>})</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>ginkgo generate</code>にパッケージ名を渡せば良い。</p>
+
+<a name="L..................................................."></a>
+<h3>自動生成されたテストスペックの確認</h3>
+
+<p>１行目については特に言うことはないと思うけど、<code>ginkgo generate</code>の引数が設定される。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>package ginkgo_study_test</span></code></pre></td></tr></table></div></figure>
+
+
+<p>3行目から7行目にかけてはテストスイートと違いがある。1つはテスト対象のパッケージが設定されていること、もう1つはtestingパッケージがimportされていないこと。前者については特に疑問はないと思うけど、後者についてはちょっと違和感があるかもしれない。というのも、一般的にgolangを使ったプログラム開発では、テストコードは<code>xxx_test.go</code>というネーミングが推奨されており、そのファイル内ではtestingパッケージをimportすることがほとんどだが、これはそういった慣習と異なっている。まぁ慣れの問題かもしれないが、ginkgoを使ったテストコードだということを知らないと違和感があると思う。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>import (
+</span><span class='line'>        . "github.com/sgykfjsm/ginkgo-study"
+</span><span class='line'>
+</span><span class='line'>        . "github.com/onsi/ginkgo"
+</span><span class='line'>        . "github.com/onsi/gomega"
+</span><span class='line'>)</span></code></pre></td></tr></table></div></figure>
+
+
+<p>以降のコードは&#8221;コンテナ&#8221;と捉えることができ、スペックを記述(=格納)するクロージャとなる。開発者はこのコンテナの中にスペックを記述することになる。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>var _ = Describe("GinkgoStudy", func() {
+</span><span class='line'>
+</span><span class='line'>})</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ところで、<code>var _ = ...</code>という記述は今回初めて見かけた。ドキュメントによると、<code>var _ = ...</code>と書くことで、<code>func init(){}</code>無しにトップレベルで(つまりは初期処理として)<code>Describe</code>が評価されることができるらしい。</p>
+
+<a name="L.............................."></a>
+<h2>テストスペックを書く</h2>
+
+<p>では実際にテストスペックを書いてみる。今回は以下の様なモデルと、その振る舞いを書いた。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>package ginkgo_study
+</span><span class='line'>
+</span><span class='line'>type Grade struct {
+</span><span class='line'>  Subject   string
+</span><span class='line'>  Score     int
+</span><span class='line'>  Mandatory bool
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>func (g *Grade) IsPass() bool {
+</span><span class='line'>  if g.Score &gt; 60 {
+</span><span class='line'>      return true
+</span><span class='line'>  }
+</span><span class='line'>  return false
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+
+
+<p>…まぁこれについては特にいうことは無いと思う。つぎに、対応するスペックを以下のようにした。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>package ginkgo_study_test
+</span><span class='line'>
+</span><span class='line'>import (
+</span><span class='line'>  . "github.com/sgykfjsm/ginkgo-study"
+</span><span class='line'>
+</span><span class='line'>  . "github.com/onsi/ginkgo"
+</span><span class='line'>  . "github.com/onsi/gomega"
+</span><span class='line'>)
+</span><span class='line'>
+</span><span class='line'>var _ = Describe("GinkgoStudy", func() {
+</span><span class='line'>
+</span><span class='line'>  var (
+</span><span class='line'>      goodGrade Grade
+</span><span class='line'>      badGrade  Grade
+</span><span class='line'>  )
+</span><span class='line'>
+</span><span class='line'>  BeforeEach(func() {
+</span><span class='line'>      goodGrade = Grade{
+</span><span class='line'>          Subject:   "Math",
+</span><span class='line'>          Score:     61,
+</span><span class='line'>          Mandatory: true,
+</span><span class='line'>      }
+</span><span class='line'>
+</span><span class='line'>      badGrade = Grade{
+</span><span class='line'>          Subject:   "History",
+</span><span class='line'>          Score:     60,
+</span><span class='line'>          Mandatory: false,
+</span><span class='line'>      }
+</span><span class='line'>  })
+</span><span class='line'>
+</span><span class='line'>  Describe("Criteria of pass or not", func() {
+</span><span class='line'>      Context("With more than 60", func() {
+</span><span class='line'>          It("should be passed", func() {
+</span><span class='line'>              Expect(goodGrade.IsPass()).To(Equal(true))
+</span><span class='line'>          })
+</span><span class='line'>      })
+</span><span class='line'>
+</span><span class='line'>      Context("With less than 60", func() {
+</span><span class='line'>          It("should be failed", func() {
+</span><span class='line'>              Expect(badGrade.IsPass()).To(Equal(false))
+</span><span class='line'>          })
+</span><span class='line'>      })
+</span><span class='line'>  })
+</span><span class='line'>
+</span><span class='line'>})</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="L.............................."></a>
+<h3>テストスペックの解説</h3>
+
+<p>先にも説明したように、開発者は<code>Describe</code>のクロージャで表現されたコンテナの中にスペックを書けば良い。</p>
+
+<p><code>BeforeEach</code>はいわゆる<code>setup</code>にあたる処理。スペックが実行される度に、<code>BeforeEach</code>で定義した&#8221;状態&#8221;が作られる。また、ここで定義した&#8221;状態&#8221;は後述する<code>It</code>の中で使うことが出来る。</p>
+
+<p><code>Describe</code>と<code>Context</code>を使って、スペックの内容を表現豊かに記述することができ、<code>It</code>でスペックを指定する。<code>BeforeEach</code>と<code>It</code>で&#8221;状態&#8221;を共有するためには、コンテナの中のトップレベルで変数を定義すれば良い。</p>
+
+<p><code>It</code>の中で使っている<code>Expect</code>はGomega由来のもの。これを使って評価したい内容を記述すれば良い。</p>
+
+<a name="L......................................."></a>
+<h2>テストスペックを実行する。</h2>
+
+<p>このテストスペックを実行してみる。実行方法は先述の通り、普通に<code>go test</code>すれば良い。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ go test -v -cover
+</span><span class='line'>=== RUN TestGinkgoStudy
+</span><span class='line'>Running Suite: GinkgoStudy Suite
+</span><span class='line'>================================
+</span><span class='line'>Random Seed: 1443114232
+</span><span class='line'>Will run 2 of 2 specs
+</span><span class='line'>
+</span><span class='line'>••
+</span><span class='line'>Ran 2 of 2 Specs in 0.000 seconds
+</span><span class='line'>SUCCESS! -- 2 Passed | 0 Failed | 0 Pending | 0 Skipped --- PASS: TestGinkgoStudy (0.00 seconds)
+</span><span class='line'>PASS
+</span><span class='line'>coverage: 100.0% of statements
+</span><span class='line'>ok      github.com/sgykfjsm/ginkgo-study        0.073s</span></code></pre></td></tr></table></div></figure>
+
+
+<p>見ての通り、<code>-cover</code>で同時にカバレッジを出すことができる。また、テストに失敗すると、以下の様になる。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ go test -v -cover
+</span><span class='line'>=== RUN TestGinkgoStudy
+</span><span class='line'>Running Suite: GinkgoStudy Suite
+</span><span class='line'>================================
+</span><span class='line'>Random Seed: 1443114347
+</span><span class='line'>Will run 2 of 2 specs
+</span><span class='line'>
+</span><span class='line'>• Failure [0.004 seconds]
+</span><span class='line'>GinkgoStudy
+</span><span class='line'>/Users/sgyk/local/script/golang/src/github.com/sgykfjsm/ginkgo-study/ginkgo_study_test.go:45
+</span><span class='line'>  Criteria of pass or not
+</span><span class='line'>  /Users/sgyk/local/script/golang/src/github.com/sgykfjsm/ginkgo-study/ginkgo_study_test.go:43
+</span><span class='line'>    With more than 60
+</span><span class='line'>    /Users/sgyk/local/script/golang/src/github.com/sgykfjsm/ginkgo-study/ginkgo_study_test.go:36
+</span><span class='line'>      should be passed [It]
+</span><span class='line'>      /Users/sgyk/local/script/golang/src/github.com/sgykfjsm/ginkgo-study/ginkgo_study_test.go:35
+</span><span class='line'>
+</span><span class='line'>      Expected
+</span><span class='line'>          &lt;bool&gt;: false
+</span><span class='line'>      to equal
+</span><span class='line'>          &lt;bool&gt;: true
+</span><span class='line'>
+</span><span class='line'>      /Users/sgyk/local/script/golang/src/github.com/sgykfjsm/ginkgo-study/ginkgo_study_test.go:34
+</span><span class='line'>------------------------------
+</span><span class='line'>•
+</span><span class='line'>
+</span><span class='line'>Summarizing 1 Failure:
+</span><span class='line'>
+</span><span class='line'>[Fail] GinkgoStudy Criteria of pass or not With more than 60 [It] should be passed
+</span><span class='line'>/Users/sgyk/local/script/golang/src/github.com/sgykfjsm/ginkgo-study/ginkgo_study_test.go:34
+</span><span class='line'>
+</span><span class='line'>Ran 2 of 2 Specs in 0.004 seconds
+</span><span class='line'>FAIL! -- 1 Passed | 1 Failed | 0 Pending | 0 Skipped --- FAIL: TestGinkgoStudy (0.00 seconds)
+</span><span class='line'>FAIL
+</span><span class='line'>exit status 1
+</span><span class='line'>FAIL    github.com/sgykfjsm/ginkgo-study        0.071s</span></code></pre></td></tr></table></div></figure>
+
+
+<p>見ての通り、かなり丁寧に失敗箇所を教えてくれる。ちなみに、Ginkgoの出力は色付きであり、一部はグレーで表示されるので、ここで見るほど冗長には感じないものと思われる。</p>
+
+<a name="L........."></a>
+<h2>まとめ</h2>
+
+<p>以上、ごくごく簡単にGinkgoの使い方を示した。といっても、内容的には公式ドキュメントの冒頭をなぞっただけだが…。</p>
+
+<p>ただ、見ての通り、かなり使いやすいことがわかると思う。コマンドによるボイラープレートや雛形の生成により、開発者は集中すべきことだけに集中できるし、他のBDDフレームワークと同様に自然言語に近い感覚でテストを書くことができる。</p>
+
+<p>また、テスト失敗時に細かい出力をしてくれるのも地味に嬉しい。標準のtestingパッケージやtestifyなどはシンプルな出力しかしてくれないのでデバッグコードが必要になる時があるが、Ginkgoだとその必要はだいぶ減らすことができるだろう。とはいえ、やや丁寧すぎる気がしないでもないが。</p>
+
+<p>個人的な感覚としてはGinkgoはとても開発者フレンドリーだし、比較的活発に開発されているので、注目すべきライブラリだと思う。</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2015-09-24T22:51:20+09:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>24</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>10:51 pm</span></time>
+      
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/bdd/'>bdd</a>, <a class='category' href='/blog/categories/golang/'>golang</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2015/09/13/svn-tutorial-for-me/" title="Previous Post: svnのデータ移行手順を確認する">&laquo; svnのデータ移行手順を確認する</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

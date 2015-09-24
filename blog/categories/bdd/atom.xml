@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: golang | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.io/blog/categories/golang/atom.xml" rel="self"/>
+  <title><![CDATA[Category: bdd | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.io/blog/categories/bdd/atom.xml" rel="self"/>
   <link href="http://sgykfjsm.github.io/"/>
   <updated>2015-09-25T02:35:23+09:00</updated>
   <id>http://sgykfjsm.github.io/</id>
@@ -348,81 +348,6 @@ FAIL    github.com/sgykfjsm/ginkgo-study        0.071s
 <p>また、テスト失敗時に細かい出力をしてくれるのも地味に嬉しい。標準のtestingパッケージやtestifyなどはシンプルな出力しかしてくれないのでデバッグコードが必要になる時があるが、Ginkgoだとその必要はだいぶ減らすことができるだろう。とはいえ、やや丁寧すぎる気がしないでもないが。</p>
 
 <p>個人的な感覚としてはGinkgoはとても開発者フレンドリーだし、比較的活発に開発されているので、注目すべきライブラリだと思う。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Jenkins上でgolangのプロジェクトをCIするときに気をつけなければならないこと]]></title>
-    <link href="http://sgykfjsm.github.io/blog/2015/09/06/ci-with-golng-on-jenkins/"/>
-    <updated>2015-09-06T20:03:54+09:00</updated>
-    <id>http://sgykfjsm.github.io/blog/2015/09/06/ci-with-golng-on-jenkins</id>
-    <content type="html"><![CDATA[<p>JenkinsでgolangプロジェクトをCIするときに少しハマったので、同じミスをしないで済むようにここにメモする。</p>
-
-<!-- more -->
-
-
-<a name="Jenkins...golang.............................."></a>
-<h2>Jenkinsでgolangを使えるようにする。</h2>
-
-<p>何はともあれ、これをしないことには始まらない。特に理由が無ければ、Jenkinsのプラグインを使うのが良い。</p>
-
-<p>&ldquo;Jenkinsの管理&rdquo; > &ldquo;プラグインの管理&rdquo; > &ldquo;利用可能&#8221;タブ へ進み、フィルターで&#8221;golang&#8221;と入力すれば、<a href="https://wiki.jenkins-ci.org/display/JENKINS/Go+Plugin">Go plugin</a>が見つかる。チェックを入れた後、&#8221;ダウンロードして再起動後にインストール&#8221;を押下する。</p>
-
-<p>再起動後、&#8221;Jenkinsの管理&#8221; > &ldquo;システムの設定&#8221;へ進むと、&#8221;Go&#8221;のセクションが追加されていることが確認できるはず。</p>
-
-<ul>
-<li>もしシステムの管理で&#8221;ロード中&#8221;から復帰しない場合、&#8221;Jenkinsの管理&#8221; > &ldquo;プラグインの管理&rdquo; > &ldquo;高度な設定&#8221;タブ へ進み、画面右下の&#8221;更新&#8221;ボタンを押すと回復する場合がある。</li>
-<li>それでもダメならいくつかプラグインをアップデートしてから、再度&#8221;更新&#8221;ボタンを押すと回復することがある。</li>
-<li>FYI: <a href="https://issues.jenkins-ci.org/browse/JENKINS-27499">Global config page is broken when loaded before the tool installer data has been fetched</a></li>
-</ul>
-
-
-<p>その後、使いたいバージョンを設定して&#8221;適用&#8221;ボタンを押下後に&#8221;保存&#8221;ボタンを押下すれば良い。</p>
-
-<a name="Job...golang..........................."></a>
-<h2>Jobでgolangを使うようにする。</h2>
-
-<p>Jenkinsのプラグインを入れたあと、ジョブの設定画面の&#8221;ビルド環境&#8221;に&#8221;Set up Go programming language tools&#8221;が表示されていることを確認する。ここで使いたいバージョンを選択すれば、あとはPluginが指定したところからバイナリをダウンロードしてして、<code>${JENKINS_HOME}/tools/org.jenkinsci.plugins.golang.GolangInstallation/</code>以下にバイナリを設置する。</p>
-
-<p>Go Pluginを使うと、環境変数に<code>GOROOT</code>が設定されて、<code>PATH</code>にgolangのバイナリが追加されていることが確認できる。</p>
-
-<pre><code class="shell"># Jenkinsのジョブで`env`を実行した出力結果の一部
-BUILD_DISPLAY_NAME=#1
-BUILD_ID=1
-...
-EXECUTOR_NUMBER=1
-GOROOT=/var/lib/jenkins/tools/org.jenkinsci.plugins.golang.GolangInstallation/v1.5
-HOME=/var/lib/jenkins
-...
-PATH=/var/lib/jenkins/tools/org.jenkinsci.plugins.golang.GolangInstallation/v1.5/bin:/sbin:/usr/sbin:/bin:/usr/bin
-...
-Finished: SUCCESS
-</code></pre>
-
-<p>しかし、<code>GOPATH</code>が設定されていない。これに気をつけなければハマることになる。</p>
-
-<a name="L................................................"></a>
-<h2>カスタムワークスペースを設定する</h2>
-
-<p>おそらく、通常のgolang開発では、GOPATH以下にソースを置いて開発しているのではないかと思う(少なくとも自分の場合はそうしている)。</p>
-
-<p>例えば、<code>github.com/sgykfjsm/hello-golang</code>というプロジェクトの開発をしている場合、コーディングしている端末でのパスは<code>${GOPATH}/src/github.com/sgykfjsm/hello-golang</code>というパスになっているはず。</p>
-
-<p>よって、Jenkinsのジョブ実行時にもこのパスを再現しなければならない。そうしないと、Git Pluginなどでソースを取得すると、普通に<code>${JENKINS_HOME}/workspace/${JOB_NAME}</code>直下にソースが配置されてしまい、<code>go get</code>や<code>go install</code>などに失敗するからだ。</p>
-
-<p>というわけで、Jenkins上でも同じパス構成を再現するためにはカスタムワークスペースを使って、ワークスペースの設定を修正しなければならない。</p>
-
-<p>カスタムワークスペースの設定箇所は、非常にわかりづらいが、ジョブの設定画面の&#8221;プロジェクトの高度なオプション&#8221;に隠れており、&#8221;高度な設定&hellip;&ldquo;を押下して表示しなければならない。押下後、&#8221;カスタムワークスペースを使用&#8221;にチェックを入れて、&#8221;ディレクトリ&#8221;のテキストボックスを表示させる。このテキストボックスに入力すべき設定値は<code>${JENKINS_HOME}</code>から下のパスにすれば良い。例えば、<code>workspace/${JOB_NAME}/src/github.com/sgykfjsm/hello-golang</code>のようにすれば良い。</p>
-
-<a name="GOPATH..............."></a>
-<h2>GOPATHを設定する</h2>
-
-<p>その後、ビルドで&#8221;シェルの実行&#8221;を選択し、<code>export GOPATH=${JENKINS_HOME}/workspace/${JOB_NAME}</code>を実行してから諸々の処理を行うようにしてあげれば良い。また、<code>export PATH=${PATH}:${GOPATH}/bin</code>も追加しておくと良い。</p>
-
-<a name="L........."></a>
-<h2>まとめ</h2>
-
-<p>要は<code>GOPATH</code>をちゃんと設定しようねっていうだけ。</p>
 ]]></content>
   </entry>
   
