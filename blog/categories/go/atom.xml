@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: go | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.io/blog/categories/go/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2015-11-04T00:43:01+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[ベンダリングのためのgomvpkgとgbについて考えてみる]]></title>
+    <link href="http://sgykfjsm.github.io/blog/2015/11/03/compare-gomvpkg-with-gb/"/>
+    <updated>2015-11-03T20:02:45+09:00</updated>
+    <id>http://sgykfjsm.github.io/blog/2015/11/03/compare-gomvpkg-with-gb</id>
+    <content type="html"><![CDATA[<p>GO言語には多言語にあるようなパッケージマネジメントの仕組みが(公式には)サポートされていない。<a href="https://docs.google.com/document/d/1Bz5-UB7g2uPBdOx-rw5t9MxJwkfpx90cqG9AFL0JAYo/edit">GOv1.5では実験的に導入されている</a>が、例えばJavaで言うmaven、Pythonで言うpipなどのような共通として用いられているツールなどは無く、基本的には以下の3つのやり方が主流だと思われる。</p>
+
+<ul>
+<li>依存するパッケージを自分のリポジトリに取り込むVendoring</li>
+<li>3rd partyツールによるRevison指定などといった擬似的なパッケージマネジメント</li>
+<li>そもそもパッケージマネジメントをしない</li>
+</ul>
+
+
+<p>自分の開発では、業務も含めて、あまり外部パッケージに依存するようなことはあまり無いが、もしやるなら1つ目のVendoringになると思う。で、今回はVendoringを行なう際に便利だと思われる2つのツール、<code>gomvpkg</code>と<code>gb</code>を試してみる。</p>
+
+<!-- more -->
+
+
+<a name="gomvpkg........."></a>
+<h2>gomvpkgの概要</h2>
+
+<p><code>gomvpkg</code>は公式に提供されているツールであり、その名称から想像できるように、パッケージを移動させるツールだ。<code>gomvpkg</code>の実体は<code>golang.org/x/tools/refactor/rename</code>によるリファクタリングである。</p>
+
+<ul>
+<li><a href="https://godoc.org/golang.org/x/tools/refactor/rename">golang.org/x/tools/refactor/rename</a></li>
+</ul>
+
+
+<p>使い方はシンプルで以下の様に実行すれば良い。詳細は<code>gomvpkg -help</code>で確認されたし。</p>
+
+<pre><code>gomvpkg -from ${original_package_name} -to ${post_moved_package_name}
+</code></pre>
+
+<p>このコマンドを実行する場合、注意することは以下の通り。</p>
+
+<ul>
+<li><code>-from</code>と<code>-to</code>の引数は物理的なディレクトリパスではなく、ソースコードファイルに記述する<code>import</code>につづくパッケージ名であること</li>
+<li>移動後のパッケージが配置されるディレクトリは事前に存在してはいけない</li>
+<li>移動後のパッケージが配置されるディレクトリの親ディレクトリが存在していること</li>
+</ul>
+
+
+<p>普通の<code>mv</code>コマンドと同じように使うとエラーが頻発して困るので注意されたし。</p>
+
+<a name="gomvpkg........."></a>
+<h3>gomvpkgの難点</h3>
+
+<p><code>gomvpkg</code>は<code>$GOPATH</code>以下をスキャンし、移動対象のパッケージの依存関係を解決し、指定の位置にパッケージを移動する(コピーではない)。また、移動対象のパッケージをimportしているファイルがあれば、import pathを書き換えてくれる。</p>
+
+<p>これだけを述べるとなんか便利そうだが、実際は意外とクセモノだったりする。まず、&#8221;依存性を解決する&#8221;という点について。実際に<code>gomvpkg</code>を実行すると、以下のようなエラーが出る場合がある。</p>
+
+<pre><code>/Users/sgyk/local/script/golang/src/github.com/Sirupsen/logrus/examples/hook/hook.go:5:2: could not import gopkg.in/gemnasium/logrus-airbrake-hook.v2 (cannot find package "gopkg.in/gemnasium/logrus-airbrake-hook.v2" in any of:
+        /usr/local/opt/go/libexec/src/gopkg.in/gemnasium/logrus-airbrake-hook.v2 (from $GOROOT)
+        /Users/sgyk/local/script/golang/src/gopkg.in/gemnasium/logrus-airbrake-hook.v2 (from $GOPATH))
+/Users/sgyk/local/script/golang/src/github.com/Sirupsen/logrus/examples/hook/hook.go:12:16: undeclared name: airbrake
+gomvpkg: couldn't load packages due to errors: github.com/Sirupsen/logrus/examples/hook.
+</code></pre>
+
+<p>上記は簡単に言うと、移動対象のパッケージにおいて<code>gopkg.in/gemnasium/logrus-airbrake-hook.v2</code>が参照できないから<code>gomvpkg</code>に失敗したということ。なので、これを解決するには<code>go get</code>で対象のパッケージを取得してこなければならない。</p>
+
+<p>次に&#8221;<code>$GOPATH</code>以下をスキャン&#8221;という点と&#8221;import pathを書き換える&#8221;という点について。おそらく、<code>gomvpkg</code>を実行する場合、対象プロジェクト(言い換えると移動先のプロジェクト)内のファイルの<code>import</code>だけを書き換えることを期待しているんじゃないかと思う。少なくとも自分はそうだった。しかし、実際には<code>$GOPATH</code>内すべてをスキャンするため、対象となるimport pathはすべて書き換えられてしまう。実際に<code>gomvpkg</code>を実行すると、以下の様な出力をみるはず。</p>
+
+<pre><code>Renamed 6 occurrences in 1 file in 1 package.
+Renamed 11 occurrences in 1 file in 1 package.
+Renamed 16 occurrences in 1 file in 1 package.
+...
+</code></pre>
+
+<p>これは実際のところ、かなり怖い。なぜならどのプロジェクトのファイルが書き換えられてしまったのか、詳細が把握できないからだ。そのため、意図しないファイル改変を行ってしまう可能性が高い。ちなみに運が悪い（？）と、上記の出力がなされず、別の出力がなされてしまう場合がある。</p>
+
+<p>まぁ冷静に考えていると、どのプロジェクトのファイルだけを改変するかという指定はできないので、この挙動は仕方ないのかもしれないが、危ういことには変わりない。</p>
+
+<p><code>gomvpkg</code>はGOの公式ドキュメントでベンダリングにおける有用なツールとして<a href="https://golang.org/doc/faq#get_version">紹介されている</a>が、実際はかなり危険なので使う際は注意が必要だと思う。</p>
+
+<a name="gb............"></a>
+<h2>gbについて</h2>
+
+<p><code>gomvpkg</code>がリファクタリングのためのツールであるのに対し、<code>gb</code>はベンダリングのためのツールであり、公式には&#8221;A project based build tool for the Go programming language.&ldquo;と紹介されている。</p>
+
+<p><code>gb</code>について簡単にいうと、既存のGOプロジェクトとは隔離された世界でベンダリングを行なうためのツールと言える。言い換えると、<code>gb</code>はプロジェクトベースで依存パッケージをベンダリングする。また、<code>gb</code>は既存のgo toolsを置き換えるものではない。</p>
+
+<p>特徴的な点としては、<code>$GOPATH</code>配下にプロジェクトを作ってはいけないというルールがあり、関連パッケージは<code>go get</code>ではなく<code>git clone</code>で取得しなければならない点だ。この特徴については捉えようによっては良い点がある。たとえば、GO初心者が参画する場合、<code>$GOPATH</code>にハマることもないし、<code>go get</code>について知る必要がないため、学習コストを一定度下げることができる（といっても大したコストではないが）。しかし、逆に言えば、gbのお作法を学ぶ必要がある。</p>
+
+<a name="gb............"></a>
+<h2>gbのお作法</h2>
+
+<p><code>gb</code>はプロジェクトベースツールなので、プロジェクトごとにディレクトリを設けなければならない。また、<code>src</code>ディレクトリや<code>bin</code>ディレクトリはプロジェクトのルートディレクトリの直下に設けなければならない。依存するパッケージはプロジェクトのルートディレクトリ直下に<code>vender/src</code>以下に格納しなければならない。</p>
+
+<p>基本的には上記のディレクトリ配置のお作法を守っていれば、通常のGO開発と同じようにすすめることが出来るはず。</p>
+
+<a name="gb........."></a>
+<h2>gbの難点</h2>
+
+<p><code>gb</code>は<code>$GOPATH</code>とは違う世界で開発しなければならないが、そのためにエディタの支援を受けられない場合がある。</p>
+
+<p>例えば、vimではソースコード中で<code>import</code>されているパッケージからコマンド補完をすることがプラグインによって可能だが、プロジェクトルートに格納されているが<code>$GOPATH</code>以下にはないパッケージの場合、エディタがエラーとする場合がある。その場合は問題となっているパッケージを<code>go get</code>すれば解決するが、<code>gb</code>での<code>git clone</code>と<code>go get</code>での二度手間が発生してしまう。</p>
+
+<hr />
+
+<p>以上、ベンダリングのためのツールとして<code>gomvpkg</code>と<code>gb</code>の両方を見たが、どちらもそれなりに難点があり、どちらも他人に進めることはできないなーと個人的には思う。とはいえ、ある程度の大規模な開発を行なうのであれば、<code>gb</code>が良いかな―とは思う。ただ、なんとなくGの世界では外部パッケージに頼らないようにすべきみたいな印象を持っているので、GO開発者はパッケージ管理にあんまり興味ないのかなーと思ったり。一応、v1.5からは実験的に<code>go tool</code>でのベンダリングサポートが導入されているようだけど、パッケージ管理という面から考えると(例えばバージョンのアップデートとダウングレードの容易さなど)、まだまだ貧弱だな―とおもうので、なるべく外部パッケージに頼らないほうが良いのかなと思う。</p>
+]]></content>
+  </entry>
+  
+</feed>

@@ -4,7 +4,7 @@
   <title><![CDATA[sgykfjsm.github.com]]></title>
   <link href="http://sgykfjsm.github.io/atom.xml" rel="self"/>
   <link href="http://sgykfjsm.github.io/"/>
-  <updated>2015-09-25T02:35:23+09:00</updated>
+  <updated>2015-11-04T00:43:01+09:00</updated>
   <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
@@ -12,6 +12,120 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[ベンダリングのためのgomvpkgとgbについて考えてみる]]></title>
+    <link href="http://sgykfjsm.github.io/blog/2015/11/03/compare-gomvpkg-with-gb/"/>
+    <updated>2015-11-03T20:02:45+09:00</updated>
+    <id>http://sgykfjsm.github.io/blog/2015/11/03/compare-gomvpkg-with-gb</id>
+    <content type="html"><![CDATA[<p>GO言語には多言語にあるようなパッケージマネジメントの仕組みが(公式には)サポートされていない。<a href="https://docs.google.com/document/d/1Bz5-UB7g2uPBdOx-rw5t9MxJwkfpx90cqG9AFL0JAYo/edit">GOv1.5では実験的に導入されている</a>が、例えばJavaで言うmaven、Pythonで言うpipなどのような共通として用いられているツールなどは無く、基本的には以下の3つのやり方が主流だと思われる。</p>
+
+<ul>
+<li>依存するパッケージを自分のリポジトリに取り込むVendoring</li>
+<li>3rd partyツールによるRevison指定などといった擬似的なパッケージマネジメント</li>
+<li>そもそもパッケージマネジメントをしない</li>
+</ul>
+
+
+<p>自分の開発では、業務も含めて、あまり外部パッケージに依存するようなことはあまり無いが、もしやるなら1つ目のVendoringになると思う。で、今回はVendoringを行なう際に便利だと思われる2つのツール、<code>gomvpkg</code>と<code>gb</code>を試してみる。</p>
+
+<!-- more -->
+
+
+<a name="gomvpkg........."></a>
+<h2>gomvpkgの概要</h2>
+
+<p><code>gomvpkg</code>は公式に提供されているツールであり、その名称から想像できるように、パッケージを移動させるツールだ。<code>gomvpkg</code>の実体は<code>golang.org/x/tools/refactor/rename</code>によるリファクタリングである。</p>
+
+<ul>
+<li><a href="https://godoc.org/golang.org/x/tools/refactor/rename">golang.org/x/tools/refactor/rename</a></li>
+</ul>
+
+
+<p>使い方はシンプルで以下の様に実行すれば良い。詳細は<code>gomvpkg -help</code>で確認されたし。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>gomvpkg -from ${original_package_name} -to ${post_moved_package_name}</span></code></pre></td></tr></table></div></figure>
+
+
+<p>このコマンドを実行する場合、注意することは以下の通り。</p>
+
+<ul>
+<li><code>-from</code>と<code>-to</code>の引数は物理的なディレクトリパスではなく、ソースコードファイルに記述する<code>import</code>につづくパッケージ名であること</li>
+<li>移動後のパッケージが配置されるディレクトリは事前に存在してはいけない</li>
+<li>移動後のパッケージが配置されるディレクトリの親ディレクトリが存在していること</li>
+</ul>
+
+
+<p>普通の<code>mv</code>コマンドと同じように使うとエラーが頻発して困るので注意されたし。</p>
+
+<a name="gomvpkg........."></a>
+<h3>gomvpkgの難点</h3>
+
+<p><code>gomvpkg</code>は<code>$GOPATH</code>以下をスキャンし、移動対象のパッケージの依存関係を解決し、指定の位置にパッケージを移動する(コピーではない)。また、移動対象のパッケージをimportしているファイルがあれば、import pathを書き換えてくれる。</p>
+
+<p>これだけを述べるとなんか便利そうだが、実際は意外とクセモノだったりする。まず、&#8221;依存性を解決する&#8221;という点について。実際に<code>gomvpkg</code>を実行すると、以下のようなエラーが出る場合がある。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/Users/sgyk/local/script/golang/src/github.com/Sirupsen/logrus/examples/hook/hook.go:5:2: could not import gopkg.in/gemnasium/logrus-airbrake-hook.v2 (cannot find package "gopkg.in/gemnasium/logrus-airbrake-hook.v2" in any of:
+</span><span class='line'>        /usr/local/opt/go/libexec/src/gopkg.in/gemnasium/logrus-airbrake-hook.v2 (from $GOROOT)
+</span><span class='line'>        /Users/sgyk/local/script/golang/src/gopkg.in/gemnasium/logrus-airbrake-hook.v2 (from $GOPATH))
+</span><span class='line'>/Users/sgyk/local/script/golang/src/github.com/Sirupsen/logrus/examples/hook/hook.go:12:16: undeclared name: airbrake
+</span><span class='line'>gomvpkg: couldn't load packages due to errors: github.com/Sirupsen/logrus/examples/hook.</span></code></pre></td></tr></table></div></figure>
+
+
+<p>上記は簡単に言うと、移動対象のパッケージにおいて<code>gopkg.in/gemnasium/logrus-airbrake-hook.v2</code>が参照できないから<code>gomvpkg</code>に失敗したということ。なので、これを解決するには<code>go get</code>で対象のパッケージを取得してこなければならない。</p>
+
+<p>次に&#8221;<code>$GOPATH</code>以下をスキャン&#8221;という点と&#8221;import pathを書き換える&#8221;という点について。おそらく、<code>gomvpkg</code>を実行する場合、対象プロジェクト(言い換えると移動先のプロジェクト)内のファイルの<code>import</code>だけを書き換えることを期待しているんじゃないかと思う。少なくとも自分はそうだった。しかし、実際には<code>$GOPATH</code>内すべてをスキャンするため、対象となるimport pathはすべて書き換えられてしまう。実際に<code>gomvpkg</code>を実行すると、以下の様な出力をみるはず。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Renamed 6 occurrences in 1 file in 1 package.
+</span><span class='line'>Renamed 11 occurrences in 1 file in 1 package.
+</span><span class='line'>Renamed 16 occurrences in 1 file in 1 package.
+</span><span class='line'>...</span></code></pre></td></tr></table></div></figure>
+
+
+<p>これは実際のところ、かなり怖い。なぜならどのプロジェクトのファイルが書き換えられてしまったのか、詳細が把握できないからだ。そのため、意図しないファイル改変を行ってしまう可能性が高い。ちなみに運が悪い（？）と、上記の出力がなされず、別の出力がなされてしまう場合がある。</p>
+
+<p>まぁ冷静に考えていると、どのプロジェクトのファイルだけを改変するかという指定はできないので、この挙動は仕方ないのかもしれないが、危ういことには変わりない。</p>
+
+<p><code>gomvpkg</code>はGOの公式ドキュメントでベンダリングにおける有用なツールとして<a href="https://golang.org/doc/faq#get_version">紹介されている</a>が、実際はかなり危険なので使う際は注意が必要だと思う。</p>
+
+<a name="gb............"></a>
+<h2>gbについて</h2>
+
+<p><code>gomvpkg</code>がリファクタリングのためのツールであるのに対し、<code>gb</code>はベンダリングのためのツールであり、公式には&#8221;A project based build tool for the Go programming language.&ldquo;と紹介されている。</p>
+
+<p><code>gb</code>について簡単にいうと、既存のGOプロジェクトとは隔離された世界でベンダリングを行なうためのツールと言える。言い換えると、<code>gb</code>はプロジェクトベースで依存パッケージをベンダリングする。また、<code>gb</code>は既存のgo toolsを置き換えるものではない。</p>
+
+<p>特徴的な点としては、<code>$GOPATH</code>配下にプロジェクトを作ってはいけないというルールがあり、関連パッケージは<code>go get</code>ではなく<code>git clone</code>で取得しなければならない点だ。この特徴については捉えようによっては良い点がある。たとえば、GO初心者が参画する場合、<code>$GOPATH</code>にハマることもないし、<code>go get</code>について知る必要がないため、学習コストを一定度下げることができる（といっても大したコストではないが）。しかし、逆に言えば、gbのお作法を学ぶ必要がある。</p>
+
+<a name="gb............"></a>
+<h2>gbのお作法</h2>
+
+<p><code>gb</code>はプロジェクトベースツールなので、プロジェクトごとにディレクトリを設けなければならない。また、<code>src</code>ディレクトリや<code>bin</code>ディレクトリはプロジェクトのルートディレクトリの直下に設けなければならない。依存するパッケージはプロジェクトのルートディレクトリ直下に<code>vender/src</code>以下に格納しなければならない。</p>
+
+<p>基本的には上記のディレクトリ配置のお作法を守っていれば、通常のGO開発と同じようにすすめることが出来るはず。</p>
+
+<a name="gb........."></a>
+<h2>gbの難点</h2>
+
+<p><code>gb</code>は<code>$GOPATH</code>とは違う世界で開発しなければならないが、そのためにエディタの支援を受けられない場合がある。</p>
+
+<p>例えば、vimではソースコード中で<code>import</code>されているパッケージからコマンド補完をすることがプラグインによって可能だが、プロジェクトルートに格納されているが<code>$GOPATH</code>以下にはないパッケージの場合、エディタがエラーとする場合がある。その場合は問題となっているパッケージを<code>go get</code>すれば解決するが、<code>gb</code>での<code>git clone</code>と<code>go get</code>での二度手間が発生してしまう。</p>
+
+<hr />
+
+<p>以上、ベンダリングのためのツールとして<code>gomvpkg</code>と<code>gb</code>の両方を見たが、どちらもそれなりに難点があり、どちらも他人に進めることはできないなーと個人的には思う。とはいえ、ある程度の大規模な開発を行なうのであれば、<code>gb</code>が良いかな―とは思う。ただ、なんとなくGの世界では外部パッケージに頼らないようにすべきみたいな印象を持っているので、GO開発者はパッケージ管理にあんまり興味ないのかなーと思ったり。一応、v1.5からは実験的に<code>go tool</code>でのベンダリングサポートが導入されているようだけど、パッケージ管理という面から考えると(例えばバージョンのアップデートとダウングレードの容易さなど)、まだまだ貧弱だな―とおもうので、なるべく外部パッケージに頼らないほうが良いのかなと思う。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Ginkgo 基本的な使い方編]]></title>
@@ -3770,381 +3884,6 @@ Writing MYMETA.yml and MYMETA.json
 </code></pre>
 
 <p>あとは<code>make &amp;&amp; make test &amp;&amp; sudo make install</code>しておけばOK。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[jenkinsでのテスト自動化いろいろ]]></title>
-    <link href="http://sgykfjsm.github.io/blog/2014/01/13/auto-test-on-jenkins/"/>
-    <updated>2014-01-13T12:28:00+09:00</updated>
-    <id>http://sgykfjsm.github.io/blog/2014/01/13/auto-test-on-jenkins</id>
-    <content type="html"><![CDATA[<p>jenkins上でテストを実行したい、自動化したいというリクエストが来たので、その設定方法をまとめた。</p>
-
-<p>今回はplay2.2.1のscalaをサンプルプロジェクトととした。</p>
-
-<!-- more -->
-
-
-<a name="L....................."></a>
-<h2>環境の基本情報</h2>
-
-<p>今回はこんな設定で試した。setup.shは結構長いけど、簡単に言うとjdkを入れて、jenkins、apache2とscala2.10のインストール、apache2がjenkinsのフロントエンドとなるように設定しているだけ。</p>
-
-<figure class='code'><figcaption><span>Vagrant / vagrantでubuntuを入れて、jenkins,apapcheをセットアップ。</span><a target='_blank' href='https://gist.github.com/8394448'>link</a></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># -*- mode: ruby -*-</span>
-</span><span class='line'><span class="c1"># vi: set ft=ruby :</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1"># Vagrantfile API/syntax version. Don&#39;t touch unless you know what you&#39;re doing!</span>
-</span><span class='line'><span class="no">VAGRANTFILE_API_VERSION</span> <span class="o">=</span> <span class="s2">&quot;2&quot;</span>
-</span><span class='line'>
-</span><span class='line'><span class="no">Vagrant</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="no">VAGRANTFILE_API_VERSION</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">config</span><span class="o">|</span>
-</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">box</span> <span class="o">=</span> <span class="s2">&quot;precise&quot;</span>
-</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">box_url</span> <span class="o">=</span> <span class="s2">&quot;/Users/sgyk/local/vagrant/box/precise-server-cloudimg-amd64-vagrant-disk1.box&quot;</span>
-</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">auto_detect</span> <span class="o">=</span> <span class="kp">true</span>
-</span><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">define</span> <span class="ss">:presice</span> <span class="k">do</span> <span class="o">|</span><span class="n">presice</span><span class="o">|</span>
-</span><span class='line'>    <span class="n">presice</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">hostname</span> <span class="o">=</span> <span class="s2">&quot;precise&quot;</span>
-</span><span class='line'>    <span class="n">presice</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">network</span> <span class="ss">:private_network</span><span class="p">,</span> <span class="ss">ip</span><span class="p">:</span> <span class="s2">&quot;192.168.56.100&quot;</span>
-</span><span class='line'>    <span class="n">presice</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">provider</span> <span class="s2">&quot;virtualbox&quot;</span> <span class="k">do</span> <span class="o">|</span><span class="n">v</span><span class="o">|</span>
-</span><span class='line'>      <span class="n">v</span><span class="o">.</span><span class="n">customize</span> <span class="o">[</span><span class="s2">&quot;modifyvm&quot;</span><span class="p">,</span> <span class="ss">:id</span><span class="p">,</span> <span class="s2">&quot;--memory&quot;</span><span class="p">,</span> <span class="mi">2048</span><span class="o">]</span>
-</span><span class='line'>      <span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;jenkins_presice&quot;</span>
-</span><span class='line'>    <span class="k">end</span>
-</span><span class='line'>    <span class="n">presice</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">synced_folder</span> <span class="s2">&quot;data1&quot;</span><span class="p">,</span> <span class="s2">&quot;/vagrant_data&quot;</span>
-</span><span class='line'>    <span class="n">presice</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">provision</span> <span class="ss">:shell</span><span class="p">,</span> <span class="ss">:path</span> <span class="o">=&gt;</span> <span class="s2">&quot;./setup.sh&quot;</span>
-</span><span class='line'>  <span class="k">end</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<figure class='code'><figcaption><span>setup.sh / vagrantでubuntuを入れて、jenkins,apapcheをセットアップ。</span><a target='_blank' href='https://gist.github.com/8394448'>link</a></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="c">#!/bin/bash</span>
-</span><span class='line'>
-</span><span class='line'><span class="c"># ssh setting</span>
-</span><span class='line'>su - vagrant -c <span class="s1">&#39;</span>
-</span><span class='line'><span class="s1">  mkdir -p ${HOME}/.ssh</span>
-</span><span class='line'><span class="s1">  ## for more secure</span>
-</span><span class='line'><span class="s1">  # ssh-keygen -t rsa -q -P &quot;&quot; -f ~/.ssh/id_dsa</span>
-</span><span class='line'>
-</span><span class='line'><span class="s1">  ## sandbox setting</span>
-</span><span class='line'><span class="s1">  wget -q -O ${HOME}/.ssh/id_dsa https://raw.github.com/mitchellh/vagrant/master/keys/vagrant</span>
-</span><span class='line'><span class="s1">  wget -q -O ${HOME}/.ssh/id_dsa.pub https://raw.github.com/mitchellh/vagrant/master/keys/vagrant.pub</span>
-</span><span class='line'>
-</span><span class='line'><span class="s1">  cat $HOME/.ssh/id_dsa.pub &gt;&gt; $HOME/.ssh/authorized_keys</span>
-</span><span class='line'>
-</span><span class='line'><span class="s1">  chmod 700 ${HOME}/.ssh</span>
-</span><span class='line'><span class="s1">  chmod 600 ${HOME}/.ssh/id_dsa*</span>
-</span><span class='line'><span class="s1">&#39;</span>
-</span><span class='line'><span class="c"># ssh speed up</span>
-</span><span class='line'><span class="nb">echo </span>UseDNS no &gt;&gt; /etc/ssh/sshd_config
-</span><span class='line'>
-</span><span class='line'><span class="nb">cd</span> /tmp
-</span><span class='line'>wget -q -O - http://pkg.jenkins-ci.org/debian/jenkins-ci.org.key <span class="p">|</span> sudo apt-key add -
-</span><span class='line'>sudo sh -c <span class="s1">&#39;echo deb http://pkg.jenkins-ci.org/debian binary/ &gt; /etc/apt/sources.list.d/jenkins.list&#39;</span>
-</span><span class='line'>sudo apt-get -fy update
-</span><span class='line'>sudo apt-get -y install git openjdk-7-jdk apache2 jenkins zip unzip
-</span><span class='line'>
-</span><span class='line'><span class="c"># Setting up an Apache Proxy for port 80 -&gt; 8080</span>
-</span><span class='line'>sudo a2enmod proxy
-</span><span class='line'>sudo a2enmod proxy_http
-</span><span class='line'>sudo a2dissite default
-</span><span class='line'>sudo cat <span class="s">&lt;&lt;EOF &gt; /etc/apache2/sites-available/jenkins</span>
-</span><span class='line'><span class="s">&lt;VirtualHost *:80&gt;</span>
-</span><span class='line'><span class="s">    ServerAdmin webmaster@localhost</span>
-</span><span class='line'><span class="s">    ServerName ci.presice.com</span>
-</span><span class='line'><span class="s">    ServerAlias ci</span>
-</span><span class='line'><span class="s">    ProxyRequests Off</span>
-</span><span class='line'><span class="s">    &lt;Proxy *&gt;</span>
-</span><span class='line'><span class="s">        Order deny,allow</span>
-</span><span class='line'><span class="s">        Allow from all</span>
-</span><span class='line'><span class="s">    &lt;/Proxy&gt;</span>
-</span><span class='line'><span class="s">    ProxyPreserveHost on</span>
-</span><span class='line'><span class="s">    ProxyPass / http://localhost:8080/</span>
-</span><span class='line'><span class="s">&lt;/VirtualHost&gt;</span>
-</span><span class='line'><span class="s">EOF</span>
-</span><span class='line'>
-</span><span class='line'>sudo a2ensite jenkins
-</span><span class='line'>sudo apache2ctl restart
-</span><span class='line'>
-</span><span class='line'><span class="c"># scala</span>
-</span><span class='line'><span class="nv">DOWNLOAD_URL</span><span class="o">=</span>http://www.scala-lang.org/files/archive/scala-2.10.3.tgz
-</span><span class='line'><span class="nv">SCALA_TGZ</span><span class="o">=</span><span class="sb">`</span>basename <span class="k">${</span><span class="nv">DOWNLOAD_URL</span><span class="k">}</span><span class="sb">`</span>
-</span><span class='line'><span class="nv">SCALA_DIR</span><span class="o">=</span><span class="sb">`</span>basename <span class="k">${</span><span class="nv">SCALA_TGZ</span><span class="k">}</span> .tgz<span class="sb">`</span>
-</span><span class='line'>wget -q -O /tmp/<span class="k">${</span><span class="nv">SCALA_TGZ</span><span class="k">}</span> <span class="k">${</span><span class="nv">DOWNLOAD_URL</span><span class="k">}</span>
-</span><span class='line'>sudo tar zxf /tmp/<span class="k">${</span><span class="nv">SCALA_TGZ</span><span class="k">}</span> -C /usr/local/
-</span><span class='line'>sudo ln -s /usr/local/<span class="k">${</span><span class="nv">SCALA_DIR</span><span class="k">}</span> /usr/local/scala
-</span><span class='line'>
-</span><span class='line'><span class="c"># setting environment</span>
-</span><span class='line'><span class="nv">SETTING_FILE</span><span class="o">=</span>/etc/profile.d/append_environment_values.sh
-</span><span class='line'><span class="nb">echo</span> <span class="s1">&#39;#!/bin/bash&#39;</span> <span class="p">|</span> sudo tee -a <span class="k">${</span><span class="nv">SETTING_FILE</span><span class="k">}</span>
-</span><span class='line'><span class="nb">echo</span> <span class="s1">&#39;# added by vagrant setup.sh&#39;</span> <span class="p">|</span> sudo tee -a <span class="k">${</span><span class="nv">SETTING_FILE</span><span class="k">}</span>
-</span><span class='line'><span class="nb">echo</span> <span class="p">|</span> sudo tee -a <span class="k">${</span><span class="nv">SETTING_FILE</span><span class="k">}</span>
-</span><span class='line'><span class="nb">echo</span> <span class="s1">&#39;export JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-amd64&#39;</span> <span class="p">|</span> sudo tee -a <span class="k">${</span><span class="nv">SETTING_FILE</span><span class="k">}</span>
-</span><span class='line'><span class="nb">echo</span> <span class="s1">&#39;export SCALA_HOME=/usr/local/scala&#39;</span> <span class="p">|</span> sudo tee -a <span class="k">${</span><span class="nv">SETTING_FILE</span><span class="k">}</span>
-</span><span class='line'><span class="nb">echo</span> <span class="s1">&#39;export PATH=${SCALA_HOME}/bin:${JAVA_HOME}/bin:${PATH}&#39;</span> <span class="p">|</span> sudo tee -a <span class="k">${</span><span class="nv">SETTING_FILE</span><span class="k">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="nb">exit </span>0
-</span></code></pre></td></tr></table></div></figure>
-
-
-<a name="L.................................git......"></a>
-<h2>サンプルプロジェクトのgit設定</h2>
-
-<p>サンプルプロジェクトはPlayframeworkなので、jenkinsがplayコマンドを使えるようにする。</p>
-
-<pre><code>vagrant@precise:~$ wget http://downloads.typesafe.com/play/2.2.1/play-2.2.1.zip
-vagrant@precise:~$ unzip play-2.2.1.zip &gt; /dev/null
-vagrant@precise:~$ cd play-2.2.1/
-vagrant@precise:~/play-2.2.1$ sudo chmod +x play
-vagrant@precise:~/play-2.2.1$ sudo chmod -R a+w framework/
-vagrant@precise:~/play-2.2.1$ sudo chmod -R a+w repository/
-vagrant@precise:~/play-2.2.1$ cd framework/
-vagrant@precise:~/play-2.2.1/framework$ find . -maxdepth 1 -type f | grep -v '.bat' | xargs sudo chmod a+x
-</code></pre>
-
-<p>サンプルプロジェクト用のgitディレクトリを用意する。</p>
-
-<pre><code>vagrant@precise:~$ mkdir git
-vagrant@precise:~$ cd git
-vagrant@precise:~/git$ mkdir play_sample.git
-vagrant@precise:~/git$ cd play_sample.git/
-vagrant@precise:~/git/play_sample.git$ git --bare init
-</code></pre>
-
-<p>このへんぐらいはまではsetup.shに盛り込んでよかったかも。</p>
-
-<p>以下はサンプルプロジェクトの開発場所にて。</p>
-
-<pre><code>[sgyk@fujishima] 14-01-13 4:01:54 ~/local/script/scala/play_sample
-$ git init
-[sgyk@fujishima] 14-01-13 4:01:59 ~/local/script/scala/play_sample (git)-[master] {?}
-$ git add .
-[sgyk@fujishima] 14-01-13 4:02:04 ~/local/script/scala/play_sample (git)-[master] {?}
-$ git commit -m "initial commit"
-[master (root-commit) d3458d3] initial commit
-[sgyk@fujishima] 14-01-13 4:11:23 ~/local/script/scala/play_sample (git)-[master] {?}
-$ git remote add origin ssh://vagrant@presice/home/vagrant/git/play_sample.git
-[sgyk@fujishima] 14-01-13 4:11:24 ~/local/script/scala/play_sample (git)-[master] {?}
-$ git push origin master
-Counting objects: 32, done.
-Delta compression using up to 4 threads.
-Compressing objects: 100% (23/23), done.
-Writing objects: 100% (32/32), 38.22 KiB, done.
-Total 32 (delta 0), reused 0 (delta 0)
-To ssh://vagrant@presice/home/vagrant/git/play_sample.git
- * [new branch]      master -&gt; master
-</code></pre>
-
-<p>これでgitの準備は完了</p>
-
-<p>ちなみに、通常のsshコマンドでvagrantのVMにアクセスする場合は以下のようにしてsshのconfigに追加しておくと楽。</p>
-
-<pre><code>vagrant ssh-config --host presice &gt;&gt; ~/.ssh/config
-</code></pre>
-
-<p>今回はsshでgitにpushするようにしたので、このように設定しておくとハマりにくくなる。と思う。</p>
-
-<a name="jenkins........."></a>
-<h2>jenkinsの設定</h2>
-
-<p>最初にjenkinsからGitを扱えるようにプラグインをインストールする。左メニュー「Jenkinsの管理」から「プラグインの管理」にアクセスし、「利用可能」タブから「Jenkins GIT plugin」を選択し、「ダウンロードして再起動後にインストール」を押下する。その後、jenkinsを再起動する。</p>
-
-<p>左メニュー「新規ジョブの作成」をクリック。<br>
-ジョブ名を入力、「フリースタイル・プロジェクトのビルド」を選択して、OKを押下する。「ソースコード管理」でGitを選択し、Repository URLを入力する。「適用」、「保存」の順番に押下する。</p>
-
-<p>これでjenkinsへのリポジトリ登録が完了。</p>
-
-<p>ビルドの設定を行う。リストボックスの「ビルド手順の追加」から、「シェルの実行」を選択し、以下の様なシェルを入力する。</p>
-
-<pre><code>#!/bin/bash
-play=/home/vagrant/play-2.2.1/play
-cd ${WORKSPACE}
-
-${play} clean compile test
-
-exit 0
-</code></pre>
-
-<p>jenkinsにはPlayframeworkのプラグインがあるのだけど、うまく実行できなかったので上記のようにシェル実行するようにした。</p>
-
-<p>テスト結果は<code>${PLAY_HOME}/target/test-reports/{ApplicationSpec,IntegrationSpec}.xml</code>に出力されているので、「ビルド後の処理」に「JUnitテスト結果の集計」を追加して、<code>**/target/test-reports/*.xml</code>と入力すればOK。</p>
-
-<p>この設定により、ビルド後、左メニューの「テスト結果」からテスト結果のレポートを見ることができる。</p>
-
-<a name="jenkins............................................................"></a>
-<h3>jenkins上で任意のタイミングでテストを実行する。</h3>
-
-<p><a href="http://yuroyoro.hatenablog.com/entry/2012/12/20/175205">Jenkinsで外部パラメータで与えたブランチを対象にビルドできるようにしておくと凄惨性あがって墓ドル</a>を参考に設定する。</p>
-
-<p>設定画面にて、「ビルドのパラメータ化」にチェックを入れる。「パラメータの追加」というリストボックスで「文字列」を選択し、「名前」、「デフォルト値」、「説明」を適宜入力する。入力を終えたら、とりあえず「適用」をクリックする。</p>
-
-<p>「ソースコード管理」の項目にある「Branches to build」で、「Branch Specifier」の欄を<code>$branch</code>に変更する。</p>
-
-<p>「適用」、「保存」の順にクリックする。</p>
-
-<p>GUIからビルドを実行したい場合は、左メニュー「パラメータ付きビルド」をクリックして、ビルドしたいブランチを設定して、ビルドをクリックする。<br>
-CLIから実行したい場合は、以下のようにcurlを投げると良い。</p>
-
-<pre><code>vagrant@precise:~/local/script$ cat jenkins_build.sh
-#!/bin/bash
-
-JENKINS_JOB_URL=http://192.168.56.100/job/play_sample/buildWithParameters?branch=origin/feature/add_plugin_scct
-
-curl ${JENKINS_JOB_URL}
-
-exit 0
-</code></pre>
-
-<a name="jenkins............................................."></a>
-<h3>jenkins上で定期的にテストを実行する。</h3>
-
-<p>これは簡単で、プロジェクトごとの設定画面から、ビルド・トリガに「定期的に実行」を選択して、cronっぽく設定すればOK。<br>
-ただし、これは固定的な設定なので任意のブランチを選択することはできない。</p>
-
-<a name="L..................push............jenkins................................."></a>
-<h3>リポジトリにpushする度にjenkins上でテストを実行する。</h3>
-
-<p>リポジトリ側の<code>hook/post-receive</code>に以下のようなスクリプトを用意すればOK。微妙にハマったのが、post-receiveに渡される引数は<code>$1</code>, <code>$2</code>のようなコマンドライン引数ではなくて標準入力だということ。で、その標準入力をどう捉えればいいのかが、よくわからなかった。</p>
-
-<pre><code>#!/bin/bash
-while read oldrev newrev refname
-do
-    branch=$(git rev-parse --symbolic --abbrev-ref $refname)
-    echo branch is ${branch}
-    JENKINS_JOB_URL=http://192.168.56.100/job/play_sample/buildWithParameters?branch=origin/${branch}
-    curl ${JENKINS_JOB_URL}
-done
-
-exit 0
-</code></pre>
-
-<p>参考：<a href="http://stackoverflow.com/questions/7351551/writing-a-git-post-receive-hook-to-deal-with-a-specific-branch">Writing a git post-receive hook to deal with a specific branch</a>の<a href="http://stackoverflow.com/a/13057643">http://stackoverflow.com/a/13057643</a>より。</p>
-
-<a name="L........."></a>
-<h2>おまけ</h2>
-
-<p>jenkinsからテストを実行しようとしたら、以下のようなエラーが発生した。</p>
-
-<pre><code>java.io.IOException: No such file or directory
-    at java.io.UnixFileSystem.createFileExclusively(Native Method)
-    at java.io.File.createNewFile(File.java:947)
-    at xsbt.boot.Locks$.apply0(Locks.scala:35)
-    at xsbt.boot.Locks$.apply(Locks.scala:28)
-    at xsbt.boot.Launch.locked(Launch.scala:178)
-    at xsbt.boot.Launch.app(Launch.scala:93)
-    at xsbt.boot.Launch.app(Launch.scala:91)
-    at xsbt.boot.Launch$.run(Launch.scala:51)
-    at xsbt.boot.Launch$$anonfun$explicit$1.apply(Launch.scala:45)
-    at xsbt.boot.Launch$.launch(Launch.scala:65)
-    at xsbt.boot.Launch$.apply(Launch.scala:16)
-    at xsbt.boot.Boot$.runImpl(Boot.scala:32)
-    at xsbt.boot.Boot$.main(Boot.scala:21)
-    at xsbt.boot.Boot.main(Boot.scala)
-Error during sbt execution: java.io.IOException: No such file or directory
-</code></pre>
-
-<p>エラー発生箇所: <a href="https://github.com/harrah/xsbt/blob/0.13/launch/src/main/scala/xsbt/boot/Locks.scala#L35">https://github.com/harrah/xsbt/blob/0.13/launch/src/main/scala/xsbt/boot/Locks.scala#L35</a><br>解説は<a href="http://stackoverflow.com/a/8105883">http://stackoverflow.com/a/8105883</a>を参照。<br>要は、playコマンドがあるディレクトリにファイルとかをつくろうとしたけど、ダメでした、というエラー。なので、以下のように対応すればOK。</p>
-
-<pre><code>vagrant@precise:~/play-2.2.1$ sudo chmod a+x play
-vagrant@precise:~/play-2.2.1$ sudo chmod -R a+w framework/
-vagrant@precise:~/play-2.2.1$ sudo chmod -R a+w repository/
-vagrant@precise:~/play-2.2.1$ cd framework/
-vagrant@precise:~/play-2.2.1/framework$ find . -maxdepth 1 -type f | grep -v '.bat' | xargs sudo chmod a+x
-</code></pre>
-
-<p>また、以下のようなエラーが出る場合がある。</p>
-
-<pre><code>java.io.FileNotFoundException: /var/lib/jenkins/jobs/play_sample/workspace/target/resolution-cache/play_sample/play_sample_2.10/1.0-SNAPSHOT/resolved.xml.xml
-</code></pre>
-
-<p>workspaceを一旦クリアして再ビルドすればOK</p>
-
-<hr />
-
-<p>以上で、任意 / 定期 / push後 のタイミングで自動テストをjenkins上で行なうことが可能となった。また、任意およびpush後のテストは任意のブランチに対して行なうことができるので、サーバ上でバシバシテストを回していくことができるんじゃないかなーと思う。</p>
 ]]></content>
   </entry>
   

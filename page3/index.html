@@ -9,7 +9,7 @@
   <meta name="author" content="sgykfjsm">
 
   
-  <meta name="description" content="前回、mesosをDEBパッケージを使ってインストールする方法を示した。これを前提としてmesosが動いているクラスタにHadoopをインストールし、wordcountをchrnosを通じて動かすところまでの手順を示す。 ちなみに見てくれている人の時間をムダにしないために言うと、 &hellip;">
+  <meta name="description" content="jenkins上でテストを実行したい、自動化したいというリクエストが来たので、その設定方法をまとめた。 今回はplay2.2.1のscalaをサンプルプロジェクトととした。 ">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,43 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/01/13/auto-test-on-jenkins/">jenkinsでのテスト自動化いろいろ</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-01-13T12:28:00+09:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>12:28 pm</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>jenkins上でテストを実行したい、自動化したいというリクエストが来たので、その設定方法をまとめた。</p>
+
+<p>今回はplay2.2.1のscalaをサンプルプロジェクトととした。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2014/01/13/auto-test-on-jenkins/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -661,50 +698,6 @@ DB設計鉄則三箇条
   
     <footer>
       <a rel="full-article" href="/blog/2013/08/18/couchbase-on-ec2-with-td-agent/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/08/11/fluentd-on-ec2-with-s3/">ec2にfluentdをインストールする</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2013-08-11T02:23:00+09:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>11</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>2:23 am</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><a name="L......"></a>
-<h2>目的</h2>
-
-<p>fluentdをec2に導入してS3にアップロードする。</p>
-
-<a name="L......"></a>
-<h2>導入</h2>
-
-<p>送出側と収集側はどちらもm1.micro、Amazon Linuxで用意した。<br>
-手順は公式の<a href="http://docs.fluentd.org/articles/install-by-rpm">Installing Fluentd Using rpm Package</a>に従った。</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2013/08/11/fluentd-on-ec2-with-s3/">Read on &rarr;</a>
     </footer>
   
 
