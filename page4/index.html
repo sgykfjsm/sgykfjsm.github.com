@@ -9,9 +9,7 @@
   <meta name="author" content="sgykfjsm">
 
   
-  <meta name="description" content="
-目的 fluentdをec2に導入してS3にアップロードする。 導入 送出側と収集側はどちらもm1.micro、Amazon Linuxで用意した。
-手順は公式のInstalling Fluentd Using rpm Packageに従った。 ">
+  <meta name="description" content="目的 ec2にCouchbaseを入れるついでに、fluentdで集めたログをcouchbaseに貯めこむ。 couchbaseについて 元々はLutus Notesを起源に持つCouchDBの開発者のひとりであるDamien Katz氏が商業展開している製品。 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -90,6 +88,57 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2013/08/18/couchbase-on-ec2-with-td-agent/">ec2にcouchbaseをインストールする。ついでにPython SDKとtd-agentも。</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2013-08-18T22:46:00+09:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>18</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>10:46 pm</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><a name="L......"></a>
+<h2>目的</h2>
+
+<p>ec2にCouchbaseを入れるついでに、fluentdで集めたログをcouchbaseに貯めこむ。</p>
+
+<a name="couchbase............"></a>
+<h2>couchbaseについて</h2>
+
+<ul>
+<li>元々はLutus Notesを起源に持つ<a href="http://couchdb.apache.org/">CouchDB</a>の開発者のひとりであるDamien Katz氏が商業展開している製品。</li>
+<li>Memcachedもベースとなっているので、<a href="http://www.couchbase.com/jp/memcached">MemcachedをCouchbaseクラスタにリプレースした事例もある。</a></li>
+<li>Enterprise Edition(EE)とCommunity Edition(CE)の２つがあり、前者は2nodeまで無料、後者は無制限に無料で使える。</li>
+<li>EEとCEの違いは、EEではサポートが購入でき、CEに比べ先進的な機能が付属している。対してCEはEEの型落ちのような位置づけである。</li>
+<li>MongoDBと同じドキュメント型NoSQLに位置づけられる。</li>
+<li>自動シャーディング、分散クエリ、独立したキャッシュ郡などの機能や特徴を持つ。</li>
+</ul>
+
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2013/08/18/couchbase-on-ec2-with-td-agent/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -450,42 +499,6 @@ Twitter社が作ってるぐらいだからTwitterとの連携が楽にできる
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/03/14/rpscala-99/">Scala勉強会第99回 in 本郷に参加した。</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2013-03-14T22:59:00+09:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>14</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>10:59 pm</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>久しぶり（1年ぶりぐらい？）に参加した。
-<a href="http://partake.in/events/b1a85809-761d-4fb2-83e7-1aecd7e96b0f">partake</a></p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2013/03/14/rpscala-99/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/page5">&larr; Older</a>
@@ -505,7 +518,7 @@ Twitter社が作ってるぐらいだからTwitterとの連携が楽にできる
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2015 - sgykfjsm -
+  Copyright &copy; 2016 - sgykfjsm -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
 </p>
 

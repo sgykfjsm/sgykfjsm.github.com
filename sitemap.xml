@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://sgykfjsm.github.io/blog/2016/01/20/golang-function-tracing/</loc>
+    <lastmod>2016-01-20T00:33:25+09:00</lastmod>
+  </url>
+  <url>
     <loc>http://sgykfjsm.github.io/blog/2015/11/03/compare-gomvpkg-with-gb/</loc>
     <lastmod>2015-11-03T20:02:45+09:00</lastmod>
   </url>
@@ -347,5 +351,17 @@
   </url>
   <url>
     <loc>http://sgykfjsm.github.io/blog/categories/go/</loc>
+  </url>
+  <url>
+    <loc>http://sgykfjsm.github.io/page2/</loc>
+  </url>
+  <url>
+    <loc>http://sgykfjsm.github.io/page3/</loc>
+  </url>
+  <url>
+    <loc>http://sgykfjsm.github.io/page4/</loc>
+  </url>
+  <url>
+    <loc>http://sgykfjsm.github.io/page5/</loc>
   </url>
 </urlset>

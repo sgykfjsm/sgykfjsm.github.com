@@ -4,7 +4,7 @@
   <title><![CDATA[sgykfjsm.github.com]]></title>
   <link href="http://sgykfjsm.github.io/atom.xml" rel="self"/>
   <link href="http://sgykfjsm.github.io/"/>
-  <updated>2015-11-04T00:43:01+09:00</updated>
+  <updated>2016-01-21T01:26:17+09:00</updated>
   <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
@@ -12,6 +12,416 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Goでfunctionが実行された順番を追いかける]]></title>
+    <link href="http://sgykfjsm.github.io/blog/2016/01/20/golang-function-tracing/"/>
+    <updated>2016-01-20T00:33:25+09:00</updated>
+    <id>http://sgykfjsm.github.io/blog/2016/01/20/golang-function-tracing</id>
+    <content type="html"><![CDATA[<p>Goはgo routineを使って並行処理を容易に書くことができるが、下手に書くと色々なfunctionが相互に入り乱れて処理が追いづらいときがある。ここではGoでfunctionをトレースする方法をメモしておく。</p>
+
+<!-- more -->
+
+
+<p>結論から言えば、<code>runtime.Caller</code>を使えば良い。なお、<code>debug.PrintStack</code>でstack traceを出力することができるが、標準エラー出力となるのでちょっと使いづらい。しかし、ただコンソールで出力したいだけなら、<code>debug.PrintStack</code>のほうが簡単であるし、これ以降を読む必要は無い。</p>
+
+<ul>
+<li><a href="https://golang.org/pkg/runtime/#Caller">func Caller</a></li>
+<li><a href="https://golang.org/pkg/runtime/debug/#PrintStack">func PrintStack</a></li>
+</ul>
+
+
+<a name="L.................."></a>
+<h2>簡単な使い方</h2>
+
+<p><code>runtime.Caller</code>とは何なのかはマニュアルを参照すべきだけど、簡単に言うと、引数の数値に応じて<code>Caller</code>が呼び出された時点での呼び出し元の情報を提供してくれるfunctionと言える。例えば、以下のような処理を想定してみる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;log&quot;</span>
+</span><span class='line'>  <span class="s">&quot;runtime&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">doCaller</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">programCounter</span><span class="p">,</span> <span class="nx">sourceFileName</span><span class="p">,</span> <span class="nx">sourceFileLineNum</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">runtime</span><span class="p">.</span><span class="nx">Caller</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;programCounter: %v\n&quot;</span><span class="p">,</span> <span class="nx">programCounter</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;souruntime: %s\n&quot;</span><span class="p">,</span> <span class="nx">sourceFileName</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;sourceFileLineNum: %d\n&quot;</span><span class="p">,</span> <span class="nx">sourceFileLineNum</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;ok: %t\n&quot;</span><span class="p">,</span> <span class="nx">ok</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">callCaller</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">doCaller</span><span class="p">()</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">callCaller</span><span class="p">()</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a href="https://play.golang.org/p/X_tDUvfR7s">https://play.golang.org/p/X_tDUvfR7s</a></p>
+
+<p>上記の場合、処理は<code>main</code> -> <code>callCaller</code> -> <code>doCaller</code>の順で実行され、この順番で<em>goroutineのstack</em>にfunctionが積み上がる（正確には<code>main</code>の前に<code>runtime.main</code>と<code>runtime.goexit</code>が呼び出されているがここでは省略する）。<code>runtime.Caller</code>の引数は<code>skip int</code>と定義されているが、イメージとしては配列のインデックスみたいな感じで、stackの上から何番目の情報を取得するか、を指定することができる。上記の場合、<code>1</code>を指定しているので、<code>callCaller</code>の情報を取得することができる。結果は以下の通り。なんかタイムスタンプがおかしい気がするが、気にしない。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="mi">2009</span><span class="o">/</span><span class="mi">11</span><span class="o">/</span><span class="mi">10</span> <span class="mi">23</span><span class="p">:</span><span class="mo">00</span><span class="p">:</span><span class="mo">00</span> <span class="nx">programCounter</span><span class="p">:</span> <span class="mi">132352</span>
+</span><span class='line'><span class="mi">2009</span><span class="o">/</span><span class="mi">11</span><span class="o">/</span><span class="mi">10</span> <span class="mi">23</span><span class="p">:</span><span class="mo">00</span><span class="p">:</span><span class="mo">00</span> <span class="nx">souruntime</span><span class="p">:</span> <span class="o">/</span><span class="nx">tmp</span><span class="o">/</span><span class="nx">sandbox627002569</span><span class="o">/</span><span class="nx">main</span><span class="p">.</span><span class="k">go</span>
+</span><span class='line'><span class="mi">2009</span><span class="o">/</span><span class="mi">11</span><span class="o">/</span><span class="mi">10</span> <span class="mi">23</span><span class="p">:</span><span class="mo">00</span><span class="p">:</span><span class="mo">00</span> <span class="nx">sourceFileLineNum</span><span class="p">:</span> <span class="mi">17</span>
+</span><span class='line'><span class="mi">2009</span><span class="o">/</span><span class="mi">11</span><span class="o">/</span><span class="mi">10</span> <span class="mi">23</span><span class="p">:</span><span class="mo">00</span><span class="p">:</span><span class="mo">00</span> <span class="nx">ok</span><span class="p">:</span> <span class="kc">true</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>変数名から何となく推測できると思うけど、<code>runtime.Caller</code>の返り値の１つ目はプログラムカウンター、2つ目がビルドされたソースファイル名（実行ファイル名では無いことに注意）、3つ目はソースファイル内での呼びだされた位置、4つ目は情報が取得できたか否かを示すbooleanとなっている。</p>
+
+<p>これだけだと、どの関数から呼ばれたか？がわからないので、もう少し処理を追加してみる。使うfunctionは<code>FuncForPC</code>だ。</p>
+
+<ul>
+<li><a href="https://golang.org/pkg/runtime/#FuncForPC">FuncForPC</a></li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;log&quot;</span>
+</span><span class='line'>  <span class="s">&quot;runtime&quot;</span>
+</span><span class='line'>  <span class="s">&quot;strings&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">doCaller</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">programCounter</span><span class="p">,</span> <span class="nx">sourceFileName</span><span class="p">,</span> <span class="nx">sourceFileLineNum</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">runtime</span><span class="p">.</span><span class="nx">Caller</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;programCounter: %v\n&quot;</span><span class="p">,</span> <span class="nx">programCounter</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;souruntime: %s\n&quot;</span><span class="p">,</span> <span class="nx">sourceFileName</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;sourceFileLineNum: %d\n&quot;</span><span class="p">,</span> <span class="nx">sourceFileLineNum</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;ok: %t\n&quot;</span><span class="p">,</span> <span class="nx">ok</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nb">println</span><span class="p">(</span><span class="s">&quot;-----&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">fn</span> <span class="o">:=</span> <span class="nx">runtime</span><span class="p">.</span><span class="nx">FuncForPC</span><span class="p">(</span><span class="nx">programCounter</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;Function Name: %s\n&quot;</span><span class="p">,</span> <span class="nx">fn</span><span class="p">.</span><span class="nx">Name</span><span class="p">())</span>
+</span><span class='line'>  <span class="nx">fileName</span><span class="p">,</span> <span class="nx">fileLine</span> <span class="o">:=</span> <span class="nx">fn</span><span class="p">.</span><span class="nx">FileLine</span><span class="p">(</span><span class="nx">programCounter</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;FileName:%s, FileLine: %d\n&quot;</span><span class="p">,</span> <span class="nx">fileName</span><span class="p">,</span> <span class="nx">fileLine</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">splitedFnName</span> <span class="o">:=</span> <span class="nx">strings</span><span class="p">.</span><span class="nx">Split</span><span class="p">(</span><span class="nx">fn</span><span class="p">.</span><span class="nx">Name</span><span class="p">(),</span> <span class="s">&quot;.&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">packageName</span> <span class="o">:=</span> <span class="nx">splitedFnName</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span class='line'>  <span class="nx">callerFuncName</span> <span class="o">:=</span> <span class="nx">splitedFnName</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</span><span class='line'>  <span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;packageName: %s\n&quot;</span><span class="p">,</span> <span class="nx">packageName</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;functionName: %s\n&quot;</span><span class="p">,</span> <span class="nx">callerFuncName</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">callCaller</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">doCaller</span><span class="p">()</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">callCaller</span><span class="p">()</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a href="https://play.golang.org/p/sFMnwYTHYF">https://play.golang.org/p/sFMnwYTHYF</a></p>
+
+<p>結果は以下の通り。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="mi">2009</span><span class="o">/</span><span class="mi">11</span><span class="o">/</span><span class="mi">10</span> <span class="mi">23</span><span class="p">:</span><span class="mo">00</span><span class="p">:</span><span class="mo">00</span> <span class="nx">programCounter</span><span class="p">:</span> <span class="mi">134432</span>
+</span><span class='line'><span class="mi">2009</span><span class="o">/</span><span class="mi">11</span><span class="o">/</span><span class="mi">10</span> <span class="mi">23</span><span class="p">:</span><span class="mo">00</span><span class="p">:</span><span class="mo">00</span> <span class="nx">souruntime</span><span class="p">:</span> <span class="o">/</span><span class="nx">tmp</span><span class="o">/</span><span class="nx">sandbox246241909</span><span class="o">/</span><span class="nx">main</span><span class="p">.</span><span class="k">go</span>
+</span><span class='line'><span class="mi">2009</span><span class="o">/</span><span class="mi">11</span><span class="o">/</span><span class="mi">10</span> <span class="mi">23</span><span class="p">:</span><span class="mo">00</span><span class="p">:</span><span class="mo">00</span> <span class="nx">sourceFileLineNum</span><span class="p">:</span> <span class="mi">32</span>
+</span><span class='line'><span class="mi">2009</span><span class="o">/</span><span class="mi">11</span><span class="o">/</span><span class="mi">10</span> <span class="mi">23</span><span class="p">:</span><span class="mo">00</span><span class="p">:</span><span class="mo">00</span> <span class="nx">ok</span><span class="p">:</span> <span class="kc">true</span>
+</span><span class='line'><span class="o">-----</span>
+</span><span class='line'><span class="mi">2009</span><span class="o">/</span><span class="mi">11</span><span class="o">/</span><span class="mi">10</span> <span class="mi">23</span><span class="p">:</span><span class="mo">00</span><span class="p">:</span><span class="mo">00</span> <span class="nx">Function</span> <span class="nx">Name</span><span class="p">:</span> <span class="nx">main</span><span class="p">.</span><span class="nx">callCaller</span>
+</span><span class='line'><span class="mi">2009</span><span class="o">/</span><span class="mi">11</span><span class="o">/</span><span class="mi">10</span> <span class="mi">23</span><span class="p">:</span><span class="mo">00</span><span class="p">:</span><span class="mo">00</span> <span class="nx">FileName</span><span class="p">:</span><span class="o">/</span><span class="nx">tmp</span><span class="o">/</span><span class="nx">sandbox246241909</span><span class="o">/</span><span class="nx">main</span><span class="p">.</span><span class="k">go</span><span class="p">,</span> <span class="nx">FileLine</span><span class="p">:</span> <span class="mi">33</span>
+</span><span class='line'><span class="mi">2009</span><span class="o">/</span><span class="mi">11</span><span class="o">/</span><span class="mi">10</span> <span class="mi">23</span><span class="p">:</span><span class="mo">00</span><span class="p">:</span><span class="mo">00</span> <span class="nx">packageName</span><span class="p">:</span> <span class="nx">main</span>
+</span><span class='line'><span class="mi">2009</span><span class="o">/</span><span class="mi">11</span><span class="o">/</span><span class="mi">10</span> <span class="mi">23</span><span class="p">:</span><span class="mo">00</span><span class="p">:</span><span class="mo">00</span> <span class="nx">functionName</span><span class="p">:</span> <span class="nx">callCaller</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>FuncForPC</code>は引数で受け取ったプログラムカウンターの詳細な情報を返してくれる。見ての通り、<code>Caller</code>で取得したプログラムカンターから呼び出し元のfunction名、ファイル情報諸々を取得することができる。</p>
+
+<p>このように、<code>Caller</code>と<code>FuncForPC</code>を使うことで、ある関数がどこから呼び出されたのかを知ることができる。</p>
+
+<a name="L......1........................"></a>
+<h2>もう1歩踏み込んでみる</h2>
+
+<p>実際にデバッグする際には、最初のエントリーポイントからエラーが発生したfunctionまでを順に辿りたいことある。上記の<code>doCaller</code>を全ての関数に<code>defer</code>で登録しておけば出来なくはないが、そんなことはしたくないはず。通常は<code>log.Fatal</code>などでプログラムを終了させる直前とかに呼び出し情報を取得できるようにしておきたいはず。要は呼び出し情報をまとめて取得して、良い感じに扱いたいのだ。</p>
+
+<p>とても安直な発想だが、<code>Caller</code>の引数を1つずつインクリメントしてたどる方法をここでは試してみる。例えば以下の様な感じ。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;fmt&quot;</span>
+</span><span class='line'>  <span class="s">&quot;regexp&quot;</span>
+</span><span class='line'>  <span class="s">&quot;runtime&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="p">(</span>
+</span><span class='line'>  <span class="nx">re</span> <span class="p">=</span> <span class="nx">regexp</span><span class="p">.</span><span class="nx">MustCompile</span><span class="p">(</span><span class="s">`^(\S.+)\.(\S.+)$`</span><span class="p">)</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">type</span> <span class="nx">CallerInfo</span> <span class="kd">struct</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">PackageName</span>  <span class="kt">string</span>
+</span><span class='line'>  <span class="nx">FunctionName</span> <span class="kt">string</span>
+</span><span class='line'>  <span class="nx">FileName</span>     <span class="kt">string</span>
+</span><span class='line'>  <span class="nx">FileLine</span>     <span class="kt">int</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">Dump</span><span class="p">()</span> <span class="p">(</span><span class="nx">callerInfo</span> <span class="p">[]</span><span class="o">*</span><span class="nx">CallerInfo</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">1</span><span class="p">;</span> <span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">pc</span><span class="p">,</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">runtime</span><span class="p">.</span><span class="nx">Caller</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="c1">// https://golang.org/pkg/runtime/#Caller</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">!</span><span class="nx">ok</span> <span class="p">{</span>
+</span><span class='line'>          <span class="k">break</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">fn</span> <span class="o">:=</span> <span class="nx">runtime</span><span class="p">.</span><span class="nx">FuncForPC</span><span class="p">(</span><span class="nx">pc</span><span class="p">)</span>
+</span><span class='line'>      <span class="nx">fileName</span><span class="p">,</span> <span class="nx">fileLine</span> <span class="o">:=</span> <span class="nx">fn</span><span class="p">.</span><span class="nx">FileLine</span><span class="p">(</span><span class="nx">pc</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">_fn</span> <span class="o">:=</span> <span class="nx">re</span><span class="p">.</span><span class="nx">FindStringSubmatch</span><span class="p">(</span><span class="nx">fn</span><span class="p">.</span><span class="nx">Name</span><span class="p">())</span>
+</span><span class='line'>      <span class="nx">callerInfo</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">callerInfo</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">CallerInfo</span><span class="p">{</span>
+</span><span class='line'>          <span class="nx">PackageName</span><span class="p">:</span>  <span class="nx">_fn</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+</span><span class='line'>          <span class="nx">FunctionName</span><span class="p">:</span> <span class="nx">_fn</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+</span><span class='line'>          <span class="nx">FileName</span><span class="p">:</span>     <span class="nx">fileName</span><span class="p">,</span>
+</span><span class='line'>          <span class="nx">FileLine</span><span class="p">:</span>     <span class="nx">fileLine</span><span class="p">,</span>
+</span><span class='line'>      <span class="p">})</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">foo</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">info</span> <span class="o">:=</span> <span class="nx">Dump</span><span class="p">()</span>
+</span><span class='line'>  <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="nb">len</span><span class="p">(</span><span class="nx">info</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="nx">i</span><span class="o">--</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">v</span> <span class="o">:=</span> <span class="nx">info</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span>
+</span><span class='line'>      <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;%02d: %s.%s@%s:%d\n&quot;</span><span class="p">,</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">v</span><span class="p">.</span><span class="nx">PackageName</span><span class="p">,</span> <span class="nx">v</span><span class="p">.</span><span class="nx">FunctionName</span><span class="p">,</span> <span class="nx">v</span><span class="p">.</span><span class="nx">FileName</span><span class="p">,</span> <span class="nx">v</span><span class="p">.</span><span class="nx">FileLine</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">bar</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">foo</span><span class="p">()</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">bar</span><span class="p">()</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a href="https://play.golang.org/p/iED00tQ9EW">https://play.golang.org/p/iED00tQ9EW</a></p>
+
+<p>上記を実行すると、以下の様にスタックの下から、つまりfunctionが実行された順番に表示される。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="mo">04</span><span class="p">:</span> <span class="nx">runtime</span><span class="p">.</span><span class="nx">goexit</span><span class="err">@</span><span class="o">/</span><span class="nx">usr</span><span class="o">/</span><span class="nx">local</span><span class="o">/</span><span class="k">go</span><span class="o">/</span><span class="nx">src</span><span class="o">/</span><span class="nx">runtime</span><span class="o">/</span><span class="nx">asm_amd64p32</span><span class="p">.</span><span class="nx">s</span><span class="p">:</span><span class="mi">1133</span>
+</span><span class='line'><span class="mo">03</span><span class="p">:</span> <span class="nx">runtime</span><span class="p">.</span><span class="nx">main</span><span class="err">@</span><span class="o">/</span><span class="nx">usr</span><span class="o">/</span><span class="nx">local</span><span class="o">/</span><span class="k">go</span><span class="o">/</span><span class="nx">src</span><span class="o">/</span><span class="nx">runtime</span><span class="o">/</span><span class="nx">proc</span><span class="p">.</span><span class="k">go</span><span class="p">:</span><span class="mi">120</span>
+</span><span class='line'><span class="mo">02</span><span class="p">:</span> <span class="nx">main</span><span class="p">.</span><span class="nx">main</span><span class="err">@</span><span class="o">/</span><span class="nx">tmp</span><span class="o">/</span><span class="nx">sandbox266928852</span><span class="o">/</span><span class="nx">main</span><span class="p">.</span><span class="k">go</span><span class="p">:</span><span class="mi">55</span>
+</span><span class='line'><span class="mo">01</span><span class="p">:</span> <span class="nx">main</span><span class="p">.</span><span class="nx">bar</span><span class="err">@</span><span class="o">/</span><span class="nx">tmp</span><span class="o">/</span><span class="nx">sandbox266928852</span><span class="o">/</span><span class="nx">main</span><span class="p">.</span><span class="k">go</span><span class="p">:</span><span class="mi">51</span>
+</span><span class='line'><span class="mo">00</span><span class="p">:</span> <span class="nx">main</span><span class="p">.</span><span class="nx">foo</span><span class="err">@</span><span class="o">/</span><span class="nx">tmp</span><span class="o">/</span><span class="nx">sandbox266928852</span><span class="o">/</span><span class="nx">main</span><span class="p">.</span><span class="k">go</span><span class="p">:</span><span class="mi">42</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="L......"></a>
+<h2>余談</h2>
+
+<p><code>Caller</code>は<em>goroutineのstackに積み上げられた情報</em>を出力するため、対象の処理に<code>go xxx()</code>や<code>go func</code>が含まれていると、上記のように必ずしも<code>runtime.goexit</code>-><code>runtime.main</code>の順番で始まるとは限らないことに注意すること。例えば、以下の様な感じ。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">wg</span> <span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span>
+</span><span class='line'>  <span class="nx">wg</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">bar</span><span class="p">()</span>
+</span><span class='line'>      <span class="nx">wg</span><span class="p">.</span><span class="nx">Done</span><span class="p">()</span>
+</span><span class='line'>  <span class="p">}()</span>
+</span><span class='line'>  <span class="nx">wg</span><span class="p">.</span><span class="nx">Wait</span><span class="p">()</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a href="https://play.golang.org/p/WZE3lItf8h">https://play.golang.org/p/WZE3lItf8h</a></p>
+
+<p>上記の結果は以下の通りで、<code>runtime.main</code>が無いことがわかる。これは<code>go func</code>が<code>func main</code>とは異なるgoroutineで処理されていることを示している（と思う）。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="mo">03</span><span class="p">:</span> <span class="nx">runtime</span><span class="p">.</span><span class="nx">goexit</span><span class="err">@</span><span class="o">/</span><span class="nx">usr</span><span class="o">/</span><span class="nx">local</span><span class="o">/</span><span class="k">go</span><span class="o">/</span><span class="nx">src</span><span class="o">/</span><span class="nx">runtime</span><span class="o">/</span><span class="nx">asm_amd64p32</span><span class="p">.</span><span class="nx">s</span><span class="p">:</span><span class="mi">1133</span>
+</span><span class='line'><span class="mo">02</span><span class="p">:</span> <span class="nx">main</span><span class="p">.</span><span class="nx">main</span><span class="p">.</span><span class="nx">func1</span><span class="err">@</span><span class="o">/</span><span class="nx">tmp</span><span class="o">/</span><span class="nx">sandbox306261972</span><span class="o">/</span><span class="nx">main</span><span class="p">.</span><span class="k">go</span><span class="p">:</span><span class="mi">59</span>
+</span><span class='line'><span class="mo">01</span><span class="p">:</span> <span class="nx">main</span><span class="p">.</span><span class="nx">bar</span><span class="err">@</span><span class="o">/</span><span class="nx">tmp</span><span class="o">/</span><span class="nx">sandbox306261972</span><span class="o">/</span><span class="nx">main</span><span class="p">.</span><span class="k">go</span><span class="p">:</span><span class="mi">52</span>
+</span><span class='line'><span class="mo">00</span><span class="p">:</span> <span class="nx">main</span><span class="p">.</span><span class="nx">foo</span><span class="err">@</span><span class="o">/</span><span class="nx">tmp</span><span class="o">/</span><span class="nx">sandbox306261972</span><span class="o">/</span><span class="nx">main</span><span class="p">.</span><span class="k">go</span><span class="p">:</span><span class="mi">43</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>また、次の場合は同じ関数をclosureでラップせずにgoroutineとして起動した場合。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">go</span> <span class="nx">bar</span><span class="p">()</span>
+</span><span class='line'>  <span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="mi">1</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a href="https://play.golang.org/p/CcNp-Do9mb">https://play.golang.org/p/CcNp-Do9mb</a></p>
+
+<p>結果は以下の様になる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="mo">02</span><span class="p">:</span> <span class="nx">runtime</span><span class="p">.</span><span class="nx">goexit</span><span class="err">@</span><span class="o">/</span><span class="nx">usr</span><span class="o">/</span><span class="nx">local</span><span class="o">/</span><span class="k">go</span><span class="o">/</span><span class="nx">src</span><span class="o">/</span><span class="nx">runtime</span><span class="o">/</span><span class="nx">asm_amd64p32</span><span class="p">.</span><span class="nx">s</span><span class="p">:</span><span class="mi">1133</span>
+</span><span class='line'><span class="mo">01</span><span class="p">:</span> <span class="nx">main</span><span class="p">.</span><span class="nx">bar</span><span class="err">@</span><span class="o">/</span><span class="nx">tmp</span><span class="o">/</span><span class="nx">sandbox385327178</span><span class="o">/</span><span class="nx">main</span><span class="p">.</span><span class="k">go</span><span class="p">:</span><span class="mi">52</span>
+</span><span class='line'><span class="mo">00</span><span class="p">:</span> <span class="nx">main</span><span class="p">.</span><span class="nx">foo</span><span class="err">@</span><span class="o">/</span><span class="nx">tmp</span><span class="o">/</span><span class="nx">sandbox385327178</span><span class="o">/</span><span class="nx">main</span><span class="p">.</span><span class="k">go</span><span class="p">:</span><span class="mi">43</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>go func</code>の場合と違って、closureを経由せずに、<code>bar</code>以降の処理を別のgoroutineとして起動させていることがわかる。</p>
+
+<p>ちゃんとわかっている人からすれば当然のことに思われるだろうが、自分のようなGo初心者だと出力内容を見て、アレ？と思うかもしれないので、goroutineを使う処理のstack情報を取得する場合は注意すること。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[ベンダリングのためのgomvpkgとgbについて考えてみる]]></title>
@@ -3723,167 +4133,6 @@ ulimit: /usr/include/ulimit.h /usr/share/man/man1/ulimit.1.gz /usr/share/man/man
 <li><a href="http://d.hatena.ne.jp/sho-yamasaki/20120405/1333640589">データベースとテーブルのサイズを確認する方法</a></li>
 </ul>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Amazon RDSのMySQLでオンラインメンテをどうやればいいかを調べた]]></title>
-    <link href="http://sgykfjsm.github.io/blog/2014/01/26/online-maintenance-on-rds-mysql/"/>
-    <updated>2014-01-26T20:28:00+09:00</updated>
-    <id>http://sgykfjsm.github.io/blog/2014/01/26/online-maintenance-on-rds-mysql</id>
-    <content type="html"><![CDATA[<p>RDSのMySQLでオンラインメンテ、つまり無停止でのスキーマ変更などをどうやれば良いか、という話。 今までは色々小細工をして生のALTER文を発行していたけど、さすがにロック時間とかが気になり始めたので調べた次第。 ざっとググると、<a href="http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html">pt-online-schema-change</a>というツールを使うと良さそうだったので、ここにその作業ログを残す。 以下は参考にしたブログ記事など。</p>
-
-<ul>
-<li><a href="http://blog.livedoor.jp/sasata299/archives/51983526.html">pt-online-schema-changeを利用して無停止でスキーマ変更</a></li>
-<li><a href="https://twitter.com/frsyuki/statuses/291713629177405441">@frsyukiさんのツイート</a></li>
-<li><a href="http://stackoverflow.com/questions/8919907/can-i-create-trigger-in-an-rds-db">Can I CREATE TRIGGER in an rds DB?</a></li>
-</ul>
-
-
-<!-- more -->
-
-
-<p>なお、別のツールで<a href="http://openarkkit.googlecode.com/svn/trunk/openarkkit/doc/html/oak-online-alter-table.html">oak-online-alter-table</a>というものがある。oak-online-alter-tableに関する記事は以下が参考になる。</p>
-
-<ul>
-<li><a href="http://d.hatena.ne.jp/sh2/20100703">MySQLでサービス停止のないALTER TABLEの検討</a></li>
-</ul>
-
-
-<a name="L............"></a>
-<h2>事前準備</h2>
-
-<p>pt-online-schema-changeの実行に必要なモジュールがあるかを確認する。</p>
-
-<pre><code>$ perl -MDBD::mysql
-Can't locate DBD/mysql.pm in @INC (@INC contains: /Library/Perl/5.12/darwin-thread-multi-2level /Library/Perl/5.12 /Network/Library/Perl/5.12/darwin-thread-multi-2level /Network/Library/Perl/5.12 /Library/Perl/Updates/5.12.5 /System/Library/Perl/5.12/darwin-thread-multi-2level /System/Library/Perl/5.12 /System/Library/Perl/Extras/5.12/darwin-thread-multi-2level /System/Library/Perl/Extras/5.12 .).
-BEGIN failed--compilation aborted.
-</code></pre>
-
-<p>今回は上記の通り、DBD::mysqlがなかったので、cpanmでインストールした。</p>
-
-<p>pt-online-schema-changeを入手する。</p>
-
-<pre><code>$ wget percona.com/get/pt-online-schema-change
-$ chmod a+x pt-online-schema-change
-</code></pre>
-
-<p>今回は以下の様な感じでテスト用のインスタンスを作った。意図せずv5.6になった…。</p>
-
-<pre><code>$ rds-create-db-instance --db-instance-identifier sbtest --db-instance-class db.m1.small --db-name db_sbtest --engine MySQL --allocated-storage 10 --master-username sbtest_user --master-user-password sbtest_passwd
-  DBINSTANCE  sbtest  db.m1.small  mysql  10  sbtest_user  creating  1  ****  n  5.6.13  general-public-license  y
-        SECGROUP  default  active
-        PARAMGRP  default.mysql5.6  in-sync
-        OPTIONGROUP  default:mysql-5-6  in-sync
-</code></pre>
-
-<a name="RDS........................"></a>
-<h2>RDSへの対応について</h2>
-
-<p>チューニングを行っていない場合、Parameter Groupはデフォルトのままなので、pt-online-schemaを使うためには以下の対応を行う必要がある。</p>
-
-<ul>
-<li>メンテナンス用のパラメータグループを作る。(<a href="http://docs.aws.amazon.com/AmazonRDS/latest/CommandLineReference/CLIReference-cmd-CreateDBParameterGroup.html">rds-create-db-parameter-group</a>)</li>
-<li>メンテナンス用のパラメータグループの設定を行う。<code>name=log_bin_trust_function_creators,value=true</code>を指定する。(<a href="http://docs.aws.amazon.com/AmazonRDS/latest/CommandLineReference/CLIReference-cmd-ModifyDBParameterGroup.html">rds-modify-db-parameter-group</a>)</li>
-<li>メンテナンス対象のDBインスタンスのパラメータグループをメンテナンス用のものに変更する。(<a href="http://docs.aws.amazon.com/AmazonRDS/latest/CommandLineReference/CLIReference-cmd-ModifyDBInstance.html">rds-modify-db-instance</a>)</li>
-</ul>
-
-
-<p>コマンドで言うと、以下の様なことを行なう。</p>
-
-<pre><code>$ rds-create-db-parameter-group --db-parameter-group-family mysql5.6 --db-parameter-group-name maintenace-pramas-group --description 'parameter group for maintenace '
-DBPARAMETERGROUP  maintenace-pramas-group  mysql5.6  parameter group for maintenace
-rds-modify-db-parameter-group --db-parameter-group-name maintenace-pramas-group --region us-east --parameters 'name=log_bin_trust_function_creators, value=true, method=immediate'
-$ rds-modify-db-parameter-group --db-parameter-group-name maintenace-pramas-group --parameters 'name=log_bin_trust_function_creators,value=true,method=immediate'
-DBPARAMETERGROUP  maintenace-pramas-group
-$ rds-modify-db-instance --db-instance-identifier sbtest --db-parameter-group-name maintenace-pramas-group --apply-immediately true
-DBINSTANCE  sbtest  2014-01-22T13:52:26.982Z  db.m1.small  mysql  10  sbtest_user  available  sbtest.cfscsg6f7tbd.us-east-1.rds.amazonaws.com  3306  us-east-1a  1  n  5.6.13  general-public-license  y
-      SECGROUP  default  active
-      PARAMGRP  maintenace-pramas-group  applying
-      OPTIONGROUP  default:mysql-5-6  in-sync
-$ rds-describe-db-instances sbtest
-DBINSTANCE  sbtest  2014-01-22T13:52:26.982Z  db.m1.small  mysql  10  sbtest_user  available  sbtest.cfscsg6f7tbd.us-east-1.rds.amazonaws.com  3306  us-east-1a  1  n  5.6.13  general-public-license  y
-      SECGROUP  default  active
-      PARAMGRP  maintenace-pramas-group  pending-reboot
-      OPTIONGROUP  default:mysql-5-6  in-sync
-</code></pre>
-
-<p><code>pending-reboot</code>と出ているので、インスタンスを再起動する。</p>
-
-<pre><code>$ rds-reboot-db-instance sbtest
-DBINSTANCE  sbtest  2014-01-22T13:52:26.982Z  db.m1.small  mysql  10  sbtest_user  rebooting  sbtest.cfscsg6f7tbd.us-east-1.rds.amazonaws.com  3306  us-east-1a  1  n  5.6.13  general-public-license  y
-      SECGROUP  default  active
-      PARAMGRP  maintenace-pramas-group  pending-reboot
-      OPTIONGROUP  default:mysql-5-6  in-sync
-$ rds-describe-db-instances sbtest
-DBINSTANCE  sbtest  2014-01-22T13:52:26.982Z  db.m1.small  mysql  10  sbtest_user  rebooting  sbtest.cfscsg6f7tbd.us-east-1.rds.amazonaws.com  3306  us-east-1a  1  n  5.6.13  general-public-license  y
-      SECGROUP  default  active
-      PARAMGRP  maintenace-pramas-group  in-sync
-      OPTIONGROUP  default:mysql-5-6  in-sync
-</code></pre>
-
-<p><code>in-sync</code>となっていることを確認する。</p>
-
-<a name="L......"></a>
-<h2>実行</h2>
-
-<p>pt-online-schemaを実行する際に、alter文で列のrenameを行なうとき（あるいはchange columnを行なうとき？）には以下のログが出る。</p>
-
-<pre><code>The tool should handle this correctly, but you should test it first because if it fails the renamed columns' data will be lost!  Specify --no-check-alter to disable this check and perform the --alter.
-</code></pre>
-
-<p>今回は<code>&ndash;alter=&lsquo;change column pad new_pad char(60),add column pad char(60)&rsquo;</code>という風に、列名の変更と変更前の列の再作成を行なうために実行の際には<code>&ndash;no-check-alter</code>を付与した。こんな感じでオプションに引数を与えておけばOK。</p>
-
-<pre><code>./pt-online-schema-change --alter='change column pad new_pad char(60),add column pad char(60)' h=sbtest.cfscsg6f7tbd.us-east-1.rds.amazonaws.com,P=3306,D=db_sbtest,t=sbtest,u=sbtest_user,p=sbtest_passwd --statistics --recursion-method processlist --print --execute --no-check-alter
-</code></pre>
-
-<p>生のalter文との処理に比べて、さすがに時間はかかる。ただ、CPU利用率は抑えられるし、何よりオンラインでalter文を発行できるメリットは大きい。とはいえ、MySQL5.6からalterはオンラインに対応するようにはなっているので、MySQL5.5以前のバージョンを使っている場合は利用を検討する価値はあるように思う。</p>
-
-<a name="L........."></a>
-<h2>おまけ</h2>
-
-<p>cpanmでDBD::mysqlをインストールしようとしたら、以下の様なエラーが出て失敗した。</p>
-
-<pre><code>t/10connect.t ........................ Bailout called.  Further testing stopped:  ERROR: Access denied for user 'root'@'localhost' (using password: NO)
-</code></pre>
-
-<p>ログを調べると以下のように出ていた。</p>
-
-<pre><code>You can also optionally set the user to run 'make test' with:
-
-perl Makefile.PL --testuser=username
-</code></pre>
-
-<p>なので、rootでlocalhostのmysqlにアクセスできるようにするための設定を行ってあげればOK。</p>
-
-<pre><code>$ sudo perl Makefile.PL --testuser=root --testpassword=root_password
-Password:
-I will use the following settings for compiling and testing:
-
-  cflags        (mysql_config ) = -I/usr/local/Cellar/mysql/5.6.10/include  -Os -g -fno-strict-aliasing
-  embedded      (mysql_config ) =
-  ldflags       (mysql_config ) =
-  libs          (mysql_config ) = -L/usr/local/Cellar/mysql/5.6.10/lib -lmysqlclient
-  mysql_config  (guessed      ) = mysql_config
-  nocatchstderr (default      ) = 0
-  nofoundrows   (default      ) = 0
-  ssl           (guessed      ) = 0
-  testdb        (default      ) = test
-  testhost      (default      ) =
-  testpassword  (User's choice) = root_password
-  testport      (default      ) =
-  testsocket    (default      ) =
-  testuser      (User's choice) = root
-
-To change these settings, see 'perl Makefile.PL --help' and
-'perldoc DBD::mysql::INSTALL'.
-
-Using DBI 1.622 (for perl 5.016002 on darwin-thread-multi-2level) installed in /System/Library/Perl/Extras/5.16/darwin-thread-multi-2level/auto/DBI/
-Writing Makefile for DBD::mysql
-Writing MYMETA.yml and MYMETA.json
-</code></pre>
-
-<p>あとは<code>make &amp;&amp; make test &amp;&amp; sudo make install</code>しておけばOK。</p>
 ]]></content>
   </entry>
   
