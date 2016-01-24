@@ -4,7 +4,7 @@
   <title><![CDATA[Category: golang | sgykfjsm.github.com]]></title>
   <link href="http://sgykfjsm.github.io/blog/categories/golang/atom.xml" rel="self"/>
   <link href="http://sgykfjsm.github.io/"/>
-  <updated>2016-01-21T01:26:17+09:00</updated>
+  <updated>2016-01-25T02:15:08+09:00</updated>
   <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
@@ -12,6 +12,137 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[自分で定義したprimitiveな型を扱う際の注意点]]></title>
+    <link href="http://sgykfjsm.github.io/blog/2016/01/25/working-with-userdefined-type/"/>
+    <updated>2016-01-25T01:11:59+09:00</updated>
+    <id>http://sgykfjsm.github.io/blog/2016/01/25/working-with-userdefined-type</id>
+    <content type="html"><![CDATA[<p>Goではよく知られているように自分で型(type)を宣言して、任意のfunctionを実装することができる。今回、あるプログラムを実装している時に少しハマったので、経緯と対応策を記録しておく。</p>
+
+<!-- more -->
+
+
+<a name="L........................"></a>
+<h2>ありがち？な失敗</h2>
+
+<p>先述したようにGoでは任意の型を定義して、任意のfunctionを実装できる。タイトルにある<em>自分で定義したprimitiveな型</em>とは以下の様な宣言のこと。</p>
+
+<pre><code class="go">type MyInt int
+</code></pre>
+
+<p>例えばこの<code>MyInt</code>に、<em>10より大きければ<code>true</code>を返す</em><code>Over10()</code>を実装し、以下の様に使いたいとする。</p>
+
+<pre><code class="go">func main() {
+    var i MyInt = 11
+
+    if i.Over10() {
+        println(i, " is over 10")
+    } else {
+        println(i, " is less than or equal 10")
+    }
+}
+</code></pre>
+
+<p>ここで、何も考えずに実装してしまうと、以下の様なコードを書いてしまう。</p>
+
+<pre><code class="go">func (m MyInt)Over10() bool {
+    if m &gt; 10 {
+        return true
+    }
+    return false
+}
+</code></pre>
+
+<p>このfunctionをコンパイルすると、以下の様なエラーが発生する。</p>
+
+<pre><code>prog.go:6: invalid operation: i &gt; 10 (mismatched types *MyInt and int)
+</code></pre>
+
+<ul>
+<li><a href="https://play.golang.org/p/uwaedTOJZ1">https://play.golang.org/p/uwaedTOJZ1</a></li>
+</ul>
+
+
+<a name="L......"></a>
+<h2>対策</h2>
+
+<p>type <code>MyInt</code>はint型を基礎に持っているから普通に比較できるはずではと思ってしまうが、エラー文言にあるように、int型を基礎にしていても、intではなく<code>MyInt</code>型なのでintとして使うことはできない。ちょっと考えればわかることだ。</p>
+
+<p>ではどうするか？今回の場合だと、対策としては2通りある。</p>
+
+<ol>
+<li>比較相手である<code>10</code>を<code>MyInt</code>型として利用する。</li>
+<li>1.の逆で、<code>i MyInt</code>から値を取り出し、int型として扱う。</li>
+</ol>
+
+
+<a name="L.....................10...MyInt........................"></a>
+<h3>比較相手である10をMyInt型として利用する</h3>
+
+<pre><code>func (i MyInt) Over10() bool {
+    var ten MyInt = 10
+    if i &gt; ten {
+        return true
+    }
+    return false
+}
+</code></pre>
+
+<ul>
+<li>実行例: <a href="https://play.golang.org/p/b17c7k4dxU">https://play.golang.org/p/b17c7k4dxU</a></li>
+</ul>
+
+
+<a name="i.MyInt...........................int.................."></a>
+<h3>i MyIntから値を取り出し、int型として扱う</h3>
+
+<p>この場合はちょっと面倒になる。というのも、<code>reflect</code>パッケージを使って、変数の型の情報を取得する必要があるからだ。</p>
+
+<pre><code class="go">func (i MyInt) Over10() bool {
+    v := reflect.ValueOf(i)
+    var num int
+    if v.IsValid() {
+        num = int(v.Int())
+    }
+
+    if num &gt; 10 {
+        return true
+    }
+    return false
+}
+</code></pre>
+
+<ul>
+<li>実行例: <a href="https://play.golang.org/p/6F3zU6Q4-g">https://play.golang.org/p/6F3zU6Q4-g</a></li>
+</ul>
+
+
+<p>まず、与えられた変数に値が入っているかどうかを確認し、入っていれば<code>Int()</code>で取り出す。<code>Int()</code>で取り出した値は<code>int64</code>なので、<code>int</code>に変換しなければならない。</p>
+
+<p>毎回この処理を実装するfunctionに書くのは面倒なので、以下の様なfunctionを用意しておくと良い。</p>
+
+<pre><code class="go">func (i MyInt)ValueInt() (num int) {
+    v := reflect.ValueOf(i)
+    if v.IsValid() {
+        num = int(v.Int())
+    }
+    return
+}
+</code></pre>
+
+<ul>
+<li>実行例: <a href="https://play.golang.org/p/cMsyxf97aL">https://play.golang.org/p/cMsyxf97aL</a></li>
+</ul>
+
+
+<hr />
+
+<p>primitiveな型を利用した型を定義するときには、少々面倒だが、上記の<code>ValueInt</code>を実装することを忘れないようにしたい。</p>
+
+<p>しかし、実際、みんなこんな風に実装しているのだろうか。さすがに面倒すぎる気がするなぁ。本当はもっと良い方法があるんだろうか？本音としては、このくらい、compileとか<code>go generate</code>的な何かでで良い感じに対応していただきたいのだけど、そういうわけにはいかないのだろうか。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Goでfunctionが実行された順番を追いかける]]></title>
