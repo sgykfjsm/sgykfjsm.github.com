@@ -9,7 +9,7 @@
   <meta name="author" content="sgykfjsm">
 
   
-  <meta name="description" content="AWSなんかを使ってると、イチからMySQLなどの基本的なミドルウェアをセットアップすることは減ってくる。そんな中、AnsibleでMySQLをインストールする事になったのだけど、意外と忘れてたりAnsibleで作業するのと手作業で進めることの差異でちょっと詰まったりしたので、ここに備忘しておく。 ">
+  <meta name="description" content="最近、あんまりDockerの話題についていけていないのでDocker weeklyについて、ざっと内容をまとめるようにしてみる。いつまで続くかはわからないけど…。今回はDocker Weekly: April 16th, 2015について。 ">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,80 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/04/20/docker-weekly/">docker-weekly: April 16th, 2015</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-04-20T23:28:28+09:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>20</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:28 pm</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>最近、あんまりDockerの話題についていけていないのでDocker weeklyについて、ざっと内容をまとめるようにしてみる。いつまで続くかはわからないけど…。今回は<a href="http://go.docker.com/webmail/44082/349477677/9bcd04c8938431b7e6ac4d9c2a270e1b">Docker Weekly: April 16th, 2015</a>について。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2015/04/20/docker-weekly/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/03/14/custom-docker-ami-on-beanstalk/">AWS BeanstalkでDockerをカスタムAMIで使う。</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-03-14T23:11:00+09:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>14</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:11 pm</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>既知の通り、BeanstalkでDockerを使うことができるが、通常の使い方だとインスタンスが配備される度にDocker ImageをPull、BuildしてからRunする。初期配備時は問題ないが、スケールアウトの観点で見た場合、非常にもたつくことがある。また、Docker Imageが大きい(800MB以上ぐらい？)と、devicemapper errorでBuildに失敗することが多い（ような気がする）。単にBuildに失敗しただけであれば切り離せば良いが、複数台のうちいくつかがBuildに失敗しただけでは検知が難しく、そのまま生き残ってしまうとムダなコストが発生する。</p>
+
+<p>上記のような認識でいたため、これまではBeanstalkでDockerを運用することにはあまり乗り気ではなかった。しかし、同僚からの意見で予めデプロイしておいたカスタムAMIを使うのはどうか、という意見があり、検証することにした。</p>
+
+<p>なお、結論から言うと、ここで記した方法では実運用に耐えないと思う。アレコレがんばらないで、素直に<a href="http://aws.amazon.com/jp/ecs/">Amazon EC2 Container Service</a>がGAになるのを待ったほうが良い。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2015/03/14/custom-docker-ami-on-beanstalk/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -380,78 +454,6 @@
   
     <footer>
       <a rel="full-article" href="/blog/2014/03/01/how-to-preview-markdown-on-cli/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/02/05/sudo-ulimit/">sudoでulimitをしたら「sudo: ulimit -Sn: コマンドが見つかりません」と言われた</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-02-05T20:26:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>5</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>8:26 pm</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>elasticsearchの調子が悪かったので、いろいろ調べていた。その途中でnofilesの上限を調べようと思って、以下のようにコマンドを叩いたらコマンドが見つからないって言われた。</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2014/02/05/sudo-ulimit/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/02/04/big-data-forum/">ITフォーラムセッション 「ビッグデータ活用実務フォーラム」に行ってきた。</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-02-04T11:39:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>4</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>11:39 am</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><a href="http://www.ipsj.or.jp/event/sj/sj2014/itforum_big_data_program.html?utm_content=buffer1396a&amp;utm_medium=social&amp;utm_source=twitter.com&amp;utm_campaign=buffer">ITフォーラムセッション 「ビッグデータ活用実務フォーラム」</a>に行ってきた。短い時間に対して、とても豪華なスピーカーだったので、これは行くしかないなーという感じで行ってきた。各セッション30分なので、とても密度が濃かった。</p>
-
-<p>以下はメモ。聞きながらなので、乱文乱筆ご容赦。</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2014/02/04/big-data-forum/">Read on &rarr;</a>
     </footer>
   
 

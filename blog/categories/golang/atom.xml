@@ -4,7 +4,7 @@
   <title><![CDATA[Category: golang | sgykfjsm.github.com]]></title>
   <link href="http://sgykfjsm.github.io/blog/categories/golang/atom.xml" rel="self"/>
   <link href="http://sgykfjsm.github.io/"/>
-  <updated>2016-01-25T02:15:08+09:00</updated>
+  <updated>2016-03-14T00:05:55+09:00</updated>
   <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
@@ -12,6 +12,1268 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[GoでJSON APIを書く Part2]]></title>
+    <link href="http://sgykfjsm.github.io/blog/2016/03/13/golang-json-api-tutorial-pt2/"/>
+    <updated>2016-03-13T23:27:51+09:00</updated>
+    <id>http://sgykfjsm.github.io/blog/2016/03/13/golang-json-api-tutorial-pt2</id>
+    <content type="html"><![CDATA[<p><a href="/blog/2016/03/13/golang-json-api-tutorial/">前回</a>の続き。全体的にちょっとアレなところが多いので、もう少しリファクタリングを行なう。今回のリファクタリングの元ネタは以下。元ネタのほうが説明が簡潔だしコードが綺麗なので、元ネタを読めばコレを読む必要は無い。</p>
+
+<ul>
+<li><a href="http://openmymind.net/Go-action-responses/">Go actions responses</a></li>
+</ul>
+
+
+<!-- more -->
+
+
+<a name="L.........................................."></a>
+<h2>主処理の結果を受け取りたい。</h2>
+
+<p>見出しの通りなんだけど、例えば現在のロギング内容にステータスコードを出力したいと思ったら、主処理から処理結果を受け取り、HTTPステータスコードを取り出す必要がある。また、事後処理にHTTPステータスコードを設定させるようにするのも同様だ。しかし、現在のハンドラからは処理結果を受け取ることができない。なぜならば、各Middlewareは<code>httprouter.Handle</code>をハンドラとして定義しており、<code>httprouter.Handle</code>は以下のように定義されているからだ。</p>
+
+<pre><code class="go">// Handle is a function that can be registered to a route to handle HTTP
+// requests. Like http.HandlerFunc, but has a third parameter for the values of
+// wildcards (variables).
+type Handle func(http.ResponseWriter, *http.Request, Params)
+</code></pre>
+
+<p>つまりハンドラには返り値が無い。というわけで、今回の目的を実現するには、まずハンドラの定義を自分で変えなければならない。また、ハンドラを自分で定義するとhttprouterを使い続けるのが難しくなるため、別の方法でroutingを実装する必要がある。これについては後述する。</p>
+
+<a name="L.............................."></a>
+<h3>アプローチを考える。</h3>
+
+<p>考えを整理しよう。大雑把に考えると、主処理はリクエストを受け取って処理結果を返却してくれればよい。例えば以下の様な感じだ。</p>
+
+<pre><code class="go">func DoSomething(r *http.Request) Result {
+
+    // Do something
+
+    return Result
+}
+</code></pre>
+
+<p>実際のところ、レスポンスを生成する処理は主処理の役割ではないため引数から<code>w http.ResponseWriter</code>を削除した。また、httprouterが使えなくなるため、<code>ps httprouter.Params</code>も削除した。</p>
+
+<p><code>Result</code>の部分は事後処理のことを考えると、HTTP Responseと対応してるっぽく定義したほうが良さそうだ。また、現在の事後処理はレスポンスヘッダーの設定を担当しているが、いっそレスポンスに関することを全て対応して欲しい。この考えを元に<code>Result</code>を<code>Response</code>に変更し、<code>Response</code>をstructとして以下のように定義する。</p>
+
+<pre><code class="go">type Response struct {
+    status int          // HTTPステータスコードに対応する
+    body   []byte       // レスポンスボディに対応する
+    header http.Header  // HTTPレスポンスヘッダーに対応する
+}
+</code></pre>
+
+<p><code>Response</code>をもう少し考える。今回の主処理のレスポンスは以下のように分類できる。</p>
+
+<ul>
+<li>GETメソッドの結果を<code>200 OK</code>でJSONレスポンスを返す</li>
+<li>POSTメソッドの結果は<code>204 Created</code>でをJSONレスポンスを返す</li>
+<li>DELETEメソッドの場合は何も返却しない</li>
+<li>エラーが発生した場合はJSONでエラーメッセージを返す</li>
+<li>上記に挙げた処理はそれぞれ基本的なレスポンス生成処理に基づく</li>
+</ul>
+
+
+<p>また、<code>Response</code>でやりたいことはレスポンス生成とロギングのためにHTTPステータスコードを取り出せるようにすることだ。この時点では具体的な実装は未定なので、やりたいことを<code>interface</code>として記述する。</p>
+
+<pre><code class="go">type Response interface {
+    Write(w http.ResponseWriter) // レスポンスを生成
+    Status() int                 // ステータスコードを取り出す
+}
+</code></pre>
+
+<p>ここでinterfaceの名前が先ほど定義したstructと被ってしまった。レスポンスを定義するstructはinterfaceを実装するようにしていたほうが何かと便利なので、interfaceのほうを尊重してstructの名前を<code>NormalResponse</code>とする。主処理はこの<code>Response</code> interfaceだけを意識するようにしておけば、レスポンス側の実装に影響を受けにくくなる。</p>
+
+<a name="response.go"></a>
+<h3>response.go</h3>
+
+<p>以上を踏まえて、<code>Response</code>を作る処理は以下のようになる。</p>
+
+<pre><code class="go">package main
+
+import (
+    "encoding/json"
+    "log"
+    "net/http"
+)
+
+type Response interface {
+    Write(w http.ResponseWriter)
+    Status() int
+}
+
+type NormalResponse struct {
+    status int         // HTTPステータスコードに対応する
+    body   []byte      // レスポンスボディに対応する
+    header http.Header // HTTPレスポンスヘッダーに対応する
+}
+
+func (r *NormalResponse) Write(w http.ResponseWriter) {
+    header := w.Header()
+    for k, v := range r.header {
+        header[k] = v
+    }
+    w.WriteHeader(r.status)
+    w.Write(r.body)
+}
+
+func (r *NormalResponse) Status() int {
+    return r.status
+}
+
+func (r *NormalResponse) Header(key, value string) *NormalResponse {
+    r.header.Set(key, value)
+    return r
+}
+
+func Empty(status int) *NormalResponse {
+    return Respond(status, nil)
+}
+
+func Json(status int, body interface{}) *NormalResponse {
+    return Respond(status, body).Header("Content-Type", "application/json")
+}
+
+func Created(status int, body interface{}, location string) *NormalResponse {
+    return Json(status, body).Header("Location", location)
+}
+
+func Error(status int, message string, err error) *NormalResponse {
+    log.Printf("%s, %s", message, err)
+    return Respond(status, message).Header("Content-Type", "application/json")
+}
+
+func Respond(status int, body interface{}) *NormalResponse {
+    var b []byte
+    var err error
+    switch t := body.(type) {
+    case string:
+        b = []byte(t)
+    default:
+        if b, err = json.Marshal(body); err != nil {
+            return Error(http.StatusInternalServerError, "failed marshalling json", err)
+        }
+    }
+
+    return &amp;NormalResponse{
+        status: status,
+        body:   b,
+        header: make(http.Header),
+    }
+}
+</code></pre>
+
+<p>この処理で注目すべき点は各処理の<code>body</code>の型が<code>interface</code>となっていることだ。引数を<code>interface</code>で抽象化することで多くのデータ型に対応することが可能となる。</p>
+
+<p><code>Respond</code>は各処理からレスポンスを生成するための材料を受け取る。<code>switch</code>の文を見てわかるように、<code>body.(type)</code>でデータ型を取り出し、それぞれのデータ型に合わせて処理を分岐させている。</p>
+
+<p>また、<code>Respond</code>は<code>NormalResponse</code>を返却する際に、<code>make(http.Header)</code>を<code>NormalResponse.header</code>に割り当てている。これにより、<code>Respond</code>を利用する各処理の内部でレスポンスヘッダーを設定することが可能となっている。</p>
+
+<a name="Middleware..............."></a>
+<h2>Middlewareを修正する</h2>
+
+<p>上記のように事後処理を実装したが、これにより、<code>decorator.go</code>に定義した<code>CommonHeaders</code>が不要となる。また、忘れてしまいそうになるが、今回の修正では独自のハンドラを定義しなければならない。先述したように主処理に必要なのは<code>r *http.Request</code>だけで<code>Response</code> interfaceを返却するだけなので、以下のように定義できる。</p>
+
+<pre><code class="go">type MyHandle func(*http.Request) Response
+</code></pre>
+
+<p>これに基づき、<code>decorator.go</code>と<code>logger.go</code>を以下のように修正する。</p>
+
+<a name="decorator.go"></a>
+<h3>decorator.go</h3>
+
+<pre><code class="go">package main
+
+import (
+    "net/http"
+    "strconv"
+
+    "github.com/gorilla/mux"
+)
+
+type MyHandle func(*http.Request) Response
+
+func IDShouldBeInt(h func(r *http.Request) Response, name string) MyHandle {
+    return Logging(func(r *http.Request) Response {
+        _, err := strconv.Atoi(mux.Vars(r)["todoId"])
+        if err != nil {
+            return Error(422, "todoId should be number", err)
+        }
+
+        return h(r)
+    }, name)
+}
+</code></pre>
+
+<p>上記を見てわかると思うけど、<code>github.com/gorilla/mux</code>を使っている。これはhttprouterの代わりとしているため。実際には、この時点では<code>r.URL.Query().Get("todoId")</code>でパラメータを取り出していた。</p>
+
+<p>さて、ここでの修正は以下のとおりだ。</p>
+
+<ul>
+<li><code>CommonHeaders</code>の削除</li>
+<li><code>IDShouldBeInt</code>は削除された<code>CommonHeaders</code>の代わりに<code>Logging</code>を設定</li>
+<li>レスポンス生成処理を削除</li>
+</ul>
+
+
+<p>これだけを書いてもちょっとわかりにくいので参考までに修正前のコードを抜粋する。比較するとかなりシンプルになったことがわかる。</p>
+
+<pre><code class="go">// これは修正前のコード
+func IDShouldBeInt(h httprouter.Handle, name string) httprouter.Handle {
+    return CommonHeaders(func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+        idParam := ps.ByName("todoId")
+        _, err := strconv.Atoi(idParam)
+        if err != nil {
+            w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+            w.WriteHeader(500)
+            if err := json.NewEncoder(w).Encode(err); err != nil {
+                return
+            }
+            return
+        }
+
+        h(w, r, ps)
+    }, name)
+}
+</code></pre>
+
+<a name="logger.go"></a>
+<h3>logger.go</h3>
+
+<pre><code class="go">package main
+
+import (
+    "log"
+    "net/http"
+    "time"
+)
+
+var logger = func(method, uri, name string, status int, start time.Time) {
+    log.Printf("\"method\":%q   \"uri\":%q  \"name\":%q \"status\":%d   \"time\":%q", method, uri, name, status, time.Since(start))
+}
+
+func Logging(h func(r *http.Request) Response, name string) MyHandle {
+    return func(r *http.Request) Response {
+        start := time.Now()
+        result := h(r)
+        logger(r.Method, r.URL.Path, name, result.Status(), start)
+        return result
+    }
+}
+</code></pre>
+
+<p>ここでようやく主処理から結果を受け取れるようになったことが確認できると思う。</p>
+
+<a name="L........................"></a>
+<h2>主処理を修正する</h2>
+
+<p>ここまでくればやることは自ずと決まる。つまり、以下のことをやれば良い。</p>
+
+<ul>
+<li>httprouterに関する部分を削除する。</li>
+<li>各処理の返却時には<code>Response</code> interfaceのデータを返却する。</li>
+</ul>
+
+
+<pre><code class="go">package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "io"
+    "io/ioutil"
+    "net/http"
+    "strconv"
+
+    "github.com/gorilla/mux"
+)
+
+func Index(r *http.Request) Response {
+    return Respond(http.StatusOK, "Welcmoe")
+}
+
+func TodoIndex(r *http.Request) Response {
+    return Json(http.StatusOK, todos)
+}
+
+func TodoShow(r *http.Request) Response {
+    id, _ := strconv.Atoi(mux.Vars(r)["todoId"])
+    t := RepoFindTodo(id)
+    if t.ID == 0 &amp;&amp; t.Name == "" {
+        return Empty(http.StatusNotFound)
+    }
+
+    return Json(http.StatusOK, t)
+}
+
+func TodoCreate(r *http.Request) Response {
+    var todo Todo
+
+    body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576)) // 1MiB
+    if err != nil {
+        return Error(http.StatusInternalServerError, "request body is too large", err)
+    }
+    defer r.Body.Close()
+
+    if err := json.Unmarshal(body, &amp;todo); err != nil {
+        return Error(http.StatusInternalServerError, "failed marshalling json", err)
+    }
+
+    t := RepoCreateTodo(todo)
+    location := fmt.Sprintf("http://%s/%s/%d", r.Host, r.URL.Path, t.ID)
+
+    return Created(http.StatusCreated, t, location)
+}
+
+func TodoDelete(r *http.Request) Response {
+    id, _ := strconv.Atoi(mux.Vars(r)["todoId"])
+    if err := RepoDestroyTodo(id); err != nil {
+        return Empty(http.StatusNotFound)
+    }
+
+    return Empty(204) // 204 No Content
+}
+</code></pre>
+
+<a name="main.go..............."></a>
+<h2>main.goを修正する</h2>
+
+<p>何度も繰り返しているようにhttprouterはもう使えない。標準の<code>mux</code>を使ってもいいけどMethodによるルーティングなどを自分で実装するのはいかにも面倒くさい。すでにネタバレしているけど、今回のような状況では<code>github.com/gorilla/mux</code>が使いやすい。</p>
+
+<ul>
+<li><a href="https://github.com/gorilla/mux">github.com/gorilla/mux</a></li>
+</ul>
+
+
+<p>また、今回は独自のハンドラを定義したことを思い出して欲しい。このままでは支障があるため、<code>func(http.ResponseWriter, *http.Request)</code>を返却するラッパーを用意しなければならない。実は<code>Response</code>をHTTPレスポンスとして出力する処理が記述されていないが、このラッパーに記述することで最後にHTTPレスポンスを生成することができるようになる。つまり、今後、新たなMiddlewareを実装するとしてもそれらはHTTPレスポンスへの書き出しを意識しなくて良くなるということだ。</p>
+
+<a name="main.go"></a>
+<h3>main.go</h3>
+
+<p>以上を踏まえると、<code>main.go</code>は以下のようになる。</p>
+
+<pre><code class="go">package main
+
+import (
+    "log"
+    "net/http"
+
+    "github.com/gorilla/mux"
+)
+
+func decorator(h func(r *http.Request) Response) func(http.ResponseWriter, *http.Request) {
+    return func(w http.ResponseWriter, r *http.Request) {
+        result := h(r)
+        result.Write(w)
+    }
+}
+
+func main() {
+    r := mux.NewRouter()
+    r.HandleFunc("/", decorator(Logging(Index, "index"))).Methods("GET")
+    r.HandleFunc("/todos", decorator(Logging(TodoIndex, "todo-index"))).Methods("GET")
+    r.HandleFunc("/todos/{todoId}", decorator(IDShouldBeInt(TodoShow, "todo-show"))).Methods("GET")
+    r.HandleFunc("/todos", decorator(Logging(TodoCreate, "todo-create"))).Methods("POST")
+    r.HandleFunc("/todos/{todoId}", decorator(IDShouldBeInt(TodoDelete, "todo-delete"))).Methods("DELETE")
+
+    http.Handle("/", r)
+
+    log.Println("start")
+    log.Fatal(http.ListenAndServe(":8080", nil))
+}
+</code></pre>
+
+<p><code>main.go</code>に関しては以前よりもごちゃごちゃしてしまった…。ちょっと丸括弧の数が多すぎるか。このあたりは今後の課題だなぁ。</p>
+
+<a name="L............"></a>
+<h2>おさらい</h2>
+
+<p>以上、GoでJSON APIを作る方法を見てきた。まぁまぁ良い感じのコードになったんじゃないかなーとは思うけど、最後の<code>main.go</code>はかなりいただけない感じになってしまった。まぁこの辺は自力でちゃんとやろうとするよりも素直にWeb Frameworkを使ったほうが良いと思う。ここまでやっといてなんだけど。しかし、Goの世界ではまだデファクトスタンダードとなるような安定したWeb Frameworkが無いのもまた事実で、シンプルなAPI程度ならばまだスクラッチで実装するほうが良いと個人的には思う。その場合、パッケージの選定には注意したい。httprouterのように優れた性能であっても利用者に一定の制約（多くの場合は問題にならないし、むしろメリットのほうが大きいが）を課すことがある。そういった制約の中でどこまで何ができるのかを早々に見極めないとハマることになるし、Goは続々と色々なパッケージが作られているのでさっさと見切りをつけてパッケージを乗り換えたほうが良い。</p>
+
+<p>今回のコードは <a href="https://gist.github.com/sgykfjsm/1dd9a8eee1f70a7068c9">https://gist.github.com/sgykfjsm/1dd9a8eee1f70a7068c9</a> にアップした。興味があれば見てみると良い。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[GoでJSON APIを書く]]></title>
+    <link href="http://sgykfjsm.github.io/blog/2016/03/13/golang-json-api-tutorial/"/>
+    <updated>2016-03-13T23:21:43+09:00</updated>
+    <id>http://sgykfjsm.github.io/blog/2016/03/13/golang-json-api-tutorial</id>
+    <content type="html"><![CDATA[<p>JSONを返すRESTful APIを作ることになったので諸々の復習を兼ねて<a href="http://thenewstack.io/make-a-restful-json-api-go/">Making a RESTful JSON API in Go</a>を読む。そのままだとつまらないのでところどころ微妙にアレンジしながらやってみる。</p>
+
+<!-- more -->
+
+
+<a name="A.Basic.Web.Server"></a>
+<h2>A Basic Web Server</h2>
+
+<p>RESTfulなAPI Serverを作る場合、当然の事ながらWeb Serverとして提供することになる。周知の通り、Goの場合は<code>net/http</code>を使って簡単にWeb Server Applicationを作ることが出来る。</p>
+
+<pre><code class="go">package main
+
+import (
+    "fmt"
+    "html"
+    "log"
+    "net/http"
+)
+
+func main() {
+    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+    })
+
+    log.Fatal(http.ListenAndServe(":8080", nil))
+}
+</code></pre>
+
+<p>上記のソースコードはGo Web Applicationのテンプレートと言っても過言ではないので、スニペットなどに登録しておくと良い。</p>
+
+<p>さて、上記のコードは以下のコマンドでプログラムとして起動させることができる。</p>
+
+<pre><code class="shell">$ go run main.go
+</code></pre>
+
+<p>起動後、もう1つターミナルを開いて以下のように<code>curl</code>でアクセスすると、レスポンスが返ってきてWeb Serverとして動作していることが確認できる。</p>
+
+<pre><code class="shell">$ curl -vvv localhost:8080/hello/world
+*   Trying ::1...
+* Connected to localhost (::1) port 8080 (#0)
+&gt; GET /hello/world HTTP/1.1
+&gt; Host: localhost:8080
+&gt; User-Agent: curl/7.43.0
+&gt; Accept: */*
+&gt;
+&lt; HTTP/1.1 200 OK
+&lt; Date: Sat, 12 Mar 2016 10:51:45 GMT
+&lt; Content-Length: 21
+&lt; Content-Type: text/plain; charset=utf-8
+&lt;
+* Connection #0 to host localhost left intact
+Hello, "/hello/world"
+</code></pre>
+
+<a name="Adding.a.Router"></a>
+<h2>Adding a Router</h2>
+
+<p>通常、APIには複数の処理を実装し、各処理に応じたURLを割り当てる。このような<em>routing</em>の実装を行うためのライブラリは標準で提供されているが、一般的には<a href="https://github.com/gorilla/mux">gorilla/mux</a>か<a href="https://github.com/julienschmidt/httprouter">julienschmidt/httprouter</a>が使われていることが多い。元記事は前者のgorilla/muxを使っているが、今回はjulienschmidt/httprouterを使うことにする。</p>
+
+<pre><code class="go">package main
+
+import (
+    "fmt"
+    "html"
+    "log"
+    "net/http"
+
+    "github.com/julienschmidt/httprouter"
+)
+
+func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+    fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+}
+
+func main() {
+    router := httprouter.New()
+    router.GET("/:path", Index)
+
+    log.Fatal(http.ListenAndServe(":8080", router))
+}
+</code></pre>
+
+<p>httprouterのroutingは結構厳密なので、元記事とはやや異なるソースとなる。具体的には<code>router.GET("/:path", Index)</code>としているところ。こうしないと、例えば<code>localhost:8080/hello_world</code>としたときに<code>Index</code>ハンドラへ処理が流れていかない。また、<code>router.GET("/", Index)</code>とすると、<code>localhost:8080/</code>あるいは<code>localhost:8080</code>とリクエストする必要があるため。</p>
+
+<p>さて、上記のコードでは外部パッケージを利用しているので、プログラムを起動する前に以下のようにしてパッケージをインストールする必要がある。</p>
+
+<pre><code class="shell">$ go get "github.com/julienschmidt/httprouter"
+</code></pre>
+
+<p>インストール後、プログラムを起動すると、以下のようにして動作を確認することができる。</p>
+
+<pre><code class="shell">$ curl -vvv localhost:8080/hello_world
+*   Trying ::1...
+* Connected to localhost (::1) port 8080 (#0)
+&gt; GET /hello_world HTTP/1.1
+&gt; Host: localhost:8080
+&gt; User-Agent: curl/7.43.0
+&gt; Accept: */*
+&gt;
+&lt; HTTP/1.1 200 OK
+&lt; Date: Sat, 12 Mar 2016 11:16:22 GMT
+&lt; Content-Length: 21
+&lt; Content-Type: text/plain; charset=utf-8
+&lt;
+* Connection #0 to host localhost left intact
+Hello, "/hello_world"
+</code></pre>
+
+<a name="Creating.Some.Basic.Routes"></a>
+<h2>Creating Some Basic Routes</h2>
+
+<p>httprouterの基本的な使い方を把握したので、それっぽくいくつかroutingを実装する。元記事に倣い、ToDoアプリケーションを作ると想定してみると、以下のようなコードになる。</p>
+
+<pre><code class="go">package main
+
+import (
+    "fmt"
+    "log"
+    "net/http"
+
+    "github.com/julienschmidt/httprouter"
+)
+
+func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+    fmt.Fprintf(w, "Welcmoe!")
+}
+
+func TodoIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+    fmt.Fprintf(w, "Todo Index!")
+}
+
+func TodoShow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+    fmt.Fprintf(w, "Todo show: %s", ps.ByName("todoId"))
+}
+
+func main() {
+    router := httprouter.New()
+    router.GET("/", Index)
+    router.GET("/todos", TodoIndex)
+    router.GET("/todos/:todoId", TodoShow)
+
+    log.Fatal(http.ListenAndServe(":8080", router))
+}
+</code></pre>
+
+<p>見ての通り、2つのエンドポイント(あるいはルート)が追加されている。</p>
+
+<ul>
+<li>localhost:8080/todos
+
+<ul>
+<li>Todoの一覧を表示するルート</li>
+</ul>
+</li>
+<li>localhost:8080/todos/:todoId
+
+<ul>
+<li><code>:todoId</code>で指定したTodoの項目を表示するルート</li>
+</ul>
+</li>
+</ul>
+
+
+<p>すでに触れているが、ここでは<code>:todoId</code>をURL指定の中に追加している。こうすることによって、例えば<code>localhost:8080/todos/123</code>とリクエストしたときに<code>123</code>という文字列が<code>todoId</code>に割り当てられることになる。割り当てられた<code>todoId</code>は<code>ps.ByName()</code>という関数を使って取り出すことができる。</p>
+
+<p>今回はcurlでの実行例を省略する。</p>
+
+<a name="A.Basic.Model"></a>
+<h2>A Basic Model</h2>
+
+<p>次にこのプログラムで取り扱うデータのモデルを定義する。Goの場合は<code>struct</code>を使って定義するのが一般的だ。他の言語であれば<code>class</code>で定義することが一般的かもしれない。ちなみに、<code>map</code>を使うことで定義の宣言を（ある程度）省略することが可能だが、Goでは<code>map</code>はスレッドセーフではなく、goroutineなどを使ってconcurrentに処理を行うことが多い処理では慎重に使う必要があるため、個人的には<code>map</code>を使うのはオススメしない(参考: <a href="https://golang.org/doc/faq#atomic_maps">Why are map operations not defined to be atomic?</a>)。</p>
+
+<pre><code class="go">package main
+
+import (
+    "fmt"
+    "log"
+    "net/http"
+    "time"
+
+    "github.com/julienschmidt/httprouter"
+)
+
+type Todo struct {
+    Name      string    `json:"name"`
+    Completed bool      `json:"completed"`
+    Due       time.Time `json:"due"`
+}
+
+type Todos []Todo
+
+// 以降は上掲のコードと同じなので省略する
+</code></pre>
+
+<p><code>type Todos []Todo</code>では<code>struct</code>を使って宣言していないが、直観的に<code>Todo</code>のスライスだとわかるはず。また、今回はJSON形式でレスポンスを返すと予めわかっているのでstructのプロパティにjsonタグをつけている。</p>
+
+<a name="Send.Back.Some.JSON"></a>
+<h2>Send Back Some JSON</h2>
+
+<p>データモデルを定義したので、このデータモデルの使い方を確認する。使い方の部分だけを抜粋すると、以下のようになる。</p>
+
+<pre><code class="go">func TodoIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+    todos := Todos{
+        Todo{Name: "Write presentation"},
+        Todo{Name: "Host meetup"},
+    }
+
+    json.NewEncoder(w).Encode(todos)
+}
+</code></pre>
+
+<p>上記を追加して（もちろん<code>import "encoding/json"</code>も忘れずに）、プログラムを起動してレスポンスを確認してみる。ここでは出力を整形するために<a href="https://stedolan.github.io/jq/">jq</a>を使っている。</p>
+
+<pre><code class="shell">$ curl --silent localhost:8080/todos | jq
+[
+  {
+    "name": "Write presentation",
+    "completed": false,
+    "due": "0001-01-01T00:00:00Z"
+  },
+  {
+    "name": "Host meetup",
+    "completed": false,
+    "due": "0001-01-01T00:00:00Z"
+  }
+]
+</code></pre>
+
+<p>上記では、<code>Completed</code>と<code>Due</code>にそれぞれ値を割り当てていないので、初期値が出力されている。また、元記事とは微妙に室力がプロパティのキー値が異なっている。これは先述したJSONタグでの定義によるもの。</p>
+
+<a name="A.Better.Model"></a>
+<h2>A Better Model</h2>
+
+<p>すでに上記で触れているので省略。</p>
+
+<a name="OK..We.Need.to.Split.This.Up."></a>
+<h2>OK, We Need to Split This Up!</h2>
+
+<p>この時点ではソースコードは50行弱だが、若干のリファクタリングを行う。具体的には以下のファイル群に処理を分ける。元記事とは異なり、<code>routes.go</code>は無い。なんかあんまり実用性があるように思えなかったので。httprouterだと同じような実装ができないからっていうのもあるけど。なお、このようにファイルを分割した場合は<code>go get</code>で起動するよりも一度<code>go build</code>して実行バイナリを生成してから動作確認をしたほうがハマりにくい。</p>
+
+<ul>
+<li>main.go</li>
+<li>handlers.go</li>
+<li>todo.go</li>
+</ul>
+
+
+<a name="main.go"></a>
+<h3>main.go</h3>
+
+<pre><code class="go">package main
+
+import (
+    "log"
+    "net/http"
+
+    "github.com/julienschmidt/httprouter"
+)
+
+func main() {
+    router := httprouter.New()
+    router.GET("/", Index)
+    router.GET("/todos", TodoIndex)
+    router.GET("/todos/:todoId", TodoShow)
+
+    log.Fatal(http.ListenAndServe(":8080", router))
+}
+</code></pre>
+
+<a name="handlers.go"></a>
+<h3>handlers.go</h3>
+
+<pre><code class="go">package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "net/http"
+
+    "github.com/julienschmidt/httprouter"
+)
+
+func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+    fmt.Fprintf(w, "Welcmoe!")
+}
+
+func TodoIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+    todos := Todos{
+        Todo{Name: "Write presentation"},
+        Todo{Name: "Host meetup"},
+    }
+
+    if err := json.NewEncoder(w).Encode(todos); err != nil {
+        panic(err)
+    }
+}
+
+func TodoShow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+    fmt.Fprintf(w, "Todo show: %s", ps.ByName("todoId"))
+}
+</code></pre>
+
+<a name="todo.go"></a>
+<h3>todo.go</h3>
+
+<pre><code class="go">package main
+
+import "time"
+
+type Todo struct {
+    Name      string    `json:"name"`
+    Completed bool      `json:"completed"`
+    Due       time.Time `json:"due"`
+}
+
+type Todos []Todo
+</code></pre>
+
+<a name="Even.Better.Routing"></a>
+<h2>Even Better Routing</h2>
+
+<p>元記事ではroutingの設定をstructとしてデータモデル化することでより良いルーティングができるよ！っと言っている（と理解した）。今回はスキップ。</p>
+
+<a name="Outputting.a.Web.Log"></a>
+<h2>Outputting a Web Log</h2>
+
+<p>Web Applicationのロギングについて。元記事では独自にロガーを実装している。httprouterではこのような共通関数の仕組みを<em>Middleware</em>として実装できる仕組みを提供している。元記事と同じような実装を以下のようにした。</p>
+
+<a name="logger.go"></a>
+<h3>logger.go</h3>
+
+<p>基本的な考え方として、Middlewareは各URLへのリクエストに対して行う処理をハンドラとして受け取り、受け取ったハンドラを実行する前または後に処理を記述すればよい。よって、MiddlewareはハンドラとMiddlewareが必要とする情報を引数として受け取るだけで良い。</p>
+
+<pre><code class="go">package main
+
+import (
+    "log"
+    "net/http"
+    "time"
+
+    "github.com/julienschmidt/httprouter"
+)
+
+var logger = func(method, uri, name string, start time.Time) {
+    log.Printf("\"method\":%q   \"uri\":%q  \"name\":%q \"time\":%q", method, uri, name, time.Since(start))
+}
+
+func Logging(h httprouter.Handle, name string) httprouter.Handle {
+    return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+        start := time.Now()
+        h(w, r, ps)
+        logger(r.Method, r.URL.Path, name, start)
+    }
+}
+</code></pre>
+
+<p>Middlewareの実装例としては以下を参考にすること。</p>
+
+<ul>
+<li><a href="https://github.com/julienschmidt/httprouter#multi-domain--sub-domains">Multi-domain / Sub-domains</a></li>
+<li><a href="https://github.com/julienschmidt/httprouter#multi-domain--sub-domains">Basic Authentication</a></li>
+<li><a href="https://justinas.org/writing-http-middleware-in-go/">Writing HTTP Middleware in Go</a></li>
+</ul>
+
+
+<a name="Applying.the.Logger.Decorator"></a>
+<h2>Applying the Logger Decorator</h2>
+
+<p>上掲の<code>logger.go</code>を組み込むには単純に以下のようにすれば良い。</p>
+
+<a name="main.go"></a>
+<h3>main.go</h3>
+
+<pre><code class="go">    router.GET("/", Logging(Index, "index"))
+    router.GET("/todos", Logging(TodoIndex, "todo-index"))
+    router.GET("/todos/:todoId", Logging(TodoShow, "todo-show"))
+</code></pre>
+
+<a name="This.Routes.File.is.Crazy.....Let...s.Refactor"></a>
+<h2>This Routes File is Crazy … Let’s Refactor</h2>
+
+<p>スキップ。</p>
+
+<a name="Taking.Some.Responsibility"></a>
+<h2>Taking Some Responsibility</h2>
+
+<p>これでようやく今回のアプリケーションのボイラーテンプレートが出来たので、各ハンドラをWeb Applicationっぽくしていく。まずは<code>TodoIndex</code>のレスポンスを改善する。現在の状態でレスポンスを詳細に見てみる(curlのオプションに<code>-vvv</code>または<code>-D -</code>というオブションをつけて実行する)と、以下のように出力されているはず。</p>
+
+<pre><code class="shell">$ curl --silent localhost:8080/todos -vvv
+*   Trying ::1...
+* Connected to localhost (::1) port 8080 (#0)
+&gt; GET /todos HTTP/1.1
+&gt; Host: localhost:8080
+&gt; User-Agent: curl/7.43.0
+&gt; Accept: */*
+&gt;
+&lt; HTTP/1.1 200 OK
+&lt; Date: Sat, 12 Mar 2016 13:44:09 GMT
+&lt; Content-Length: 149
+&lt; Content-Type: text/plain; charset=utf-8  ## &lt;- コレに注目
+&lt;
+[{"name":"Write presentation","completed":false,"due":"0001-01-01T00:00:00Z"},{"name":"Host meetup","completed":false,"due":"0001-01-01T00:00:00Z"}]
+* Connection #0 to host localhost left intact
+</code></pre>
+
+<p>レスポンスのContent-Typeが<code>text/plain; charset=utf-8</code>となっているのが確認できる。今回はJSON APIを作るのが目的なので、<code>application/json; charset=UTF-8</code>としてレスポンスを返したい。なので、以下のようにコードを少し追加する。</p>
+
+<pre><code class="go">func TodoIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+    todos := Todos{
+        Todo{Name: "Write presentation"},
+        Todo{Name: "Host meetup"},
+    }
+
+    w.Header().Set("Content-Type", "application/json; charset=UTF-8") // &lt;- Added
+    w.WriteHeader(http.StatusOK) // &lt;- Added
+
+    if err := json.NewEncoder(w).Encode(todos); err != nil {
+        panic(err)
+    }
+}
+</code></pre>
+
+<p><code>// &lt;- Added</code>とコメントしている行が追加されている。直観的にわかると思うけど、レスポンスヘッダにContent-Typeとステータスコードを設定しているだけ。buildしなおしてからcurlでアクセスしてみる。</p>
+
+<pre><code class="shell">*   Trying ::1...
+* Connected to localhost (::1) port 8080 (#0)
+&gt; GET /todos HTTP/1.1
+&gt; Host: localhost:8080
+&gt; User-Agent: curl/7.43.0
+&gt; Accept: */*
+&gt;
+&lt; HTTP/1.1 200 OK
+&lt; Content-Type: application/json; charset=UTF-8  ## &lt;- コレに注目
+&lt; Date: Sat, 12 Mar 2016 13:52:46 GMT
+&lt; Content-Length: 149
+&lt;
+[{"name":"Write presentation","completed":false,"due":"0001-01-01T00:00:00Z"},{"name":"Host meetup","completed":false,"due":"0001-01-01T00:00:00Z"}]
+* Connection #0 to host localhost left intact
+</code></pre>
+
+<p>レスポンスヘッダが意図したものになっていることが確認できる。</p>
+
+<a name="Wait..Where.is.my.Database."></a>
+<h2>Wait, Where is my Database?</h2>
+
+<p>Web Applicationにデータベースはつきもの。ここでは簡易なモックデータベースを使ってデータベースを使った処理を仮実装してみる。</p>
+
+<a name="repo.go"></a>
+<h3>repo.go</h3>
+
+<p>モックデータベースの処理は<code>repo.go</code>に記述することにする。ここでは擬似的なCreate/Read/Delete処理を実装している。</p>
+
+<pre><code class="go">package main
+
+import "fmt"
+
+var (
+    todos     Todos
+    currentID int
+)
+
+func init() {
+    RepoCreateTodo(Todo{Name: "Write presentation"})
+    RepoCreateTodo(Todo{Name: "Host meetup"})
+}
+
+func RepoFindTodo(id int) Todo {
+    for _, t := range todos {
+        if t.ID == id {
+            return t
+        }
+    }
+    return Todo{}
+}
+
+func RepoCreateTodo(t Todo) Todo {
+    currentID += 1
+    t.ID = currentID
+    todos = append(todos, t)
+    return t
+}
+
+func RepoDestroyTodo(id int) error {
+    for i, t := range todos {
+        if t.ID == id {
+            todos = append(todos[:i], todos[i+1:]...)
+            return nil
+        }
+    }
+
+    return fmt.Errorf("Could not find Todo with id of %d to delete", id)
+}
+</code></pre>
+
+<a name="Add.ID.to.Todo"></a>
+<h2>Add ID to Todo</h2>
+
+<p><code>repo.go</code>ではTodoの項目を探すために<code>ID</code>という概念を利用しているので、データモデルに<code>ID</code>を追加しておく。</p>
+
+<pre><code class="go">package main
+
+import "time"
+
+type Todo struct {
+    ID        int       `json:"id"`
+    Name      string    `json:"name"`
+    Completed bool      `json:"completed"`
+    Due       time.Time `json:"due"`
+}
+
+type Todos []Todo
+</code></pre>
+
+<a name="Update.our.TodoIndex"></a>
+<h2>Update our TodoIndex</h2>
+
+<p><code>repo.go</code>の<code>init.go</code>にて初期値を与えるようにし、また、<code>todos</code>はグローバル変数として利用できるようになった（本当は良くない）ので<code>handlers.go</code>の<code>TodoIndex</code>を以下のように修正する。</p>
+
+<pre><code class="go">func TodoIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+    w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+    w.WriteHeader(http.StatusOK)
+
+    if err := json.NewEncoder(w).Encode(todos); err != nil {
+        panic(err)
+    }
+}
+</code></pre>
+
+<a name="Posting.JSON"></a>
+<h2>Posting JSON</h2>
+
+<p>スキップ</p>
+
+<a name="The.Create.endpoint"></a>
+<h2>The Create endpoint</h2>
+
+<p>モックデータベースの処理を実装したので、それを利用するエンドポイントを追加する。なお、元記事では<code>RepoCreateTodo</code>を使ったエンドポイントのみを実装しているが、せっかくなので<code>RepoFindTodo</code>と<code>RepoDestroyTodo</code>を使ったエンドポイントも実装する。</p>
+
+<a name="TodoShow"></a>
+<h3>TodoShow</h3>
+
+<p>まずは<code>TodoShow</code>から。<code>ps.ByName</code>で対象のIDを受け取りバリデーションを兼ねて<code>strconv.Atoi</code>で変換する。変換したIDが数字でなければ422を返す。知らなかったけど、このようなリクエストの形式としては正しいが意味的に間違っている場合（今回の場合だと数字であるべき箇所に数値(int)に変換できない文字列を含む場合）は<code>422 Unprocessable Entity</code>を返すのが一般的らしい。変換したIDを<code>RepoFindTodo</code>に渡して結果をもらう。空っぽだったら404、何か入っていれば200を返す。</p>
+
+<pre><code class="go">func TodoShow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+    idParam := ps.ByName("todoId")
+    id, err := strconv.Atoi(idParam)
+    if err != nil {
+        w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+        w.WriteHeader(422) // unprocessable entity
+        if err := json.NewEncoder(w).Encode(err); err != nil {
+            panic(err)
+        }
+        return
+    }
+
+    t := RepoFindTodo(id)
+    if t.ID == 0 &amp;&amp; t.Name == "" {
+        w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+        w.WriteHeader(http.StatusNotFound)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+    w.WriteHeader(http.StatusOK)
+    if err := json.NewEncoder(w).Encode(t); err != nil {
+        panic(err)
+    }
+    return
+}
+</code></pre>
+
+<a name="TodoCreate"></a>
+<h3>TodoCreate</h3>
+
+<p><code>TodoCreate</code>は元記事とほとんど同じだけど、RESTful APIっぽくするために<code>Location</code>をヘッダーに追加している。元記事でも触れているが、<code>io.LimitReader(r.Body, 1048576)</code>は巨大なリクエストを受け取らないようにするため。<code>1048576</code>は1MiB(<a href="https://ja.wikipedia.org/wiki/%E3%83%A1%E3%83%93%E3%83%90%E3%82%A4%E3%83%88">メビバイト</a>)。これもまた知らなかったけど、最近はこっちのほうがモダンなのかな。</p>
+
+<pre><code class="go">func TodoCreate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+    var todo Todo
+
+    body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576)) // 1MiB
+    if err != nil {
+        panic(err)
+    }
+    defer r.Body.Close()
+
+    if err := json.Unmarshal(body, &amp;todo); err != nil {
+        w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+        w.WriteHeader(500)
+        if err := json.NewEncoder(w).Encode(err); err != nil {
+            panic(err)
+        }
+        return
+    }
+
+    t := RepoCreateTodo(todo)
+    location := fmt.Sprintf("http://%s/%d", r.Host, t.ID)
+    w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+    w.Header().Set("Location", location)
+    w.WriteHeader(http.StatusCreated)
+    if err := json.NewEncoder(w).Encode(t); err != nil {
+        panic(err)
+    }
+    return
+}
+</code></pre>
+
+<a name="TodoDelete"></a>
+<h3>TodoDelete</h3>
+
+<p>実は<code>DELETE</code>メソッドの処理を作ったことがなかった。というか、Web Applicationを作る機会自体があんまり無いんだけど。削除の場合、特に返却すべき内容は無いので、<code>204 Not Content</code>を返している。</p>
+
+<pre><code class="go">func TodoDelete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+    idParam := ps.ByName("todoId")
+    id, err := strconv.Atoi(idParam)
+    if err != nil {
+        w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+        w.WriteHeader(500)
+        if err := json.NewEncoder(w).Encode(err); err != nil {
+            panic(err)
+        }
+        return
+    }
+
+    if err := RepoDestroyTodo(id); err != nil {
+        w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+        w.WriteHeader(http.StatusNotFound)
+        if err := json.NewEncoder(w).Encode(err); err != nil {
+            panic(err)
+        }
+        return
+    }
+
+    w.WriteHeader(204) // 204 No Content
+    return
+}
+</code></pre>
+
+<a name="Things.We.Didn...t.Do"></a>
+<h2>Things We Didn’t Do</h2>
+
+<ul>
+<li>Version Control
+
+<ul>
+<li>gitとかの話ではなくAPIとしてのバージョンのこと。例えば互換性を破壊するような変更を行うことが予想される場合は、<code>/api/v1/prefix</code>のようなエンドポイントで設定したほうが良いかもしれない。</li>
+</ul>
+</li>
+<li>Authentication
+
+<ul>
+<li>パブリックあるいはオープンなAPIで無いのならば、認証は設けたほうが良い。元記事では<a href="http://jwt.io/">JSON web tokens</a>の利用を推奨している。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>また、元記事では<a href="https://ja.wikipedia.org/wiki/HTTP_ETag">eTags</a>を使ってキャッシュの仕組みを盛り込み、スケーリング可能なアプリケーションの実装を提案している。具体的な実装については以下が参考になりそう（ちゃんと読んでない）。</p>
+
+<ul>
+<li><a href="http://www.sanarias.com/blog/115LearningHTTPcachinginGo">Learning HTTP caching in Go</a>
+
+<ul>
+<li><a href="https://www.reddit.com/r/golang/comments/2sxlwp/learning_http_caching_in_go/">Redditのスレ</a></li>
+</ul>
+</li>
+<li><a href="http://stackoverflow.com/q/23014106">HTTP ETags and HTTP Redirects</a></li>
+</ul>
+
+
+<a name="What.Else.is.Left."></a>
+<h2>What Else is Left?</h2>
+
+<p>他にやるべきこととしては以下が挙げられる。</p>
+
+<ul>
+<li>リファクタリング</li>
+<li>各々の処理をファイルをパッケージに分割する</li>
+<li>テスト</li>
+<li>適切なエラーメッセージ
+
+<ul>
+<li>これは独自に追加した項目なんだけど、例えば今は<code>strconv.Atoi</code>でエラーが発生した場合にエラーをそのままクライアントにかえしているので、これはやはり適切なエラーメッセージに変えたほうが良い。</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="L.............-....................................."></a>
+<h2>おまけ１ - 同じような処理をまとめる</h2>
+
+<p>ハンドラの処理を実装している<code>handlers.go</code>を眺めていると気づくが、ハンドラの処理の構成は主に以下のようになっている。</p>
+
+<ul>
+<li>事前処理: 引数のバリデーションチェック</li>
+<li>主処理: モックデータベースを使った処理</li>
+<li>事後処理: レスポンスヘッダーと返却するHTTPステータスコードの設定</li>
+</ul>
+
+
+<p>主処理は事前処理にてチェックされた値を受け取るという若干の依存はあるものの、それぞれの関心事は以下のように分けることが出来て、それぞれ分離させて共通化出来そうなことに気づく。</p>
+
+<ul>
+<li>事前処理: クライアントからのリクエストの中身に興味がある</li>
+<li>主処理: 指定されたTodoのIDを使ったデータベースの操作に興味がある</li>
+<li>事後処理: クライアントに返却するレスポンスに興味がある</li>
+</ul>
+
+
+<p>ここでロギング処理をMiddlewareとして実装したことを思い出す。今回の事前処理と事後処理もロギングと同様にMiddlewareとして実装することでコードの重複を減らし、ハンドラの関心事を主処理に専念させることができそうだ。</p>
+
+<a name="decorator.go"></a>
+<h3>decorator.go</h3>
+
+<p>事前処理と事後処理を記述する<code>decorator.go</code>というファイルを用意する。やるべきことは<code>handlers.go</code>に記述していた処理をコピペするだけ。多少修正しているが、以下のようになる。</p>
+
+<pre><code class="go">package main
+
+import (
+    "encoding/json"
+    "net/http"
+    "strconv"
+
+    "github.com/julienschmidt/httprouter"
+)
+
+func IDShouldBeInt(h httprouter.Handle, name string) httprouter.Handle {
+    return CommonHeaders(func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+        idParam := ps.ByName("todoId")
+        _, err := strconv.Atoi(idParam)
+        if err != nil {
+            w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+            w.WriteHeader(500)
+            if err := json.NewEncoder(w).Encode(err); err != nil {
+                return
+            }
+            return
+        }
+
+        h(w, r, ps)
+    }, name)
+}
+
+func CommonHeaders(h httprouter.Handle, name string) httprouter.Handle {
+    return Logging(func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+        w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+        h(w, r, ps)
+    }, name)
+}
+</code></pre>
+
+<p><code>_, err := strconv.Atoi(idParam)</code>では変換された値を捨てている。これは事前処理では変換された値を使わないから。また、見ての通り、ソースのシグネチャというか、基本的な構造は<code>logger.go</code>で実装したものと何も変わらないことに気づくはず。非常にシンプルにコードが書けているし、関数の処理内容もわかりやすくなったと思う。</p>
+
+<p>ただ、これで良いかと言われると、やや苦しいところがある。それは事前処理の中でレスポンスを返却しているところだ。処理の内容からしてここではパラメータが不正であることだけを呼び出し元に通知して良い感じに事後処理に結果を渡すことができればよいのだけど、今の時点では妥協しておく（というか良いやり方を思いつかなかった）。</p>
+
+<a name="handlers.go"></a>
+<h3>handlers.go</h3>
+
+<p>上記の通り、事前処理と事後処理をハンドラから取り除いたので<code>handlers.go</code>は以下のようになる。</p>
+
+<pre><code class="go">package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "io"
+    "io/ioutil"
+    "net/http"
+    "strconv"
+
+    "github.com/julienschmidt/httprouter"
+)
+
+func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+    fmt.Fprintf(w, "Welcmoe!")
+}
+
+func TodoIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+    w.WriteHeader(http.StatusOK)
+
+    if err := json.NewEncoder(w).Encode(todos); err != nil {
+        panic(err)
+    }
+}
+
+func TodoShow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+    id, _ := strconv.Atoi(ps.ByName("todoId"))
+    t := RepoFindTodo(id)
+    if t.ID == 0 &amp;&amp; t.Name == "" {
+        w.WriteHeader(http.StatusNotFound)
+        return
+    }
+
+    w.WriteHeader(http.StatusOK)
+    if err := json.NewEncoder(w).Encode(t); err != nil {
+        panic(err)
+    }
+}
+
+func TodoCreate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+    var todo Todo
+
+    body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576)) // 1MiB
+    if err != nil {
+        panic(err)
+    }
+    defer r.Body.Close()
+
+    if err := json.Unmarshal(body, &amp;todo); err != nil {
+        w.WriteHeader(500)
+        if err := json.NewEncoder(w).Encode(err); err != nil {
+            panic(err)
+        }
+        return
+    }
+
+    t := RepoCreateTodo(todo)
+    location := fmt.Sprintf("http://%s/%d", r.Host, t.ID)
+    w.Header().Set("Location", location)
+    w.WriteHeader(http.StatusCreated)
+    if err := json.NewEncoder(w).Encode(t); err != nil {
+        panic(err)
+    }
+}
+
+func TodoDelete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+    id, _ := strconv.Atoi(ps.ByName("todoId"))
+    if err := RepoDestroyTodo(id); err != nil {
+        w.WriteHeader(http.StatusNotFound)
+        if err := json.NewEncoder(w).Encode(err); err != nil {
+            panic(err)
+        }
+        return
+    }
+
+    w.Header().Del("Content-Type")
+    w.WriteHeader(204) // 204 No Content
+}
+</code></pre>
+
+<p>ちょっとすっきりしたけど、処理結果に応じてHTTPステータスコードが変わるため今の時点では主処理から取り除くことが出来ないので、ちょっと中途半端になっている。</p>
+
+<a name="main.go"></a>
+<h3>main.go</h3>
+
+<p>それぞれの主処理に応じて用意したMiddlewareを割り当てる。多少は可読性が上がったかも？</p>
+
+<pre><code class="go">package main
+
+import (
+    "log"
+    "net/http"
+
+    "github.com/julienschmidt/httprouter"
+)
+
+func main() {
+    router := httprouter.New()
+    router.GET("/", Logging(Index, "index"))
+    router.GET("/todos", CommonHeaders(TodoIndex, "todo-index"))
+    router.GET("/todos/:todoId", IDShouldBeInt(TodoShow, "todo-show"))
+    router.POST("/todos", CommonHeaders(TodoCreate, "todo-create"))
+    router.DELETE("/todos/:todoId", IDShouldBeInt(TodoDelete, "todo-delete"))
+
+    log.Fatal(http.ListenAndServe(":8080", router))
+}
+</code></pre>
+
+<a name="L........................"></a>
+<h2>ここまでのまとめ</h2>
+
+<p>ある程度はそれらしくなったけど、主処理の中でレスポンスヘッダ―を設定していたりするため現状ではやや不満が残る内容になった。これは主処理と事後処理が完全に分断されているためであり次回はその辺りを考慮に入れてリファクタリングを行なう。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[自分で定義したprimitiveな型を扱う際の注意点]]></title>
@@ -727,81 +1989,6 @@ FAIL    github.com/sgykfjsm/ginkgo-study        0.071s
 <p>また、テスト失敗時に細かい出力をしてくれるのも地味に嬉しい。標準のtestingパッケージやtestifyなどはシンプルな出力しかしてくれないのでデバッグコードが必要になる時があるが、Ginkgoだとその必要はだいぶ減らすことができるだろう。とはいえ、やや丁寧すぎる気がしないでもないが。</p>
 
 <p>個人的な感覚としてはGinkgoはとても開発者フレンドリーだし、比較的活発に開発されているので、注目すべきライブラリだと思う。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Jenkins上でgolangのプロジェクトをCIするときに気をつけなければならないこと]]></title>
-    <link href="http://sgykfjsm.github.io/blog/2015/09/06/ci-with-golng-on-jenkins/"/>
-    <updated>2015-09-06T20:03:54+09:00</updated>
-    <id>http://sgykfjsm.github.io/blog/2015/09/06/ci-with-golng-on-jenkins</id>
-    <content type="html"><![CDATA[<p>JenkinsでgolangプロジェクトをCIするときに少しハマったので、同じミスをしないで済むようにここにメモする。</p>
-
-<!-- more -->
-
-
-<a name="Jenkins...golang.............................."></a>
-<h2>Jenkinsでgolangを使えるようにする。</h2>
-
-<p>何はともあれ、これをしないことには始まらない。特に理由が無ければ、Jenkinsのプラグインを使うのが良い。</p>
-
-<p>&ldquo;Jenkinsの管理&rdquo; > &ldquo;プラグインの管理&rdquo; > &ldquo;利用可能&#8221;タブ へ進み、フィルターで&#8221;golang&#8221;と入力すれば、<a href="https://wiki.jenkins-ci.org/display/JENKINS/Go+Plugin">Go plugin</a>が見つかる。チェックを入れた後、&#8221;ダウンロードして再起動後にインストール&#8221;を押下する。</p>
-
-<p>再起動後、&#8221;Jenkinsの管理&#8221; > &ldquo;システムの設定&#8221;へ進むと、&#8221;Go&#8221;のセクションが追加されていることが確認できるはず。</p>
-
-<ul>
-<li>もしシステムの管理で&#8221;ロード中&#8221;から復帰しない場合、&#8221;Jenkinsの管理&#8221; > &ldquo;プラグインの管理&rdquo; > &ldquo;高度な設定&#8221;タブ へ進み、画面右下の&#8221;更新&#8221;ボタンを押すと回復する場合がある。</li>
-<li>それでもダメならいくつかプラグインをアップデートしてから、再度&#8221;更新&#8221;ボタンを押すと回復することがある。</li>
-<li>FYI: <a href="https://issues.jenkins-ci.org/browse/JENKINS-27499">Global config page is broken when loaded before the tool installer data has been fetched</a></li>
-</ul>
-
-
-<p>その後、使いたいバージョンを設定して&#8221;適用&#8221;ボタンを押下後に&#8221;保存&#8221;ボタンを押下すれば良い。</p>
-
-<a name="Job...golang..........................."></a>
-<h2>Jobでgolangを使うようにする。</h2>
-
-<p>Jenkinsのプラグインを入れたあと、ジョブの設定画面の&#8221;ビルド環境&#8221;に&#8221;Set up Go programming language tools&#8221;が表示されていることを確認する。ここで使いたいバージョンを選択すれば、あとはPluginが指定したところからバイナリをダウンロードしてして、<code>${JENKINS_HOME}/tools/org.jenkinsci.plugins.golang.GolangInstallation/</code>以下にバイナリを設置する。</p>
-
-<p>Go Pluginを使うと、環境変数に<code>GOROOT</code>が設定されて、<code>PATH</code>にgolangのバイナリが追加されていることが確認できる。</p>
-
-<pre><code class="shell"># Jenkinsのジョブで`env`を実行した出力結果の一部
-BUILD_DISPLAY_NAME=#1
-BUILD_ID=1
-...
-EXECUTOR_NUMBER=1
-GOROOT=/var/lib/jenkins/tools/org.jenkinsci.plugins.golang.GolangInstallation/v1.5
-HOME=/var/lib/jenkins
-...
-PATH=/var/lib/jenkins/tools/org.jenkinsci.plugins.golang.GolangInstallation/v1.5/bin:/sbin:/usr/sbin:/bin:/usr/bin
-...
-Finished: SUCCESS
-</code></pre>
-
-<p>しかし、<code>GOPATH</code>が設定されていない。これに気をつけなければハマることになる。</p>
-
-<a name="L................................................"></a>
-<h2>カスタムワークスペースを設定する</h2>
-
-<p>おそらく、通常のgolang開発では、GOPATH以下にソースを置いて開発しているのではないかと思う(少なくとも自分の場合はそうしている)。</p>
-
-<p>例えば、<code>github.com/sgykfjsm/hello-golang</code>というプロジェクトの開発をしている場合、コーディングしている端末でのパスは<code>${GOPATH}/src/github.com/sgykfjsm/hello-golang</code>というパスになっているはず。</p>
-
-<p>よって、Jenkinsのジョブ実行時にもこのパスを再現しなければならない。そうしないと、Git Pluginなどでソースを取得すると、普通に<code>${JENKINS_HOME}/workspace/${JOB_NAME}</code>直下にソースが配置されてしまい、<code>go get</code>や<code>go install</code>などに失敗するからだ。</p>
-
-<p>というわけで、Jenkins上でも同じパス構成を再現するためにはカスタムワークスペースを使って、ワークスペースの設定を修正しなければならない。</p>
-
-<p>カスタムワークスペースの設定箇所は、非常にわかりづらいが、ジョブの設定画面の&#8221;プロジェクトの高度なオプション&#8221;に隠れており、&#8221;高度な設定&hellip;&ldquo;を押下して表示しなければならない。押下後、&#8221;カスタムワークスペースを使用&#8221;にチェックを入れて、&#8221;ディレクトリ&#8221;のテキストボックスを表示させる。このテキストボックスに入力すべき設定値は<code>${JENKINS_HOME}</code>から下のパスにすれば良い。例えば、<code>workspace/${JOB_NAME}/src/github.com/sgykfjsm/hello-golang</code>のようにすれば良い。</p>
-
-<a name="GOPATH..............."></a>
-<h2>GOPATHを設定する</h2>
-
-<p>その後、ビルドで&#8221;シェルの実行&#8221;を選択し、<code>export GOPATH=${JENKINS_HOME}/workspace/${JOB_NAME}</code>を実行してから諸々の処理を行うようにしてあげれば良い。また、<code>export PATH=${PATH}:${GOPATH}/bin</code>も追加しておくと良い。</p>
-
-<a name="L........."></a>
-<h2>まとめ</h2>
-
-<p>要は<code>GOPATH</code>をちゃんと設定しようねっていうだけ。</p>
 ]]></content>
   </entry>
   

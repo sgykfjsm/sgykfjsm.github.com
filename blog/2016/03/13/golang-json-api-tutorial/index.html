@@ -1,0 +1,1621 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>GoでJSON APIを書く - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="JSONを返すRESTful APIを作ることになったので諸々の復習を兼ねてMaking a RESTful JSON API in Goを読む。そのままだとつまらないのでところどころ微妙にアレンジしながらやってみる。 A Basic Web Server RESTfulなAPI &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.io/blog/2016/03/13/golang-json-api-tutorial">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.io" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">GoでJSON APIを書く</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-03-13T23:21:43+09:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>11:21 pm</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>JSONを返すRESTful APIを作ることになったので諸々の復習を兼ねて<a href="http://thenewstack.io/make-a-restful-json-api-go/">Making a RESTful JSON API in Go</a>を読む。そのままだとつまらないのでところどころ微妙にアレンジしながらやってみる。</p>
+
+<!-- more -->
+
+
+<a name="A.Basic.Web.Server"></a>
+<h2>A Basic Web Server</h2>
+
+<p>RESTfulなAPI Serverを作る場合、当然の事ながらWeb Serverとして提供することになる。周知の通り、Goの場合は<code>net/http</code>を使って簡単にWeb Server Applicationを作ることが出来る。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;fmt&quot;</span>
+</span><span class='line'>  <span class="s">&quot;html&quot;</span>
+</span><span class='line'>  <span class="s">&quot;log&quot;</span>
+</span><span class='line'>  <span class="s">&quot;net/http&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">http</span><span class="p">.</span><span class="nx">HandleFunc</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span> <span class="kd">func</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">fmt</span><span class="p">.</span><span class="nx">Fprintf</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="s">&quot;Hello, %q&quot;</span><span class="p">,</span> <span class="nx">html</span><span class="p">.</span><span class="nx">EscapeString</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">URL</span><span class="p">.</span><span class="nx">Path</span><span class="p">))</span>
+</span><span class='line'>  <span class="p">})</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">&quot;:8080&quot;</span><span class="p">,</span> <span class="kc">nil</span><span class="p">))</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>上記のソースコードはGo Web Applicationのテンプレートと言っても過言ではないので、スニペットなどに登録しておくと良い。</p>
+
+<p>さて、上記のコードは以下のコマンドでプログラムとして起動させることができる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>go run main.go
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>起動後、もう1つターミナルを開いて以下のように<code>curl</code>でアクセスすると、レスポンスが返ってきてWeb Serverとして動作していることが確認できる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>curl -vvv localhost:8080/hello/world
+</span><span class='line'>*   Trying ::1...
+</span><span class='line'>* Connected to localhost <span class="o">(</span>::1<span class="o">)</span> port <span class="m">8080</span> <span class="o">(</span><span class="c">#0)</span>
+</span><span class='line'>&gt; GET /hello/world HTTP/1.1
+</span><span class='line'>&gt; Host: localhost:8080
+</span><span class='line'>&gt; User-Agent: curl/7.43.0
+</span><span class='line'>&gt; Accept: */*
+</span><span class='line'>&gt;
+</span><span class='line'>&lt; HTTP/1.1 <span class="m">200</span> OK
+</span><span class='line'>&lt; Date: Sat, <span class="m">12</span> Mar <span class="m">2016</span> 10:51:45 GMT
+</span><span class='line'>&lt; Content-Length: 21
+</span><span class='line'>&lt; Content-Type: text/plain<span class="p">;</span> <span class="nv">charset</span><span class="o">=</span>utf-8
+</span><span class='line'>&lt;
+</span><span class='line'>* Connection <span class="c">#0 to host localhost left intact</span>
+</span><span class='line'>Hello, <span class="s2">&quot;/hello/world&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="Adding.a.Router"></a>
+<h2>Adding a Router</h2>
+
+<p>通常、APIには複数の処理を実装し、各処理に応じたURLを割り当てる。このような<em>routing</em>の実装を行うためのライブラリは標準で提供されているが、一般的には<a href="https://github.com/gorilla/mux">gorilla/mux</a>か<a href="https://github.com/julienschmidt/httprouter">julienschmidt/httprouter</a>が使われていることが多い。元記事は前者のgorilla/muxを使っているが、今回はjulienschmidt/httprouterを使うことにする。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;fmt&quot;</span>
+</span><span class='line'>  <span class="s">&quot;html&quot;</span>
+</span><span class='line'>  <span class="s">&quot;log&quot;</span>
+</span><span class='line'>  <span class="s">&quot;net/http&quot;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="s">&quot;github.com/julienschmidt/httprouter&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">Index</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">_</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">fmt</span><span class="p">.</span><span class="nx">Fprintf</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="s">&quot;Hello, %q&quot;</span><span class="p">,</span> <span class="nx">html</span><span class="p">.</span><span class="nx">EscapeString</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">URL</span><span class="p">.</span><span class="nx">Path</span><span class="p">))</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">router</span> <span class="o">:=</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">New</span><span class="p">()</span>
+</span><span class='line'>  <span class="nx">router</span><span class="p">.</span><span class="nx">GET</span><span class="p">(</span><span class="s">&quot;/:path&quot;</span><span class="p">,</span> <span class="nx">Index</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">&quot;:8080&quot;</span><span class="p">,</span> <span class="nx">router</span><span class="p">))</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>httprouterのroutingは結構厳密なので、元記事とはやや異なるソースとなる。具体的には<code>router.GET("/:path", Index)</code>としているところ。こうしないと、例えば<code>localhost:8080/hello_world</code>としたときに<code>Index</code>ハンドラへ処理が流れていかない。また、<code>router.GET("/", Index)</code>とすると、<code>localhost:8080/</code>あるいは<code>localhost:8080</code>とリクエストする必要があるため。</p>
+
+<p>さて、上記のコードでは外部パッケージを利用しているので、プログラムを起動する前に以下のようにしてパッケージをインストールする必要がある。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>go get <span class="s2">&quot;github.com/julienschmidt/httprouter&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>インストール後、プログラムを起動すると、以下のようにして動作を確認することができる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>curl -vvv localhost:8080/hello_world
+</span><span class='line'>*   Trying ::1...
+</span><span class='line'>* Connected to localhost <span class="o">(</span>::1<span class="o">)</span> port <span class="m">8080</span> <span class="o">(</span><span class="c">#0)</span>
+</span><span class='line'>&gt; GET /hello_world HTTP/1.1
+</span><span class='line'>&gt; Host: localhost:8080
+</span><span class='line'>&gt; User-Agent: curl/7.43.0
+</span><span class='line'>&gt; Accept: */*
+</span><span class='line'>&gt;
+</span><span class='line'>&lt; HTTP/1.1 <span class="m">200</span> OK
+</span><span class='line'>&lt; Date: Sat, <span class="m">12</span> Mar <span class="m">2016</span> 11:16:22 GMT
+</span><span class='line'>&lt; Content-Length: 21
+</span><span class='line'>&lt; Content-Type: text/plain<span class="p">;</span> <span class="nv">charset</span><span class="o">=</span>utf-8
+</span><span class='line'>&lt;
+</span><span class='line'>* Connection <span class="c">#0 to host localhost left intact</span>
+</span><span class='line'>Hello, <span class="s2">&quot;/hello_world&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="Creating.Some.Basic.Routes"></a>
+<h2>Creating Some Basic Routes</h2>
+
+<p>httprouterの基本的な使い方を把握したので、それっぽくいくつかroutingを実装する。元記事に倣い、ToDoアプリケーションを作ると想定してみると、以下のようなコードになる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;fmt&quot;</span>
+</span><span class='line'>  <span class="s">&quot;log&quot;</span>
+</span><span class='line'>  <span class="s">&quot;net/http&quot;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="s">&quot;github.com/julienschmidt/httprouter&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">Index</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">_</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">fmt</span><span class="p">.</span><span class="nx">Fprintf</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="s">&quot;Welcmoe!&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">TodoIndex</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">_</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">fmt</span><span class="p">.</span><span class="nx">Fprintf</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="s">&quot;Todo Index!&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">TodoShow</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">ps</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">fmt</span><span class="p">.</span><span class="nx">Fprintf</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="s">&quot;Todo show: %s&quot;</span><span class="p">,</span> <span class="nx">ps</span><span class="p">.</span><span class="nx">ByName</span><span class="p">(</span><span class="s">&quot;todoId&quot;</span><span class="p">))</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">router</span> <span class="o">:=</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">New</span><span class="p">()</span>
+</span><span class='line'>  <span class="nx">router</span><span class="p">.</span><span class="nx">GET</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span> <span class="nx">Index</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">router</span><span class="p">.</span><span class="nx">GET</span><span class="p">(</span><span class="s">&quot;/todos&quot;</span><span class="p">,</span> <span class="nx">TodoIndex</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">router</span><span class="p">.</span><span class="nx">GET</span><span class="p">(</span><span class="s">&quot;/todos/:todoId&quot;</span><span class="p">,</span> <span class="nx">TodoShow</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">&quot;:8080&quot;</span><span class="p">,</span> <span class="nx">router</span><span class="p">))</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>見ての通り、2つのエンドポイント(あるいはルート)が追加されている。</p>
+
+<ul>
+<li>localhost:8080/todos
+
+<ul>
+<li>Todoの一覧を表示するルート</li>
+</ul>
+</li>
+<li>localhost:8080/todos/:todoId
+
+<ul>
+<li><code>:todoId</code>で指定したTodoの項目を表示するルート</li>
+</ul>
+</li>
+</ul>
+
+
+<p>すでに触れているが、ここでは<code>:todoId</code>をURL指定の中に追加している。こうすることによって、例えば<code>localhost:8080/todos/123</code>とリクエストしたときに<code>123</code>という文字列が<code>todoId</code>に割り当てられることになる。割り当てられた<code>todoId</code>は<code>ps.ByName()</code>という関数を使って取り出すことができる。</p>
+
+<p>今回はcurlでの実行例を省略する。</p>
+
+<a name="A.Basic.Model"></a>
+<h2>A Basic Model</h2>
+
+<p>次にこのプログラムで取り扱うデータのモデルを定義する。Goの場合は<code>struct</code>を使って定義するのが一般的だ。他の言語であれば<code>class</code>で定義することが一般的かもしれない。ちなみに、<code>map</code>を使うことで定義の宣言を（ある程度）省略することが可能だが、Goでは<code>map</code>はスレッドセーフではなく、goroutineなどを使ってconcurrentに処理を行うことが多い処理では慎重に使う必要があるため、個人的には<code>map</code>を使うのはオススメしない(参考: <a href="https://golang.org/doc/faq#atomic_maps">Why are map operations not defined to be atomic?</a>)。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;fmt&quot;</span>
+</span><span class='line'>  <span class="s">&quot;log&quot;</span>
+</span><span class='line'>  <span class="s">&quot;net/http&quot;</span>
+</span><span class='line'>  <span class="s">&quot;time&quot;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="s">&quot;github.com/julienschmidt/httprouter&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">type</span> <span class="nx">Todo</span> <span class="kd">struct</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">Name</span>      <span class="kt">string</span>    <span class="s">`json:&quot;name&quot;`</span>
+</span><span class='line'>  <span class="nx">Completed</span> <span class="kt">bool</span>      <span class="s">`json:&quot;completed&quot;`</span>
+</span><span class='line'>  <span class="nx">Due</span>       <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span> <span class="s">`json:&quot;due&quot;`</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">type</span> <span class="nx">Todos</span> <span class="p">[]</span><span class="nx">Todo</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 以降は上掲のコードと同じなので省略する</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>type Todos []Todo</code>では<code>struct</code>を使って宣言していないが、直観的に<code>Todo</code>のスライスだとわかるはず。また、今回はJSON形式でレスポンスを返すと予めわかっているのでstructのプロパティにjsonタグをつけている。</p>
+
+<a name="Send.Back.Some.JSON"></a>
+<h2>Send Back Some JSON</h2>
+
+<p>データモデルを定義したので、このデータモデルの使い方を確認する。使い方の部分だけを抜粋すると、以下のようになる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">TodoIndex</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">_</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">todos</span> <span class="o">:=</span> <span class="nx">Todos</span><span class="p">{</span>
+</span><span class='line'>      <span class="nx">Todo</span><span class="p">{</span><span class="nx">Name</span><span class="p">:</span> <span class="s">&quot;Write presentation&quot;</span><span class="p">},</span>
+</span><span class='line'>      <span class="nx">Todo</span><span class="p">{</span><span class="nx">Name</span><span class="p">:</span> <span class="s">&quot;Host meetup&quot;</span><span class="p">},</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">todos</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>上記を追加して（もちろん<code>import "encoding/json"</code>も忘れずに）、プログラムを起動してレスポンスを確認してみる。ここでは出力を整形するために<a href="https://stedolan.github.io/jq/">jq</a>を使っている。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>curl --silent localhost:8080/todos <span class="p">|</span> jq
+</span><span class='line'><span class="o">[</span>
+</span><span class='line'>  <span class="o">{</span>
+</span><span class='line'>    <span class="s2">&quot;name&quot;</span>: <span class="s2">&quot;Write presentation&quot;</span>,
+</span><span class='line'>    <span class="s2">&quot;completed&quot;</span>: <span class="nb">false</span>,
+</span><span class='line'>    <span class="s2">&quot;due&quot;</span>: <span class="s2">&quot;0001-01-01T00:00:00Z&quot;</span>
+</span><span class='line'>  <span class="o">}</span>,
+</span><span class='line'>  <span class="o">{</span>
+</span><span class='line'>    <span class="s2">&quot;name&quot;</span>: <span class="s2">&quot;Host meetup&quot;</span>,
+</span><span class='line'>    <span class="s2">&quot;completed&quot;</span>: <span class="nb">false</span>,
+</span><span class='line'>    <span class="s2">&quot;due&quot;</span>: <span class="s2">&quot;0001-01-01T00:00:00Z&quot;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>上記では、<code>Completed</code>と<code>Due</code>にそれぞれ値を割り当てていないので、初期値が出力されている。また、元記事とは微妙に室力がプロパティのキー値が異なっている。これは先述したJSONタグでの定義によるもの。</p>
+
+<a name="A.Better.Model"></a>
+<h2>A Better Model</h2>
+
+<p>すでに上記で触れているので省略。</p>
+
+<a name="OK..We.Need.to.Split.This.Up."></a>
+<h2>OK, We Need to Split This Up!</h2>
+
+<p>この時点ではソースコードは50行弱だが、若干のリファクタリングを行う。具体的には以下のファイル群に処理を分ける。元記事とは異なり、<code>routes.go</code>は無い。なんかあんまり実用性があるように思えなかったので。httprouterだと同じような実装ができないからっていうのもあるけど。なお、このようにファイルを分割した場合は<code>go get</code>で起動するよりも一度<code>go build</code>して実行バイナリを生成してから動作確認をしたほうがハマりにくい。</p>
+
+<ul>
+<li>main.go</li>
+<li>handlers.go</li>
+<li>todo.go</li>
+</ul>
+
+
+<a name="main.go"></a>
+<h3>main.go</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;log&quot;</span>
+</span><span class='line'>  <span class="s">&quot;net/http&quot;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="s">&quot;github.com/julienschmidt/httprouter&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">router</span> <span class="o">:=</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">New</span><span class="p">()</span>
+</span><span class='line'>  <span class="nx">router</span><span class="p">.</span><span class="nx">GET</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span> <span class="nx">Index</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">router</span><span class="p">.</span><span class="nx">GET</span><span class="p">(</span><span class="s">&quot;/todos&quot;</span><span class="p">,</span> <span class="nx">TodoIndex</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">router</span><span class="p">.</span><span class="nx">GET</span><span class="p">(</span><span class="s">&quot;/todos/:todoId&quot;</span><span class="p">,</span> <span class="nx">TodoShow</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">&quot;:8080&quot;</span><span class="p">,</span> <span class="nx">router</span><span class="p">))</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="handlers.go"></a>
+<h3>handlers.go</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;encoding/json&quot;</span>
+</span><span class='line'>  <span class="s">&quot;fmt&quot;</span>
+</span><span class='line'>  <span class="s">&quot;net/http&quot;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="s">&quot;github.com/julienschmidt/httprouter&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">Index</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">_</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">fmt</span><span class="p">.</span><span class="nx">Fprintf</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="s">&quot;Welcmoe!&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">TodoIndex</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">_</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">todos</span> <span class="o">:=</span> <span class="nx">Todos</span><span class="p">{</span>
+</span><span class='line'>      <span class="nx">Todo</span><span class="p">{</span><span class="nx">Name</span><span class="p">:</span> <span class="s">&quot;Write presentation&quot;</span><span class="p">},</span>
+</span><span class='line'>      <span class="nx">Todo</span><span class="p">{</span><span class="nx">Name</span><span class="p">:</span> <span class="s">&quot;Host meetup&quot;</span><span class="p">},</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">todos</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">TodoShow</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">ps</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">fmt</span><span class="p">.</span><span class="nx">Fprintf</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="s">&quot;Todo show: %s&quot;</span><span class="p">,</span> <span class="nx">ps</span><span class="p">.</span><span class="nx">ByName</span><span class="p">(</span><span class="s">&quot;todoId&quot;</span><span class="p">))</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="todo.go"></a>
+<h3>todo.go</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="s">&quot;time&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">type</span> <span class="nx">Todo</span> <span class="kd">struct</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">Name</span>      <span class="kt">string</span>    <span class="s">`json:&quot;name&quot;`</span>
+</span><span class='line'>  <span class="nx">Completed</span> <span class="kt">bool</span>      <span class="s">`json:&quot;completed&quot;`</span>
+</span><span class='line'>  <span class="nx">Due</span>       <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span> <span class="s">`json:&quot;due&quot;`</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">type</span> <span class="nx">Todos</span> <span class="p">[]</span><span class="nx">Todo</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="Even.Better.Routing"></a>
+<h2>Even Better Routing</h2>
+
+<p>元記事ではroutingの設定をstructとしてデータモデル化することでより良いルーティングができるよ！っと言っている（と理解した）。今回はスキップ。</p>
+
+<a name="Outputting.a.Web.Log"></a>
+<h2>Outputting a Web Log</h2>
+
+<p>Web Applicationのロギングについて。元記事では独自にロガーを実装している。httprouterではこのような共通関数の仕組みを<em>Middleware</em>として実装できる仕組みを提供している。元記事と同じような実装を以下のようにした。</p>
+
+<a name="logger.go"></a>
+<h3>logger.go</h3>
+
+<p>基本的な考え方として、Middlewareは各URLへのリクエストに対して行う処理をハンドラとして受け取り、受け取ったハンドラを実行する前または後に処理を記述すればよい。よって、MiddlewareはハンドラとMiddlewareが必要とする情報を引数として受け取るだけで良い。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;log&quot;</span>
+</span><span class='line'>  <span class="s">&quot;net/http&quot;</span>
+</span><span class='line'>  <span class="s">&quot;time&quot;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="s">&quot;github.com/julienschmidt/httprouter&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">logger</span> <span class="p">=</span> <span class="kd">func</span><span class="p">(</span><span class="nx">method</span><span class="p">,</span> <span class="nx">uri</span><span class="p">,</span> <span class="nx">name</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">start</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;\&quot;method\&quot;:%q  \&quot;uri\&quot;:%q    \&quot;name\&quot;:%q   \&quot;time\&quot;:%q&quot;</span><span class="p">,</span> <span class="nx">method</span><span class="p">,</span> <span class="nx">uri</span><span class="p">,</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Since</span><span class="p">(</span><span class="nx">start</span><span class="p">))</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">Logging</span><span class="p">(</span><span class="nx">h</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Handle</span><span class="p">,</span> <span class="nx">name</span> <span class="kt">string</span><span class="p">)</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Handle</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">return</span> <span class="kd">func</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">ps</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">start</span> <span class="o">:=</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">()</span>
+</span><span class='line'>      <span class="nx">h</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="nx">r</span><span class="p">,</span> <span class="nx">ps</span><span class="p">)</span>
+</span><span class='line'>      <span class="nx">logger</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">Method</span><span class="p">,</span> <span class="nx">r</span><span class="p">.</span><span class="nx">URL</span><span class="p">.</span><span class="nx">Path</span><span class="p">,</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">start</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Middlewareの実装例としては以下を参考にすること。</p>
+
+<ul>
+<li><a href="https://github.com/julienschmidt/httprouter#multi-domain--sub-domains">Multi-domain / Sub-domains</a></li>
+<li><a href="https://github.com/julienschmidt/httprouter#multi-domain--sub-domains">Basic Authentication</a></li>
+<li><a href="https://justinas.org/writing-http-middleware-in-go/">Writing HTTP Middleware in Go</a></li>
+</ul>
+
+
+<a name="Applying.the.Logger.Decorator"></a>
+<h2>Applying the Logger Decorator</h2>
+
+<p>上掲の<code>logger.go</code>を組み込むには単純に以下のようにすれば良い。</p>
+
+<a name="main.go"></a>
+<h3>main.go</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">GET</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span> <span class="nx">Logging</span><span class="p">(</span><span class="nx">Index</span><span class="p">,</span> <span class="s">&quot;index&quot;</span><span class="p">))</span>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">GET</span><span class="p">(</span><span class="s">&quot;/todos&quot;</span><span class="p">,</span> <span class="nx">Logging</span><span class="p">(</span><span class="nx">TodoIndex</span><span class="p">,</span> <span class="s">&quot;todo-index&quot;</span><span class="p">))</span>
+</span><span class='line'><span class="nx">router</span><span class="p">.</span><span class="nx">GET</span><span class="p">(</span><span class="s">&quot;/todos/:todoId&quot;</span><span class="p">,</span> <span class="nx">Logging</span><span class="p">(</span><span class="nx">TodoShow</span><span class="p">,</span> <span class="s">&quot;todo-show&quot;</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="This.Routes.File.is.Crazy.....Let...s.Refactor"></a>
+<h2>This Routes File is Crazy … Let’s Refactor</h2>
+
+<p>スキップ。</p>
+
+<a name="Taking.Some.Responsibility"></a>
+<h2>Taking Some Responsibility</h2>
+
+<p>これでようやく今回のアプリケーションのボイラーテンプレートが出来たので、各ハンドラをWeb Applicationっぽくしていく。まずは<code>TodoIndex</code>のレスポンスを改善する。現在の状態でレスポンスを詳細に見てみる(curlのオプションに<code>-vvv</code>または<code>-D -</code>というオブションをつけて実行する)と、以下のように出力されているはず。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>curl --silent localhost:8080/todos -vvv
+</span><span class='line'>*   Trying ::1...
+</span><span class='line'>* Connected to localhost <span class="o">(</span>::1<span class="o">)</span> port <span class="m">8080</span> <span class="o">(</span><span class="c">#0)</span>
+</span><span class='line'>&gt; GET /todos HTTP/1.1
+</span><span class='line'>&gt; Host: localhost:8080
+</span><span class='line'>&gt; User-Agent: curl/7.43.0
+</span><span class='line'>&gt; Accept: */*
+</span><span class='line'>&gt;
+</span><span class='line'>&lt; HTTP/1.1 <span class="m">200</span> OK
+</span><span class='line'>&lt; Date: Sat, <span class="m">12</span> Mar <span class="m">2016</span> 13:44:09 GMT
+</span><span class='line'>&lt; Content-Length: 149
+</span><span class='line'>&lt; Content-Type: text/plain<span class="p">;</span> <span class="nv">charset</span><span class="o">=</span>utf-8  <span class="c">## &lt;- コレに注目</span>
+</span><span class='line'>&lt;
+</span><span class='line'><span class="o">[{</span><span class="s2">&quot;name&quot;</span>:<span class="s2">&quot;Write presentation&quot;</span>,<span class="s2">&quot;completed&quot;</span>:false,<span class="s2">&quot;due&quot;</span>:<span class="s2">&quot;0001-01-01T00:00:00Z&quot;</span><span class="o">}</span>,<span class="o">{</span><span class="s2">&quot;name&quot;</span>:<span class="s2">&quot;Host meetup&quot;</span>,<span class="s2">&quot;completed&quot;</span>:false,<span class="s2">&quot;due&quot;</span>:<span class="s2">&quot;0001-01-01T00:00:00Z&quot;</span><span class="o">}]</span>
+</span><span class='line'>* Connection <span class="c">#0 to host localhost left intact</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>レスポンスのContent-Typeが<code>text/plain; charset=utf-8</code>となっているのが確認できる。今回はJSON APIを作るのが目的なので、<code>application/json; charset=UTF-8</code>としてレスポンスを返したい。なので、以下のようにコードを少し追加する。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">TodoIndex</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">_</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">todos</span> <span class="o">:=</span> <span class="nx">Todos</span><span class="p">{</span>
+</span><span class='line'>      <span class="nx">Todo</span><span class="p">{</span><span class="nx">Name</span><span class="p">:</span> <span class="s">&quot;Write presentation&quot;</span><span class="p">},</span>
+</span><span class='line'>      <span class="nx">Todo</span><span class="p">{</span><span class="nx">Name</span><span class="p">:</span> <span class="s">&quot;Host meetup&quot;</span><span class="p">},</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;application/json; charset=UTF-8&quot;</span><span class="p">)</span> <span class="c1">// &lt;- Added</span>
+</span><span class='line'>  <span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusOK</span><span class="p">)</span> <span class="c1">// &lt;- Added</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">todos</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>// &lt;- Added</code>とコメントしている行が追加されている。直観的にわかると思うけど、レスポンスヘッダにContent-Typeとステータスコードを設定しているだけ。buildしなおしてからcurlでアクセスしてみる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>*   Trying ::1...
+</span><span class='line'>* Connected to localhost <span class="o">(</span>::1<span class="o">)</span> port <span class="m">8080</span> <span class="o">(</span><span class="c">#0)</span>
+</span><span class='line'>&gt; GET /todos HTTP/1.1
+</span><span class='line'>&gt; Host: localhost:8080
+</span><span class='line'>&gt; User-Agent: curl/7.43.0
+</span><span class='line'>&gt; Accept: */*
+</span><span class='line'>&gt;
+</span><span class='line'>&lt; HTTP/1.1 <span class="m">200</span> OK
+</span><span class='line'>&lt; Content-Type: application/json<span class="p">;</span> <span class="nv">charset</span><span class="o">=</span>UTF-8  <span class="c">## &lt;- コレに注目</span>
+</span><span class='line'>&lt; Date: Sat, <span class="m">12</span> Mar <span class="m">2016</span> 13:52:46 GMT
+</span><span class='line'>&lt; Content-Length: 149
+</span><span class='line'>&lt;
+</span><span class='line'><span class="o">[{</span><span class="s2">&quot;name&quot;</span>:<span class="s2">&quot;Write presentation&quot;</span>,<span class="s2">&quot;completed&quot;</span>:false,<span class="s2">&quot;due&quot;</span>:<span class="s2">&quot;0001-01-01T00:00:00Z&quot;</span><span class="o">}</span>,<span class="o">{</span><span class="s2">&quot;name&quot;</span>:<span class="s2">&quot;Host meetup&quot;</span>,<span class="s2">&quot;completed&quot;</span>:false,<span class="s2">&quot;due&quot;</span>:<span class="s2">&quot;0001-01-01T00:00:00Z&quot;</span><span class="o">}]</span>
+</span><span class='line'>* Connection <span class="c">#0 to host localhost left intact</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>レスポンスヘッダが意図したものになっていることが確認できる。</p>
+
+<a name="Wait..Where.is.my.Database."></a>
+<h2>Wait, Where is my Database?</h2>
+
+<p>Web Applicationにデータベースはつきもの。ここでは簡易なモックデータベースを使ってデータベースを使った処理を仮実装してみる。</p>
+
+<a name="repo.go"></a>
+<h3>repo.go</h3>
+
+<p>モックデータベースの処理は<code>repo.go</code>に記述することにする。ここでは擬似的なCreate/Read/Delete処理を実装している。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="s">&quot;fmt&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="p">(</span>
+</span><span class='line'>  <span class="nx">todos</span>     <span class="nx">Todos</span>
+</span><span class='line'>  <span class="nx">currentID</span> <span class="kt">int</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">init</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">RepoCreateTodo</span><span class="p">(</span><span class="nx">Todo</span><span class="p">{</span><span class="nx">Name</span><span class="p">:</span> <span class="s">&quot;Write presentation&quot;</span><span class="p">})</span>
+</span><span class='line'>  <span class="nx">RepoCreateTodo</span><span class="p">(</span><span class="nx">Todo</span><span class="p">{</span><span class="nx">Name</span><span class="p">:</span> <span class="s">&quot;Host meetup&quot;</span><span class="p">})</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">RepoFindTodo</span><span class="p">(</span><span class="nx">id</span> <span class="kt">int</span><span class="p">)</span> <span class="nx">Todo</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">t</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">todos</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">if</span> <span class="nx">t</span><span class="p">.</span><span class="nx">ID</span> <span class="o">==</span> <span class="nx">id</span> <span class="p">{</span>
+</span><span class='line'>          <span class="k">return</span> <span class="nx">t</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">Todo</span><span class="p">{}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">RepoCreateTodo</span><span class="p">(</span><span class="nx">t</span> <span class="nx">Todo</span><span class="p">)</span> <span class="nx">Todo</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">currentID</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span class='line'>  <span class="nx">t</span><span class="p">.</span><span class="nx">ID</span> <span class="p">=</span> <span class="nx">currentID</span>
+</span><span class='line'>  <span class="nx">todos</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">todos</span><span class="p">,</span> <span class="nx">t</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">t</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">RepoDestroyTodo</span><span class="p">(</span><span class="nx">id</span> <span class="kt">int</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">for</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">t</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">todos</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">if</span> <span class="nx">t</span><span class="p">.</span><span class="nx">ID</span> <span class="o">==</span> <span class="nx">id</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">todos</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">todos</span><span class="p">[:</span><span class="nx">i</span><span class="p">],</span> <span class="nx">todos</span><span class="p">[</span><span class="nx">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span><span class="o">...</span><span class="p">)</span>
+</span><span class='line'>          <span class="k">return</span> <span class="kc">nil</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;Could not find Todo with id of %d to delete&quot;</span><span class="p">,</span> <span class="nx">id</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="Add.ID.to.Todo"></a>
+<h2>Add ID to Todo</h2>
+
+<p><code>repo.go</code>ではTodoの項目を探すために<code>ID</code>という概念を利用しているので、データモデルに<code>ID</code>を追加しておく。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="s">&quot;time&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">type</span> <span class="nx">Todo</span> <span class="kd">struct</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">ID</span>        <span class="kt">int</span>       <span class="s">`json:&quot;id&quot;`</span>
+</span><span class='line'>  <span class="nx">Name</span>      <span class="kt">string</span>    <span class="s">`json:&quot;name&quot;`</span>
+</span><span class='line'>  <span class="nx">Completed</span> <span class="kt">bool</span>      <span class="s">`json:&quot;completed&quot;`</span>
+</span><span class='line'>  <span class="nx">Due</span>       <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span> <span class="s">`json:&quot;due&quot;`</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">type</span> <span class="nx">Todos</span> <span class="p">[]</span><span class="nx">Todo</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="Update.our.TodoIndex"></a>
+<h2>Update our TodoIndex</h2>
+
+<p><code>repo.go</code>の<code>init.go</code>にて初期値を与えるようにし、また、<code>todos</code>はグローバル変数として利用できるようになった（本当は良くない）ので<code>handlers.go</code>の<code>TodoIndex</code>を以下のように修正する。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">TodoIndex</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">_</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;application/json; charset=UTF-8&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusOK</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">todos</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="Posting.JSON"></a>
+<h2>Posting JSON</h2>
+
+<p>スキップ</p>
+
+<a name="The.Create.endpoint"></a>
+<h2>The Create endpoint</h2>
+
+<p>モックデータベースの処理を実装したので、それを利用するエンドポイントを追加する。なお、元記事では<code>RepoCreateTodo</code>を使ったエンドポイントのみを実装しているが、せっかくなので<code>RepoFindTodo</code>と<code>RepoDestroyTodo</code>を使ったエンドポイントも実装する。</p>
+
+<a name="TodoShow"></a>
+<h3>TodoShow</h3>
+
+<p>まずは<code>TodoShow</code>から。<code>ps.ByName</code>で対象のIDを受け取りバリデーションを兼ねて<code>strconv.Atoi</code>で変換する。変換したIDが数字でなければ422を返す。知らなかったけど、このようなリクエストの形式としては正しいが意味的に間違っている場合（今回の場合だと数字であるべき箇所に数値(int)に変換できない文字列を含む場合）は<code>422 Unprocessable Entity</code>を返すのが一般的らしい。変換したIDを<code>RepoFindTodo</code>に渡して結果をもらう。空っぽだったら404、何か入っていれば200を返す。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">TodoShow</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">ps</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">idParam</span> <span class="o">:=</span> <span class="nx">ps</span><span class="p">.</span><span class="nx">ByName</span><span class="p">(</span><span class="s">&quot;todoId&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">id</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">Atoi</span><span class="p">(</span><span class="nx">idParam</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;application/json; charset=UTF-8&quot;</span><span class="p">)</span>
+</span><span class='line'>      <span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="mi">422</span><span class="p">)</span> <span class="c1">// unprocessable entity</span>
+</span><span class='line'>      <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>      <span class="k">return</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">t</span> <span class="o">:=</span> <span class="nx">RepoFindTodo</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">t</span><span class="p">.</span><span class="nx">ID</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Name</span> <span class="o">==</span> <span class="s">&quot;&quot;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;application/json; charset=UTF-8&quot;</span><span class="p">)</span>
+</span><span class='line'>      <span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusNotFound</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">return</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;application/json; charset=UTF-8&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusOK</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">t</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="TodoCreate"></a>
+<h3>TodoCreate</h3>
+
+<p><code>TodoCreate</code>は元記事とほとんど同じだけど、RESTful APIっぽくするために<code>Location</code>をヘッダーに追加している。元記事でも触れているが、<code>io.LimitReader(r.Body, 1048576)</code>は巨大なリクエストを受け取らないようにするため。<code>1048576</code>は1MiB(<a href="https://ja.wikipedia.org/wiki/%E3%83%A1%E3%83%93%E3%83%90%E3%82%A4%E3%83%88">メビバイト</a>)。これもまた知らなかったけど、最近はこっちのほうがモダンなのかな。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">TodoCreate</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">ps</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">todo</span> <span class="nx">Todo</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">body</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">ioutil</span><span class="p">.</span><span class="nx">ReadAll</span><span class="p">(</span><span class="nx">io</span><span class="p">.</span><span class="nx">LimitReader</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">Body</span><span class="p">,</span> <span class="mi">1048576</span><span class="p">))</span> <span class="c1">// 1MiB</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="k">defer</span> <span class="nx">r</span><span class="p">.</span><span class="nx">Body</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">Unmarshal</span><span class="p">(</span><span class="nx">body</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">todo</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;application/json; charset=UTF-8&quot;</span><span class="p">)</span>
+</span><span class='line'>      <span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>      <span class="k">return</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">t</span> <span class="o">:=</span> <span class="nx">RepoCreateTodo</span><span class="p">(</span><span class="nx">todo</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">location</span> <span class="o">:=</span> <span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="s">&quot;http://%s/%d&quot;</span><span class="p">,</span> <span class="nx">r</span><span class="p">.</span><span class="nx">Host</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">ID</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;application/json; charset=UTF-8&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Location&quot;</span><span class="p">,</span> <span class="nx">location</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusCreated</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">t</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="TodoDelete"></a>
+<h3>TodoDelete</h3>
+
+<p>実は<code>DELETE</code>メソッドの処理を作ったことがなかった。というか、Web Applicationを作る機会自体があんまり無いんだけど。削除の場合、特に返却すべき内容は無いので、<code>204 Not Content</code>を返している。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">TodoDelete</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">ps</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">idParam</span> <span class="o">:=</span> <span class="nx">ps</span><span class="p">.</span><span class="nx">ByName</span><span class="p">(</span><span class="s">&quot;todoId&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">id</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">Atoi</span><span class="p">(</span><span class="nx">idParam</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;application/json; charset=UTF-8&quot;</span><span class="p">)</span>
+</span><span class='line'>      <span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>      <span class="k">return</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">RepoDestroyTodo</span><span class="p">(</span><span class="nx">id</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;application/json; charset=UTF-8&quot;</span><span class="p">)</span>
+</span><span class='line'>      <span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusNotFound</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>      <span class="k">return</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="mi">204</span><span class="p">)</span> <span class="c1">// 204 No Content</span>
+</span><span class='line'>  <span class="k">return</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="Things.We.Didn...t.Do"></a>
+<h2>Things We Didn’t Do</h2>
+
+<ul>
+<li>Version Control
+
+<ul>
+<li>gitとかの話ではなくAPIとしてのバージョンのこと。例えば互換性を破壊するような変更を行うことが予想される場合は、<code>/api/v1/prefix</code>のようなエンドポイントで設定したほうが良いかもしれない。</li>
+</ul>
+</li>
+<li>Authentication
+
+<ul>
+<li>パブリックあるいはオープンなAPIで無いのならば、認証は設けたほうが良い。元記事では<a href="http://jwt.io/">JSON web tokens</a>の利用を推奨している。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>また、元記事では<a href="https://ja.wikipedia.org/wiki/HTTP_ETag">eTags</a>を使ってキャッシュの仕組みを盛り込み、スケーリング可能なアプリケーションの実装を提案している。具体的な実装については以下が参考になりそう（ちゃんと読んでない）。</p>
+
+<ul>
+<li><a href="http://www.sanarias.com/blog/115LearningHTTPcachinginGo">Learning HTTP caching in Go</a>
+
+<ul>
+<li><a href="https://www.reddit.com/r/golang/comments/2sxlwp/learning_http_caching_in_go/">Redditのスレ</a></li>
+</ul>
+</li>
+<li><a href="http://stackoverflow.com/q/23014106">HTTP ETags and HTTP Redirects</a></li>
+</ul>
+
+
+<a name="What.Else.is.Left."></a>
+<h2>What Else is Left?</h2>
+
+<p>他にやるべきこととしては以下が挙げられる。</p>
+
+<ul>
+<li>リファクタリング</li>
+<li>各々の処理をファイルをパッケージに分割する</li>
+<li>テスト</li>
+<li>適切なエラーメッセージ
+
+<ul>
+<li>これは独自に追加した項目なんだけど、例えば今は<code>strconv.Atoi</code>でエラーが発生した場合にエラーをそのままクライアントにかえしているので、これはやはり適切なエラーメッセージに変えたほうが良い。</li>
+</ul>
+</li>
+</ul>
+
+
+<a name="L.............-....................................."></a>
+<h2>おまけ１ - 同じような処理をまとめる</h2>
+
+<p>ハンドラの処理を実装している<code>handlers.go</code>を眺めていると気づくが、ハンドラの処理の構成は主に以下のようになっている。</p>
+
+<ul>
+<li>事前処理: 引数のバリデーションチェック</li>
+<li>主処理: モックデータベースを使った処理</li>
+<li>事後処理: レスポンスヘッダーと返却するHTTPステータスコードの設定</li>
+</ul>
+
+
+<p>主処理は事前処理にてチェックされた値を受け取るという若干の依存はあるものの、それぞれの関心事は以下のように分けることが出来て、それぞれ分離させて共通化出来そうなことに気づく。</p>
+
+<ul>
+<li>事前処理: クライアントからのリクエストの中身に興味がある</li>
+<li>主処理: 指定されたTodoのIDを使ったデータベースの操作に興味がある</li>
+<li>事後処理: クライアントに返却するレスポンスに興味がある</li>
+</ul>
+
+
+<p>ここでロギング処理をMiddlewareとして実装したことを思い出す。今回の事前処理と事後処理もロギングと同様にMiddlewareとして実装することでコードの重複を減らし、ハンドラの関心事を主処理に専念させることができそうだ。</p>
+
+<a name="decorator.go"></a>
+<h3>decorator.go</h3>
+
+<p>事前処理と事後処理を記述する<code>decorator.go</code>というファイルを用意する。やるべきことは<code>handlers.go</code>に記述していた処理をコピペするだけ。多少修正しているが、以下のようになる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;encoding/json&quot;</span>
+</span><span class='line'>  <span class="s">&quot;net/http&quot;</span>
+</span><span class='line'>  <span class="s">&quot;strconv&quot;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="s">&quot;github.com/julienschmidt/httprouter&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">IDShouldBeInt</span><span class="p">(</span><span class="nx">h</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Handle</span><span class="p">,</span> <span class="nx">name</span> <span class="kt">string</span><span class="p">)</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Handle</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">CommonHeaders</span><span class="p">(</span><span class="kd">func</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">ps</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">idParam</span> <span class="o">:=</span> <span class="nx">ps</span><span class="p">.</span><span class="nx">ByName</span><span class="p">(</span><span class="s">&quot;todoId&quot;</span><span class="p">)</span>
+</span><span class='line'>      <span class="nx">_</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">Atoi</span><span class="p">(</span><span class="nx">idParam</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;application/json; charset=UTF-8&quot;</span><span class="p">)</span>
+</span><span class='line'>          <span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
+</span><span class='line'>          <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>              <span class="k">return</span>
+</span><span class='line'>          <span class="p">}</span>
+</span><span class='line'>          <span class="k">return</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">h</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="nx">r</span><span class="p">,</span> <span class="nx">ps</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">},</span> <span class="nx">name</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">CommonHeaders</span><span class="p">(</span><span class="nx">h</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Handle</span><span class="p">,</span> <span class="nx">name</span> <span class="kt">string</span><span class="p">)</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Handle</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">Logging</span><span class="p">(</span><span class="kd">func</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">ps</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;application/json; charset=UTF-8&quot;</span><span class="p">)</span>
+</span><span class='line'>      <span class="nx">h</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="nx">r</span><span class="p">,</span> <span class="nx">ps</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">},</span> <span class="nx">name</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>_, err := strconv.Atoi(idParam)</code>では変換された値を捨てている。これは事前処理では変換された値を使わないから。また、見ての通り、ソースのシグネチャというか、基本的な構造は<code>logger.go</code>で実装したものと何も変わらないことに気づくはず。非常にシンプルにコードが書けているし、関数の処理内容もわかりやすくなったと思う。</p>
+
+<p>ただ、これで良いかと言われると、やや苦しいところがある。それは事前処理の中でレスポンスを返却しているところだ。処理の内容からしてここではパラメータが不正であることだけを呼び出し元に通知して良い感じに事後処理に結果を渡すことができればよいのだけど、今の時点では妥協しておく（というか良いやり方を思いつかなかった）。</p>
+
+<a name="handlers.go"></a>
+<h3>handlers.go</h3>
+
+<p>上記の通り、事前処理と事後処理をハンドラから取り除いたので<code>handlers.go</code>は以下のようになる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;encoding/json&quot;</span>
+</span><span class='line'>  <span class="s">&quot;fmt&quot;</span>
+</span><span class='line'>  <span class="s">&quot;io&quot;</span>
+</span><span class='line'>  <span class="s">&quot;io/ioutil&quot;</span>
+</span><span class='line'>  <span class="s">&quot;net/http&quot;</span>
+</span><span class='line'>  <span class="s">&quot;strconv&quot;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="s">&quot;github.com/julienschmidt/httprouter&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">Index</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">_</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">fmt</span><span class="p">.</span><span class="nx">Fprintf</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="s">&quot;Welcmoe!&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">TodoIndex</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">_</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusOK</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">todos</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">TodoShow</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">ps</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">id</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">Atoi</span><span class="p">(</span><span class="nx">ps</span><span class="p">.</span><span class="nx">ByName</span><span class="p">(</span><span class="s">&quot;todoId&quot;</span><span class="p">))</span>
+</span><span class='line'>  <span class="nx">t</span> <span class="o">:=</span> <span class="nx">RepoFindTodo</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">t</span><span class="p">.</span><span class="nx">ID</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Name</span> <span class="o">==</span> <span class="s">&quot;&quot;</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusNotFound</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">return</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusOK</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">t</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">TodoCreate</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">ps</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">todo</span> <span class="nx">Todo</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">body</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">ioutil</span><span class="p">.</span><span class="nx">ReadAll</span><span class="p">(</span><span class="nx">io</span><span class="p">.</span><span class="nx">LimitReader</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">Body</span><span class="p">,</span> <span class="mi">1048576</span><span class="p">))</span> <span class="c1">// 1MiB</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="k">defer</span> <span class="nx">r</span><span class="p">.</span><span class="nx">Body</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">Unmarshal</span><span class="p">(</span><span class="nx">body</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">todo</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>      <span class="k">return</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">t</span> <span class="o">:=</span> <span class="nx">RepoCreateTodo</span><span class="p">(</span><span class="nx">todo</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">location</span> <span class="o">:=</span> <span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="s">&quot;http://%s/%d&quot;</span><span class="p">,</span> <span class="nx">r</span><span class="p">.</span><span class="nx">Host</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">ID</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;Location&quot;</span><span class="p">,</span> <span class="nx">location</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusCreated</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">t</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">TodoDelete</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">,</span> <span class="nx">ps</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">Params</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">id</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">Atoi</span><span class="p">(</span><span class="nx">ps</span><span class="p">.</span><span class="nx">ByName</span><span class="p">(</span><span class="s">&quot;todoId&quot;</span><span class="p">))</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">RepoDestroyTodo</span><span class="p">(</span><span class="nx">id</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusNotFound</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">NewEncoder</span><span class="p">(</span><span class="nx">w</span><span class="p">).</span><span class="nx">Encode</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>      <span class="k">return</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">w</span><span class="p">.</span><span class="nx">Header</span><span class="p">().</span><span class="nx">Del</span><span class="p">(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">w</span><span class="p">.</span><span class="nx">WriteHeader</span><span class="p">(</span><span class="mi">204</span><span class="p">)</span> <span class="c1">// 204 No Content</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ちょっとすっきりしたけど、処理結果に応じてHTTPステータスコードが変わるため今の時点では主処理から取り除くことが出来ないので、ちょっと中途半端になっている。</p>
+
+<a name="main.go"></a>
+<h3>main.go</h3>
+
+<p>それぞれの主処理に応じて用意したMiddlewareを割り当てる。多少は可読性が上がったかも？</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;log&quot;</span>
+</span><span class='line'>  <span class="s">&quot;net/http&quot;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="s">&quot;github.com/julienschmidt/httprouter&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">router</span> <span class="o">:=</span> <span class="nx">httprouter</span><span class="p">.</span><span class="nx">New</span><span class="p">()</span>
+</span><span class='line'>  <span class="nx">router</span><span class="p">.</span><span class="nx">GET</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span> <span class="nx">Logging</span><span class="p">(</span><span class="nx">Index</span><span class="p">,</span> <span class="s">&quot;index&quot;</span><span class="p">))</span>
+</span><span class='line'>  <span class="nx">router</span><span class="p">.</span><span class="nx">GET</span><span class="p">(</span><span class="s">&quot;/todos&quot;</span><span class="p">,</span> <span class="nx">CommonHeaders</span><span class="p">(</span><span class="nx">TodoIndex</span><span class="p">,</span> <span class="s">&quot;todo-index&quot;</span><span class="p">))</span>
+</span><span class='line'>  <span class="nx">router</span><span class="p">.</span><span class="nx">GET</span><span class="p">(</span><span class="s">&quot;/todos/:todoId&quot;</span><span class="p">,</span> <span class="nx">IDShouldBeInt</span><span class="p">(</span><span class="nx">TodoShow</span><span class="p">,</span> <span class="s">&quot;todo-show&quot;</span><span class="p">))</span>
+</span><span class='line'>  <span class="nx">router</span><span class="p">.</span><span class="nx">POST</span><span class="p">(</span><span class="s">&quot;/todos&quot;</span><span class="p">,</span> <span class="nx">CommonHeaders</span><span class="p">(</span><span class="nx">TodoCreate</span><span class="p">,</span> <span class="s">&quot;todo-create&quot;</span><span class="p">))</span>
+</span><span class='line'>  <span class="nx">router</span><span class="p">.</span><span class="nx">DELETE</span><span class="p">(</span><span class="s">&quot;/todos/:todoId&quot;</span><span class="p">,</span> <span class="nx">IDShouldBeInt</span><span class="p">(</span><span class="nx">TodoDelete</span><span class="p">,</span> <span class="s">&quot;todo-delete&quot;</span><span class="p">))</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">&quot;:8080&quot;</span><span class="p">,</span> <span class="nx">router</span><span class="p">))</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="L........................"></a>
+<h2>ここまでのまとめ</h2>
+
+<p>ある程度はそれらしくなったけど、主処理の中でレスポンスヘッダ―を設定していたりするため現状ではやや不満が残る内容になった。これは主処理と事後処理が完全に分断されているためであり次回はその辺りを考慮に入れてリファクタリングを行なう。</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2016-03-13T23:21:43+09:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>11:21 pm</span></time>
+      
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/go/'>go</a>, <a class='category' href='/blog/categories/golang/'>golang</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2016/01/25/working-with-userdefined-type/" title="Previous Post: 自分で定義したprimitiveな型を扱う際の注意点">&laquo; 自分で定義したprimitiveな型を扱う際の注意点</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2016/03/13/golang-json-api-tutorial-pt2/" title="Next Post: GoでJSON APIを書く Part2">GoでJSON APIを書く Part2 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2016 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

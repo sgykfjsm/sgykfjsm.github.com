@@ -9,7 +9,7 @@
   <meta name="author" content="sgykfjsm">
 
   
-  <meta name="description" content="Goではよく知られているように自分で型(type)を宣言して、任意のfunctionを実装することができる。今回、あるプログラムを実装している時に少しハマったので、経緯と対応策を記録しておく。 ">
+  <meta name="description" content="前回の続き。全体的にちょっとアレなところが多いので、もう少しリファクタリングを行なう。今回のリファクタリングの元ネタは以下。元ネタのほうが説明が簡潔だしコードが綺麗なので、元ネタを読めばコレを読む必要は無い。 Go actions responses ">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,81 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/03/13/golang-json-api-tutorial-pt2/">GoでJSON APIを書く Part2</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-03-13T23:27:51+09:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>11:27 pm</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><a href="/blog/2016/03/13/golang-json-api-tutorial/">前回</a>の続き。全体的にちょっとアレなところが多いので、もう少しリファクタリングを行なう。今回のリファクタリングの元ネタは以下。元ネタのほうが説明が簡潔だしコードが綺麗なので、元ネタを読めばコレを読む必要は無い。</p>
+
+<ul>
+<li><a href="http://openmymind.net/Go-action-responses/">Go actions responses</a></li>
+</ul>
+
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2016/03/13/golang-json-api-tutorial-pt2/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/03/13/golang-json-api-tutorial/">GoでJSON APIを書く</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-03-13T23:21:43+09:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>11:21 pm</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>JSONを返すRESTful APIを作ることになったので諸々の復習を兼ねて<a href="http://thenewstack.io/make-a-restful-json-api-go/">Making a RESTful JSON API in Go</a>を読む。そのままだとつまらないのでところどころ微妙にアレンジしながらやってみる。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2016/03/13/golang-json-api-tutorial/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -375,80 +450,6 @@
   
     <footer>
       <a rel="full-article" href="/blog/2015/04/21/coding-by-python-with-little-tips/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/04/20/docker-weekly/">docker-weekly: April 16th, 2015</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-04-20T23:28:28+09:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>20</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:28 pm</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>最近、あんまりDockerの話題についていけていないのでDocker weeklyについて、ざっと内容をまとめるようにしてみる。いつまで続くかはわからないけど…。今回は<a href="http://go.docker.com/webmail/44082/349477677/9bcd04c8938431b7e6ac4d9c2a270e1b">Docker Weekly: April 16th, 2015</a>について。</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2015/04/20/docker-weekly/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/03/14/custom-docker-ami-on-beanstalk/">AWS BeanstalkでDockerをカスタムAMIで使う。</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-03-14T23:11:00+09:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>14</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:11 pm</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>既知の通り、BeanstalkでDockerを使うことができるが、通常の使い方だとインスタンスが配備される度にDocker ImageをPull、BuildしてからRunする。初期配備時は問題ないが、スケールアウトの観点で見た場合、非常にもたつくことがある。また、Docker Imageが大きい(800MB以上ぐらい？)と、devicemapper errorでBuildに失敗することが多い（ような気がする）。単にBuildに失敗しただけであれば切り離せば良いが、複数台のうちいくつかがBuildに失敗しただけでは検知が難しく、そのまま生き残ってしまうとムダなコストが発生する。</p>
-
-<p>上記のような認識でいたため、これまではBeanstalkでDockerを運用することにはあまり乗り気ではなかった。しかし、同僚からの意見で予めデプロイしておいたカスタムAMIを使うのはどうか、という意見があり、検証することにした。</p>
-
-<p>なお、結論から言うと、ここで記した方法では実運用に耐えないと思う。アレコレがんばらないで、素直に<a href="http://aws.amazon.com/jp/ecs/">Amazon EC2 Container Service</a>がGAになるのを待ったほうが良い。</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2015/03/14/custom-docker-ami-on-beanstalk/">Read on &rarr;</a>
     </footer>
   
 
