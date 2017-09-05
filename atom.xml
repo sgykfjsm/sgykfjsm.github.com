@@ -4,7 +4,7 @@
   <title><![CDATA[sgykfjsm.github.com]]></title>
   <link href="http://sgykfjsm.github.io/atom.xml" rel="self"/>
   <link href="http://sgykfjsm.github.io/"/>
-  <updated>2016-03-14T00:05:55+09:00</updated>
+  <updated>2017-09-05T23:17:50+09:00</updated>
   <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
@@ -12,6 +12,580 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[GolangのSignalハンドリングを同時に複数実行したらどうなるか]]></title>
+    <link href="http://sgykfjsm.github.io/blog/2017/09/05/golangfalsesignalhandoringuwotong-shi-nifu-shu-shi-xing-sitaradounaruka/"/>
+    <updated>2017-09-05T22:03:39+09:00</updated>
+    <id>http://sgykfjsm.github.io/blog/2017/09/05/golangfalsesignalhandoringuwotong-shi-nifu-shu-shi-xing-sitaradounaruka</id>
+    <content type="html"><![CDATA[<p>めっちゃ久しぶりにブログを書く。標題の件が気になったので実際にやってみた。</p>
+
+<!-- more -->
+
+
+<p>シンプルなSignalハンドラはこんな感じになる。ほぼ<a href="https://gobyexample.com/signals">Go By Example</a>と同じ。何度も写経しているうちに暗記した。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;fmt&quot;</span>
+</span><span class='line'>  <span class="s">&quot;os&quot;</span>
+</span><span class='line'>  <span class="s">&quot;os/signal&quot;</span>
+</span><span class='line'>  <span class="s">&quot;syscall&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">sig</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="nx">os</span><span class="p">.</span><span class="nx">Signal</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">done</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">bool</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">signal</span><span class="p">.</span><span class="nx">Notify</span><span class="p">(</span><span class="nx">sig</span><span class="p">,</span> <span class="nx">syscall</span><span class="p">.</span><span class="nx">SIGINT</span><span class="p">,</span> <span class="nx">syscall</span><span class="p">.</span><span class="nx">SIGTERM</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">s</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">sig</span>
+</span><span class='line'>      <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;\nCatch the signal at main: %v\n&quot;</span><span class="p">,</span> <span class="nx">s</span><span class="p">)</span>
+</span><span class='line'>      <span class="nx">done</span> <span class="o">&lt;-</span> <span class="kc">true</span>
+</span><span class='line'>  <span class="p">}()</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Waiting for signal at main ...&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="o">&lt;-</span><span class="nx">done</span>
+</span><span class='line'>  <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Exit from main&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>次にほぼこれをコピペしてライブラリとしてインポートする。そうすると、以下のようになる。</p>
+
+<p>main.go</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;fmt&quot;</span>
+</span><span class='line'>  <span class="s">&quot;os&quot;</span>
+</span><span class='line'>  <span class="s">&quot;os/signal&quot;</span>
+</span><span class='line'>  <span class="s">&quot;syscall&quot;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="s">&quot;github.com/sgykfjsm/sample-program-by-go/signal-handler/sub1&quot;</span>
+</span><span class='line'>  <span class="s">&quot;github.com/sgykfjsm/sample-program-by-go/signal-handler/sub2&quot;</span>
+</span><span class='line'>  <span class="s">&quot;sync&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">sig</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="nx">os</span><span class="p">.</span><span class="nx">Signal</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">done</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">bool</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">wg</span> <span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">go</span> <span class="nx">sub1</span><span class="p">.</span><span class="nx">Sub1</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">wg</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">go</span> <span class="nx">sub2</span><span class="p">.</span><span class="nx">Sub2</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">wg</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">signal</span><span class="p">.</span><span class="nx">Notify</span><span class="p">(</span><span class="nx">sig</span><span class="p">,</span> <span class="nx">syscall</span><span class="p">.</span><span class="nx">SIGINT</span><span class="p">,</span> <span class="nx">syscall</span><span class="p">.</span><span class="nx">SIGTERM</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">wg</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">defer</span> <span class="nx">wg</span><span class="p">.</span><span class="nx">Done</span><span class="p">()</span>
+</span><span class='line'>      <span class="nx">s</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">sig</span>
+</span><span class='line'>      <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;\nCatch the signal at main: %v\n&quot;</span><span class="p">,</span> <span class="nx">s</span><span class="p">)</span>
+</span><span class='line'>      <span class="nx">done</span> <span class="o">&lt;-</span> <span class="kc">true</span>
+</span><span class='line'>  <span class="p">}()</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Waiting for signal at main ...&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">wg</span><span class="p">.</span><span class="nx">Wait</span><span class="p">()</span>
+</span><span class='line'>  <span class="o">&lt;-</span><span class="nx">done</span>
+</span><span class='line'>  <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Exit from main&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>sub1/sub.go</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">sub1</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;fmt&quot;</span>
+</span><span class='line'>  <span class="s">&quot;os&quot;</span>
+</span><span class='line'>  <span class="s">&quot;os/signal&quot;</span>
+</span><span class='line'>  <span class="s">&quot;sync&quot;</span>
+</span><span class='line'>  <span class="s">&quot;syscall&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">Sub1</span><span class="p">(</span><span class="nx">wg</span> <span class="o">*</span><span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">// Don&#39;t put wg.Wait(). This should be done at caller function.</span>
+</span><span class='line'>  <span class="nx">wg</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">sig</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="nx">os</span><span class="p">.</span><span class="nx">Signal</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">done</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">bool</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">signal</span><span class="p">.</span><span class="nx">Notify</span><span class="p">(</span><span class="nx">sig</span><span class="p">,</span> <span class="nx">syscall</span><span class="p">.</span><span class="nx">SIGINT</span><span class="p">,</span> <span class="nx">syscall</span><span class="p">.</span><span class="nx">SIGTERM</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">defer</span> <span class="nx">wg</span><span class="p">.</span><span class="nx">Done</span><span class="p">()</span>
+</span><span class='line'>      <span class="nx">s</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">sig</span>
+</span><span class='line'>      <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;\nCatch the signal at Sub1: %v\n&quot;</span><span class="p">,</span> <span class="nx">s</span><span class="p">)</span>
+</span><span class='line'>      <span class="nx">done</span> <span class="o">&lt;-</span> <span class="kc">true</span>
+</span><span class='line'>  <span class="p">}()</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Waiting for signal at Sub1 ...&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="o">&lt;-</span><span class="nx">done</span>
+</span><span class='line'>  <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Exit from Sub1&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>sub2/sub.goも作っているけど、sub1/sub.goとほぼ同じなので省略。先にmain.goがexitしないように<code>sync.Waitgroup</code>を使って待ち合わせをする。実行結果は以下の通り。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> go run ./main.go
+</span><span class='line'><span class="go">Waiting for signal at main ...</span>
+</span><span class='line'><span class="go">Waiting for signal at Sub2 ...</span>
+</span><span class='line'><span class="go">Waiting for signal at Sub1 ...</span>
+</span><span class='line'><span class="go">^C</span>
+</span><span class='line'><span class="go">Catch the signal at Sub1: interrupt</span>
+</span><span class='line'><span class="go">Exit from Sub1</span>
+</span><span class='line'>
+</span><span class='line'><span class="go">Catch the signal at main: interrupt</span>
+</span><span class='line'>
+</span><span class='line'><span class="go">Catch the signal at Sub2: interrupt</span>
+</span><span class='line'><span class="go">Exit from main</span>
+</span><span class='line'>
+</span><span class='line'><span class="gp">$</span> go run ./main.go
+</span><span class='line'><span class="go">Waiting for signal at main ...</span>
+</span><span class='line'><span class="go">Waiting for signal at Sub1 ...</span>
+</span><span class='line'><span class="go">Waiting for signal at Sub2 ...</span>
+</span><span class='line'><span class="go">^C</span>
+</span><span class='line'><span class="go">Catch the signal at main: interrupt</span>
+</span><span class='line'>
+</span><span class='line'><span class="go">Catch the signal at Sub1: interrupt</span>
+</span><span class='line'><span class="go">Exit from Sub1</span>
+</span><span class='line'>
+</span><span class='line'><span class="go">Catch the signal at Sub2: interrupt</span>
+</span><span class='line'><span class="go">Exit from main</span>
+</span><span class='line'>
+</span><span class='line'><span class="gp">$</span> go run ./main.go
+</span><span class='line'><span class="go">Waiting for signal at main ...</span>
+</span><span class='line'><span class="go">Waiting for signal at Sub2 ...</span>
+</span><span class='line'><span class="go">Waiting for signal at Sub1 ...</span>
+</span><span class='line'><span class="go">^C</span>
+</span><span class='line'><span class="go">Catch the signal at main: interrupt</span>
+</span><span class='line'>
+</span><span class='line'><span class="go">Catch the signal at Sub2: interrupt</span>
+</span><span class='line'><span class="go">Exit from Sub2</span>
+</span><span class='line'>
+</span><span class='line'><span class="go">Catch the signal at Sub1: interrupt</span>
+</span><span class='line'><span class="go">Exit from main</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>見ての通り、各ハンドラは同一のシグナルを同様に受け取っていることがわかる。まぁそりゃそうだという感じ。実際にコード（というかgodoc）にも以下の様に<a href="https://github.com/golang/go/blob/master/src/os/signal/signal.go#L102-L104">記述されている</a>。</p>
+
+<blockquote><p>It is allowed to call Notify multiple times with different channels
+and the same signals: each channel receives copies of incoming
+signals independently.</p></blockquote>
+
+<p>ただし、上記出力からもう１つわかることとして、ライブラリ側の<code>wg.Done()</code>以降の処理は必ずしも全うするとは限らないということだ。そのため、例えば、シグナルを受け取ったらメモリに溜まっているデータをFlushして何らかの処理などを行う必要がある場合、呼び出し側の処理を止めてライブラリ側の処理を終了させてから次に呼び出し側の処理を再開するような実装をしなければならない。</p>
+
+<p>今回のサンプルの場合であれば、<code>wg.Done</code>を処理の一番最後に持っていけば良い。例えば、以下の様にする。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">Sub2</span><span class="p">(</span><span class="nx">wg</span> <span class="o">*</span><span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">defer</span> <span class="nx">wg</span><span class="p">.</span><span class="nx">Done</span><span class="p">()</span> <span class="c1">// &lt;-- 処理の最初にdeferでwg.Doneを登録する。</span>
+</span><span class='line'>  <span class="c1">// Don&#39;t put wg.Wait(). This should be done at caller function.</span>
+</span><span class='line'>  <span class="nx">wg</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">sig</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="nx">os</span><span class="p">.</span><span class="nx">Signal</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">done</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">bool</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">signal</span><span class="p">.</span><span class="nx">Notify</span><span class="p">(</span><span class="nx">sig</span><span class="p">,</span> <span class="nx">syscall</span><span class="p">.</span><span class="nx">SIGINT</span><span class="p">,</span> <span class="nx">syscall</span><span class="p">.</span><span class="nx">SIGTERM</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">s</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">sig</span>
+</span><span class='line'>      <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;\nCatch the signal at Sub2: %v\n&quot;</span><span class="p">,</span> <span class="nx">s</span><span class="p">)</span>
+</span><span class='line'>      <span class="nx">done</span> <span class="o">&lt;-</span> <span class="kc">true</span>
+</span><span class='line'>  <span class="p">}()</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Waiting for signal at Sub2 ...&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="o">&lt;-</span><span class="nx">done</span>
+</span><span class='line'>  <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Exit from Sub2&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>しかし、現実として呼び出し側から<code>wg *sync.WaitGroup</code>を渡してもらうということは実装として通常はありえない。ではどうするか？</p>
+
+<p>１つの方法としては<a href="https://golang.org/pkg/runtime/#SetFinalizer">runtime.SetFinalizer</a>を使う方法がある。これはGCが発動する際にGC処理のfinalizerとして処理を登録する方法だ。参考の実装は <a href="https://gist.github.com/deltamobile/6511901">https://gist.github.com/deltamobile/6511901</a> がある。<a href="https://play.golang.org/p/jWhRSPNvxJ">https://play.golang.org/p/jWhRSPNvxJ</a> で動作を確認することができる。一見、これは有用に見えるが、GC処理のfinalizerとするのはあまり実用的ではない。</p>
+
+<p>自分がおもいつく限りだと<code>sync.Mutex</code>を使った排他制御かなーと思ったけど、どういう風に実装にすれば良いか思いつかない。やっぱりシンプルにチャンネルを渡して、呼び出し側が渡したチャンネルから終了の合図を受け取る方法かなぁ？</p>
+
+<p>main.go</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;fmt&quot;</span>
+</span><span class='line'>  <span class="s">&quot;os&quot;</span>
+</span><span class='line'>  <span class="s">&quot;os/signal&quot;</span>
+</span><span class='line'>  <span class="s">&quot;syscall&quot;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="s">&quot;github.com/sgykfjsm/sample-program-by-go/signal-handler/sub1&quot;</span>
+</span><span class='line'>  <span class="s">&quot;github.com/sgykfjsm/sample-program-by-go/signal-handler/sub2&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">sig</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="nx">os</span><span class="p">.</span><span class="nx">Signal</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">done</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">bool</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">sub1Done</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">bool</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">sub2Done</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">bool</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">go</span> <span class="nx">sub1</span><span class="p">.</span><span class="nx">Sub1</span><span class="p">(</span><span class="nx">sub1Done</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">go</span> <span class="nx">sub2</span><span class="p">.</span><span class="nx">Sub2</span><span class="p">(</span><span class="nx">sub2Done</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">signal</span><span class="p">.</span><span class="nx">Notify</span><span class="p">(</span><span class="nx">sig</span><span class="p">,</span> <span class="nx">syscall</span><span class="p">.</span><span class="nx">SIGINT</span><span class="p">,</span> <span class="nx">syscall</span><span class="p">.</span><span class="nx">SIGTERM</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">s</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">sig</span>
+</span><span class='line'>      <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;\nCatch the signal at main: %v\n&quot;</span><span class="p">,</span> <span class="nx">s</span><span class="p">)</span>
+</span><span class='line'>      <span class="nx">done</span> <span class="o">&lt;-</span> <span class="kc">true</span>
+</span><span class='line'>  <span class="p">}()</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Waiting for signal at main ...&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="o">&lt;-</span><span class="nx">done</span>
+</span><span class='line'>  <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Exit from main&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="o">&lt;-</span><span class="nx">sub1Done</span>
+</span><span class='line'>  <span class="o">&lt;-</span><span class="nx">sub2Done</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>sub1/sub.go</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">sub1</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;fmt&quot;</span>
+</span><span class='line'>  <span class="s">&quot;os&quot;</span>
+</span><span class='line'>  <span class="s">&quot;os/signal&quot;</span>
+</span><span class='line'>  <span class="s">&quot;syscall&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">Sub1</span><span class="p">(</span><span class="nx">done</span> <span class="kd">chan</span><span class="o">&lt;-</span> <span class="kt">bool</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">sig</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="nx">os</span><span class="p">.</span><span class="nx">Signal</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">subDone</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">bool</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">signal</span><span class="p">.</span><span class="nx">Notify</span><span class="p">(</span><span class="nx">sig</span><span class="p">,</span> <span class="nx">syscall</span><span class="p">.</span><span class="nx">SIGINT</span><span class="p">,</span> <span class="nx">syscall</span><span class="p">.</span><span class="nx">SIGTERM</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">s</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">sig</span>
+</span><span class='line'>      <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;\nCatch the signal at Sub1: %v\n&quot;</span><span class="p">,</span> <span class="nx">s</span><span class="p">)</span>
+</span><span class='line'>      <span class="nx">subDone</span> <span class="o">&lt;-</span> <span class="kc">true</span>
+</span><span class='line'>  <span class="p">}()</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Waiting for signal at Sub1 ...&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="o">&lt;-</span><span class="nx">subDone</span>
+</span><span class='line'>  <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Exit from Sub1&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">done</span> <span class="o">&lt;-</span> <span class="kc">true</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>結果は以下の通り。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> go run ./main.go
+</span><span class='line'><span class="go">Waiting for signal at main ...</span>
+</span><span class='line'><span class="go">Waiting for signal at Sub2 ...</span>
+</span><span class='line'><span class="go">Waiting for signal at Sub1 ...</span>
+</span><span class='line'><span class="go">^C</span>
+</span><span class='line'><span class="go">Catch the signal at main: interrupt</span>
+</span><span class='line'><span class="go">Exit from main</span>
+</span><span class='line'>
+</span><span class='line'><span class="go">Catch the signal at Sub2: interrupt</span>
+</span><span class='line'><span class="go">Exit from Sub2</span>
+</span><span class='line'>
+</span><span class='line'><span class="go">Catch the signal at Sub1: interrupt</span>
+</span><span class='line'><span class="go">Exit from Sub1</span>
+</span><span class='line'>
+</span><span class='line'><span class="gp">$</span> go run ./main.go
+</span><span class='line'><span class="go">Waiting for signal at main ...</span>
+</span><span class='line'><span class="go">Waiting for signal at Sub2 ...</span>
+</span><span class='line'><span class="go">Waiting for signal at Sub1 ...</span>
+</span><span class='line'><span class="go">^C</span>
+</span><span class='line'><span class="go">Catch the signal at Sub2: interrupt</span>
+</span><span class='line'><span class="go">Exit from Sub2</span>
+</span><span class='line'>
+</span><span class='line'><span class="go">Catch the signal at main: interrupt</span>
+</span><span class='line'><span class="go">Exit from main</span>
+</span><span class='line'>
+</span><span class='line'><span class="go">Catch the signal at Sub1: interrupt</span>
+</span><span class='line'><span class="go">Exit from Sub1</span>
+</span><span class='line'>
+</span><span class='line'><span class="gp">$</span> go run ./main.go
+</span><span class='line'><span class="go">Waiting for signal at main ...</span>
+</span><span class='line'><span class="go">Waiting for signal at Sub1 ...</span>
+</span><span class='line'><span class="go">Waiting for signal at Sub2 ...</span>
+</span><span class='line'><span class="go">^C</span>
+</span><span class='line'><span class="go">Catch the signal at Sub2: interrupt</span>
+</span><span class='line'><span class="go">Exit from Sub2</span>
+</span><span class='line'>
+</span><span class='line'><span class="go">Catch the signal at main: interrupt</span>
+</span><span class='line'><span class="go">Exit from main</span>
+</span><span class='line'>
+</span><span class='line'><span class="go">Catch the signal at Sub1: interrupt</span>
+</span><span class='line'><span class="go">Exit from Sub1</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>一応は期待通りに、ライブラリ側の処理を全うして呼び出し側が終了させることが出来た。最初の例と何が違うのかって言われるとちょっと困るけど、チャンネルを通じたコミュニケーションということで、こっちのほうがGoっぽいかな？という程度…どこかに最適解がありそうな気がするけど、まぁ今日はこのへんで。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[GoでJSON APIを書く Part2]]></title>
@@ -5853,55 +6427,6 @@ mysql [localhost] {msandbox} (test) &gt; desc t2;
 </ol>
 </div>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[markdownをプレビューする]]></title>
-    <link href="http://sgykfjsm.github.io/blog/2014/03/01/how-to-preview-markdown-on-cli/"/>
-    <updated>2014-03-01T09:43:00+09:00</updated>
-    <id>http://sgykfjsm.github.io/blog/2014/03/01/how-to-preview-markdown-on-cli</id>
-    <content type="html"><![CDATA[<p>Macではプレビュー機能があるけど、markdownだとレンダリングされずにそのままが表示される。 ので、ちゃんとレンダリングされた状態でプレビューできるようにする。また、いつもvimを使って作業しているので、コマンドラインからプレビューできるようにする。</p>
-
-<p>ただ、今回はlynxを使ってプレビューするので、あまり一般的なやり方ではないと思う。</p>
-
-<!-- more -->
-
-
-<ul>
-<li>markdownをhtmlに変換するツール
-
-<ul>
-<li>今回は<a href="http://daringfireball.net/projects/markdown/">http://daringfireball.net/projects/markdown/</a>を使う。</li>
-<li><code>PATH</code>が通っている所にスクリプトを配置して、実行権限をつけておく。</li>
-</ul>
-</li>
-<li>lynx
-
-<ul>
-<li><code>brew install lynx</code>でOK。</li>
-</ul>
-</li>
-</ul>
-
-
-<p>随時実行できるように以下のような関数を<code>~/.zshrc</code>とかに登録しておく。</p>
-
-<pre><code># markdown preview
-markdown_preview() {
-    case $1 in
-        -d | -dump | --dump )
-            shift
-            /usr/local/bin/Markdown.pl $1 | lynx -stdin -raw -dump
-            ;;
-        * )
-            /usr/local/bin/Markdown.pl $1 | lynx -stdin -raw
-            ;;
-    esac
-}
-</code></pre>
-
-<p>lynxのオプションに<code>-raw</code>を付けないと、日本語が化けてしまうのでつけておいたほうが良いと思う。あとは、このコマンドをvimから呼び出せるようにすればいいんだろうけど、うまくバッファの中で表示される方法がわからなかったので早々に諦めた。</p>
 ]]></content>
   </entry>
   

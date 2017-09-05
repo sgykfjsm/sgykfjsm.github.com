@@ -4,7 +4,7 @@
   <title><![CDATA[Category: golang | sgykfjsm.github.com]]></title>
   <link href="http://sgykfjsm.github.io/blog/categories/golang/atom.xml" rel="self"/>
   <link href="http://sgykfjsm.github.io/"/>
-  <updated>2016-03-14T00:05:55+09:00</updated>
+  <updated>2017-09-05T23:17:50+09:00</updated>
   <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
@@ -12,6 +12,320 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[GolangのSignalハンドリングを同時に複数実行したらどうなるか]]></title>
+    <link href="http://sgykfjsm.github.io/blog/2017/09/05/golangfalsesignalhandoringuwotong-shi-nifu-shu-shi-xing-sitaradounaruka/"/>
+    <updated>2017-09-05T22:03:39+09:00</updated>
+    <id>http://sgykfjsm.github.io/blog/2017/09/05/golangfalsesignalhandoringuwotong-shi-nifu-shu-shi-xing-sitaradounaruka</id>
+    <content type="html"><![CDATA[<p>めっちゃ久しぶりにブログを書く。標題の件が気になったので実際にやってみた。</p>
+
+<!-- more -->
+
+
+<p>シンプルなSignalハンドラはこんな感じになる。ほぼ<a href="https://gobyexample.com/signals">Go By Example</a>と同じ。何度も写経しているうちに暗記した。</p>
+
+<pre><code class="go">package main
+
+import (
+    "fmt"
+    "os"
+    "os/signal"
+    "syscall"
+)
+
+func main() {
+    sig := make(chan os.Signal, 1)
+    done := make(chan bool, 1)
+
+    signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+    go func() {
+        s := &lt;-sig
+        fmt.Printf("\nCatch the signal at main: %v\n", s)
+        done &lt;- true
+    }()
+
+    fmt.Println("Waiting for signal at main ...")
+    &lt;-done
+    fmt.Println("Exit from main")
+}
+</code></pre>
+
+<p>次にほぼこれをコピペしてライブラリとしてインポートする。そうすると、以下のようになる。</p>
+
+<p>main.go</p>
+
+<pre><code class="go">package main
+
+import (
+    "fmt"
+    "os"
+    "os/signal"
+    "syscall"
+
+    "github.com/sgykfjsm/sample-program-by-go/signal-handler/sub1"
+    "github.com/sgykfjsm/sample-program-by-go/signal-handler/sub2"
+    "sync"
+)
+
+func main() {
+    sig := make(chan os.Signal, 1)
+    done := make(chan bool, 1)
+
+    var wg sync.WaitGroup
+
+    go sub1.Sub1(&amp;wg)
+    go sub2.Sub2(&amp;wg)
+
+    signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+    wg.Add(1)
+    go func() {
+        defer wg.Done()
+        s := &lt;-sig
+        fmt.Printf("\nCatch the signal at main: %v\n", s)
+        done &lt;- true
+    }()
+
+    fmt.Println("Waiting for signal at main ...")
+    wg.Wait()
+    &lt;-done
+    fmt.Println("Exit from main")
+}
+</code></pre>
+
+<p>sub1/sub.go</p>
+
+<pre><code class="go">package sub1
+
+import (
+    "fmt"
+    "os"
+    "os/signal"
+    "sync"
+    "syscall"
+)
+
+func Sub1(wg *sync.WaitGroup) {
+    // Don't put wg.Wait(). This should be done at caller function.
+    wg.Add(1)
+    sig := make(chan os.Signal, 1)
+    done := make(chan bool, 1)
+
+    signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+    go func() {
+        defer wg.Done()
+        s := &lt;-sig
+        fmt.Printf("\nCatch the signal at Sub1: %v\n", s)
+        done &lt;- true
+    }()
+
+    fmt.Println("Waiting for signal at Sub1 ...")
+    &lt;-done
+    fmt.Println("Exit from Sub1")
+}
+</code></pre>
+
+<p>sub2/sub.goも作っているけど、sub1/sub.goとほぼ同じなので省略。先にmain.goがexitしないように<code>sync.Waitgroup</code>を使って待ち合わせをする。実行結果は以下の通り。</p>
+
+<pre><code class="console">$ go run ./main.go
+Waiting for signal at main ...
+Waiting for signal at Sub2 ...
+Waiting for signal at Sub1 ...
+^C
+Catch the signal at Sub1: interrupt
+Exit from Sub1
+
+Catch the signal at main: interrupt
+
+Catch the signal at Sub2: interrupt
+Exit from main
+
+$ go run ./main.go
+Waiting for signal at main ...
+Waiting for signal at Sub1 ...
+Waiting for signal at Sub2 ...
+^C
+Catch the signal at main: interrupt
+
+Catch the signal at Sub1: interrupt
+Exit from Sub1
+
+Catch the signal at Sub2: interrupt
+Exit from main
+
+$ go run ./main.go
+Waiting for signal at main ...
+Waiting for signal at Sub2 ...
+Waiting for signal at Sub1 ...
+^C
+Catch the signal at main: interrupt
+
+Catch the signal at Sub2: interrupt
+Exit from Sub2
+
+Catch the signal at Sub1: interrupt
+Exit from main
+</code></pre>
+
+<p>見ての通り、各ハンドラは同一のシグナルを同様に受け取っていることがわかる。まぁそりゃそうだという感じ。実際にコード（というかgodoc）にも以下の様に<a href="https://github.com/golang/go/blob/master/src/os/signal/signal.go#L102-L104">記述されている</a>。</p>
+
+<blockquote><p>It is allowed to call Notify multiple times with different channels
+and the same signals: each channel receives copies of incoming
+signals independently.</p></blockquote>
+
+<p>ただし、上記出力からもう１つわかることとして、ライブラリ側の<code>wg.Done()</code>以降の処理は必ずしも全うするとは限らないということだ。そのため、例えば、シグナルを受け取ったらメモリに溜まっているデータをFlushして何らかの処理などを行う必要がある場合、呼び出し側の処理を止めてライブラリ側の処理を終了させてから次に呼び出し側の処理を再開するような実装をしなければならない。</p>
+
+<p>今回のサンプルの場合であれば、<code>wg.Done</code>を処理の一番最後に持っていけば良い。例えば、以下の様にする。</p>
+
+<pre><code class="go">func Sub2(wg *sync.WaitGroup) {
+    defer wg.Done() // &lt;-- 処理の最初にdeferでwg.Doneを登録する。
+    // Don't put wg.Wait(). This should be done at caller function.
+    wg.Add(1)
+    sig := make(chan os.Signal, 1)
+    done := make(chan bool, 1)
+
+    signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+    go func() {
+        s := &lt;-sig
+        fmt.Printf("\nCatch the signal at Sub2: %v\n", s)
+        done &lt;- true
+    }()
+
+    fmt.Println("Waiting for signal at Sub2 ...")
+    &lt;-done
+    fmt.Println("Exit from Sub2")
+}
+</code></pre>
+
+<p>しかし、現実として呼び出し側から<code>wg *sync.WaitGroup</code>を渡してもらうということは実装として通常はありえない。ではどうするか？</p>
+
+<p>１つの方法としては<a href="https://golang.org/pkg/runtime/#SetFinalizer">runtime.SetFinalizer</a>を使う方法がある。これはGCが発動する際にGC処理のfinalizerとして処理を登録する方法だ。参考の実装は <a href="https://gist.github.com/deltamobile/6511901">https://gist.github.com/deltamobile/6511901</a> がある。<a href="https://play.golang.org/p/jWhRSPNvxJ">https://play.golang.org/p/jWhRSPNvxJ</a> で動作を確認することができる。一見、これは有用に見えるが、GC処理のfinalizerとするのはあまり実用的ではない。</p>
+
+<p>自分がおもいつく限りだと<code>sync.Mutex</code>を使った排他制御かなーと思ったけど、どういう風に実装にすれば良いか思いつかない。やっぱりシンプルにチャンネルを渡して、呼び出し側が渡したチャンネルから終了の合図を受け取る方法かなぁ？</p>
+
+<p>main.go</p>
+
+<pre><code class="go">package main
+
+import (
+    "fmt"
+    "os"
+    "os/signal"
+    "syscall"
+
+    "github.com/sgykfjsm/sample-program-by-go/signal-handler/sub1"
+    "github.com/sgykfjsm/sample-program-by-go/signal-handler/sub2"
+)
+
+func main() {
+    sig := make(chan os.Signal, 1)
+    done := make(chan bool, 1)
+    sub1Done := make(chan bool, 1)
+    sub2Done := make(chan bool, 1)
+
+    go sub1.Sub1(sub1Done)
+    go sub2.Sub2(sub2Done)
+
+    signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+    go func() {
+        s := &lt;-sig
+        fmt.Printf("\nCatch the signal at main: %v\n", s)
+        done &lt;- true
+    }()
+
+    fmt.Println("Waiting for signal at main ...")
+    &lt;-done
+    fmt.Println("Exit from main")
+
+    &lt;-sub1Done
+    &lt;-sub2Done
+}
+</code></pre>
+
+<p>sub1/sub.go</p>
+
+<pre><code class="go">package sub1
+
+import (
+    "fmt"
+    "os"
+    "os/signal"
+    "syscall"
+)
+
+func Sub1(done chan&lt;- bool) {
+    sig := make(chan os.Signal, 1)
+    subDone := make(chan bool, 1)
+
+    signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+    go func() {
+        s := &lt;-sig
+        fmt.Printf("\nCatch the signal at Sub1: %v\n", s)
+        subDone &lt;- true
+    }()
+
+    fmt.Println("Waiting for signal at Sub1 ...")
+    &lt;-subDone
+    fmt.Println("Exit from Sub1")
+
+    done &lt;- true
+}
+</code></pre>
+
+<p>結果は以下の通り。</p>
+
+<pre><code class="console">$ go run ./main.go
+Waiting for signal at main ...
+Waiting for signal at Sub2 ...
+Waiting for signal at Sub1 ...
+^C
+Catch the signal at main: interrupt
+Exit from main
+
+Catch the signal at Sub2: interrupt
+Exit from Sub2
+
+Catch the signal at Sub1: interrupt
+Exit from Sub1
+
+$ go run ./main.go
+Waiting for signal at main ...
+Waiting for signal at Sub2 ...
+Waiting for signal at Sub1 ...
+^C
+Catch the signal at Sub2: interrupt
+Exit from Sub2
+
+Catch the signal at main: interrupt
+Exit from main
+
+Catch the signal at Sub1: interrupt
+Exit from Sub1
+
+$ go run ./main.go
+Waiting for signal at main ...
+Waiting for signal at Sub1 ...
+Waiting for signal at Sub2 ...
+^C
+Catch the signal at Sub2: interrupt
+Exit from Sub2
+
+Catch the signal at main: interrupt
+Exit from main
+
+Catch the signal at Sub1: interrupt
+Exit from Sub1
+</code></pre>
+
+<p>一応は期待通りに、ライブラリ側の処理を全うして呼び出し側が終了させることが出来た。最初の例と何が違うのかって言われるとちょっと困るけど、チャンネルを通じたコミュニケーションということで、こっちのほうがGoっぽいかな？という程度…どこかに最適解がありそうな気がするけど、まぁ今日はこのへんで。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[GoでJSON APIを書く Part2]]></title>
@@ -1651,344 +1965,6 @@ func main() {
 <p><code>go func</code>の場合と違って、closureを経由せずに、<code>bar</code>以降の処理を別のgoroutineとして起動させていることがわかる。</p>
 
 <p>ちゃんとわかっている人からすれば当然のことに思われるだろうが、自分のようなGo初心者だと出力内容を見て、アレ？と思うかもしれないので、goroutineを使う処理のstack情報を取得する場合は注意すること。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Ginkgo 基本的な使い方編]]></title>
-    <link href="http://sgykfjsm.github.io/blog/2015/09/24/ginkgo-getting-start/"/>
-    <updated>2015-09-24T22:51:20+09:00</updated>
-    <id>http://sgykfjsm.github.io/blog/2015/09/24/ginkgo-getting-start</id>
-    <content type="html"><![CDATA[<p>最近、golangでプログラムを書く機会が増えてきた。golangでTDDをする場合、標準の<a href="https://golang.org/pkg/testing/">testingパッケージ</a>を使うのが一般的なようだ。ただし、標準パッケージだけだとちょっとテストが書きづらいので、<a href="https://github.com/stretchr/testify">stretchr/testify</a>を使っている人も多いと思う。</p>
-
-<p>関数のテストをしたいときは標準パッケージなりtestifyを使うなりで良いのだけど、振る舞いをテストしたい、つまりBDDをしたいなーと思った時にちょっと調べらたら<a href="http://onsi.github.io/ginkgo/">Ginkgo</a>というのが良さ気だったので、ちょっと試してみる。</p>
-
-<!-- more -->
-
-
-<a name="Ginkgo......"></a>
-<h2>Ginkgoとは</h2>
-
-<p>表現力があって包括的なテストを効率良く書くためのBDDスタイルのテストフレームワーク。<a href="http://github.com/onsi/gomega">Gomega</a>というMatcherライブラリと併用すると良い感じらしいけど、単体でも充分使えるらしい。</p>
-
-<p>今回はドキュメントに従い、GinkgoだけでなくGomegaもインストールした。</p>
-
-<a name="L.................."></a>
-<h2>インストール</h2>
-
-<p><code>go get</code>するだけ。ginkgoの実行バイナリが<code>${GOPATH}/bin</code>に、ソースコードはgomegaとともに<code>$GOPATH/src/github.com/onsi</code>にインストールされていることが確認できる。</p>
-
-<pre><code>$ go get github.com/onsi/ginkgo/ginkgo
-$ go get github.com/onsi/gomega
-$ ls -l $GOPATH/bin
-...
--rwxr-xr-x   1 sgyk  staff  11747788  9 24 23:00 ginkgo*
-$ ls -l $GOPATH/src/github.com/onsi
-...
-drwxr-xr-x  16 sgyk  staff  544  9 24 23:00 ginkgo/
-drwxr-xr-x  17 sgyk  staff  578  9 24 23:01 gomega/
-</code></pre>
-
-<a name="L........."></a>
-<h2>始め方</h2>
-
-<p>こんなかんじで<code>ginkgo bootstrap</code>をすると、テストスイートを生成してくれる。</p>
-
-<pre><code>$ mkdir ginkgo-study
-$ cd $_
-$ ginkgo bootstrap
-Generating ginkgo test suite bootstrap for ginkgo_study in:
-        ginkgo_study_suite_test.go
-$ cat ginkgo_study_suite_test.go
-package ginkgo_study_test
-
-import (
-        . "github.com/onsi/ginkgo"
-        . "github.com/onsi/gomega"
-
-        "testing"
-)
-
-func TestGinkgoStudy(t *testing.T) {
-        RegisterFailHandler(Fail)
-        RunSpecs(t, "GinkgoStudy Suite")
-}
-</code></pre>
-
-<p>自動生成されたファイルは<code>ginkgo</code>でテストを走らせることができるし、Ginkgoは標準パッケージであるtestingにフックしているので、<code>go test</code>で実行させることも出来る。</p>
-
-<pre><code>$ ginkgo
-Running Suite: GinkgoStudy Suite
-================================
-Random Seed: 1443106503
-Will run 0 of 0 specs
-
-
-Ran 0 of 0 Specs in 0.000 seconds
-SUCCESS! -- 0 Passed | 0 Failed | 0 Pending | 0 Skipped PASS
-
-Ginkgo ran 1 suite in 3.234616229s
-Test Suite Passed
-</code></pre>
-
-<pre><code>$ go test
-Running Suite: GinkgoStudy Suite
-================================
-Random Seed: 1443106514
-Will run 0 of 0 specs
-
-
-Ran 0 of 0 Specs in 0.000 seconds
-SUCCESS! -- 0 Passed | 0 Failed | 0 Pending | 0 Skipped PASS
-ok      github.com/sgykfjsm/ginkgo-study        0.077s
-</code></pre>
-
-<a name="L..................................................."></a>
-<h3>自動生成されたテストスイートの確認</h3>
-
-<p>まずは１行目。</p>
-
-<pre><code>package ginkgo_study_test
-</code></pre>
-
-<p>このパッケージ名は<code>ginkgo bootstrap</code>が実行されたディレクトリ名を元に設定されている。今回は<code>ginkgo-study</code>というディレクトリの中で実行したので、<code>ginkgo_study_test</code>となっている。もちろん敢えて<code>ginkgo_study</code>など、別名に修正することは可能だが、テストコードと実コードとの切り分けの観点からすると、このままで良いだろう。</p>
-
-<p>続いて3行目から8行目について。</p>
-
-<pre><code>import (
-        . "github.com/onsi/ginkgo"
-        . "github.com/onsi/gomega"
-
-        "testing"
-)
-</code></pre>
-
-<p>ドットインポートを使うことでginkgoとgomegaをtop levelでインポート、つまり修飾子なしで各パッケージの関数を使えるようにしている。詳しくはSOの<a href="http://stackoverflow.com/a/6478990">What does the &lsquo;.&rsquo; (dot or period) in a go import statement do?の回答</a>と公式ドキュメントの<a href="https://golang.org/ref/spec#Import_declarations">Import declarations</a>を参照のこと。</p>
-
-<p>ドットインポートをしたくない場合は、bootstrap実行時にオプション<code>--nodot</code>をつけることで回避できる。</p>
-
-<p>では最後に自動生成されたテスト関数を確認する。</p>
-
-<pre><code>func TestGinkgoStudy(t *testing.T) {
-        RegisterFailHandler(Fail)
-        RunSpecs(t, "GinkgoStudy Suite")
-}
-</code></pre>
-
-<p><code>TestGinkgoStudy</code>はもちろんただの関数名。引数に<code>t *testing.T</code>があることからわかるように<code>go test</code>でこの関数を実行することが出来る。</p>
-
-<p>11行目の<code>RegisterFailHandler</code>は、Ginkgoの<code>Fail</code>関数を引数にすることで、テストが失敗した際にGomegaへGinkgoの<code>Fail</code>関数を渡している。この<code>RegisterFailHandler</code>はGinkgoとGomegaの間の唯一の接点となっている。</p>
-
-<p>12行目の<code>RunSpec</code>でテストのスペック、つまりテストの内容を設定する。</p>
-
-<p>ドキュメントに沿って細かく見ていったけど、全体的に難しいことはあまり無いように見える。Ginkgo(に限らずBDD全般がそうだと思うけど)ではテストをどう実装するか、よりもどのようにテストを設計するかに注力しやすくなっている。</p>
-
-<a name="L.............................."></a>
-<h2>テストスペックを作る</h2>
-
-<p>テストスペックはテストスイートと同様にコマンドで自動生成出来る。と言っても、雛形だけど。</p>
-
-<pre><code>$ ginkgo generate ginkgo_study
-Generating ginkgo test for GinkgoStudy in:
-  ginkgo_study_test.go
-
-$ cat ginkgo_study_test.go
-package ginkgo_study_test
-
-import (
-        . "github.com/sgykfjsm/ginkgo-study"
-
-        . "github.com/onsi/ginkgo"
-        . "github.com/onsi/gomega"
-)
-
-var _ = Describe("GinkgoStudy", func() {
-
-})
-</code></pre>
-
-<p><code>ginkgo generate</code>にパッケージ名を渡せば良い。</p>
-
-<a name="L..................................................."></a>
-<h3>自動生成されたテストスペックの確認</h3>
-
-<p>１行目については特に言うことはないと思うけど、<code>ginkgo generate</code>の引数が設定される。</p>
-
-<pre><code>package ginkgo_study_test
-</code></pre>
-
-<p>3行目から7行目にかけてはテストスイートと違いがある。1つはテスト対象のパッケージが設定されていること、もう1つはtestingパッケージがimportされていないこと。前者については特に疑問はないと思うけど、後者についてはちょっと違和感があるかもしれない。というのも、一般的にgolangを使ったプログラム開発では、テストコードは<code>xxx_test.go</code>というネーミングが推奨されており、そのファイル内ではtestingパッケージをimportすることがほとんどだが、これはそういった慣習と異なっている。まぁ慣れの問題かもしれないが、ginkgoを使ったテストコードだということを知らないと違和感があると思う。</p>
-
-<pre><code>import (
-        . "github.com/sgykfjsm/ginkgo-study"
-
-        . "github.com/onsi/ginkgo"
-        . "github.com/onsi/gomega"
-)
-</code></pre>
-
-<p>以降のコードは&#8221;コンテナ&#8221;と捉えることができ、スペックを記述(=格納)するクロージャとなる。開発者はこのコンテナの中にスペックを記述することになる。</p>
-
-<pre><code>var _ = Describe("GinkgoStudy", func() {
-
-})
-</code></pre>
-
-<p>ところで、<code>var _ = ...</code>という記述は今回初めて見かけた。ドキュメントによると、<code>var _ = ...</code>と書くことで、<code>func init(){}</code>無しにトップレベルで(つまりは初期処理として)<code>Describe</code>が評価されることができるらしい。</p>
-
-<a name="L.............................."></a>
-<h2>テストスペックを書く</h2>
-
-<p>では実際にテストスペックを書いてみる。今回は以下の様なモデルと、その振る舞いを書いた。</p>
-
-<pre><code>package ginkgo_study
-
-type Grade struct {
-    Subject   string
-    Score     int
-    Mandatory bool
-}
-
-func (g *Grade) IsPass() bool {
-    if g.Score &gt; 60 {
-        return true
-    }
-    return false
-}
-</code></pre>
-
-<p>…まぁこれについては特にいうことは無いと思う。つぎに、対応するスペックを以下のようにした。</p>
-
-<pre><code>package ginkgo_study_test
-
-import (
-    . "github.com/sgykfjsm/ginkgo-study"
-
-    . "github.com/onsi/ginkgo"
-    . "github.com/onsi/gomega"
-)
-
-var _ = Describe("GinkgoStudy", func() {
-
-    var (
-        goodGrade Grade
-        badGrade  Grade
-    )
-
-    BeforeEach(func() {
-        goodGrade = Grade{
-            Subject:   "Math",
-            Score:     61,
-            Mandatory: true,
-        }
-
-        badGrade = Grade{
-            Subject:   "History",
-            Score:     60,
-            Mandatory: false,
-        }
-    })
-
-    Describe("Criteria of pass or not", func() {
-        Context("With more than 60", func() {
-            It("should be passed", func() {
-                Expect(goodGrade.IsPass()).To(Equal(true))
-            })
-        })
-
-        Context("With less than 60", func() {
-            It("should be failed", func() {
-                Expect(badGrade.IsPass()).To(Equal(false))
-            })
-        })
-    })
-
-})
-</code></pre>
-
-<a name="L.............................."></a>
-<h3>テストスペックの解説</h3>
-
-<p>先にも説明したように、開発者は<code>Describe</code>のクロージャで表現されたコンテナの中にスペックを書けば良い。</p>
-
-<p><code>BeforeEach</code>はいわゆる<code>setup</code>にあたる処理。スペックが実行される度に、<code>BeforeEach</code>で定義した&#8221;状態&#8221;が作られる。また、ここで定義した&#8221;状態&#8221;は後述する<code>It</code>の中で使うことが出来る。</p>
-
-<p><code>Describe</code>と<code>Context</code>を使って、スペックの内容を表現豊かに記述することができ、<code>It</code>でスペックを指定する。<code>BeforeEach</code>と<code>It</code>で&#8221;状態&#8221;を共有するためには、コンテナの中のトップレベルで変数を定義すれば良い。</p>
-
-<p><code>It</code>の中で使っている<code>Expect</code>はGomega由来のもの。これを使って評価したい内容を記述すれば良い。</p>
-
-<a name="L......................................."></a>
-<h2>テストスペックを実行する。</h2>
-
-<p>このテストスペックを実行してみる。実行方法は先述の通り、普通に<code>go test</code>すれば良い。</p>
-
-<pre><code>$ go test -v -cover
-=== RUN TestGinkgoStudy
-Running Suite: GinkgoStudy Suite
-================================
-Random Seed: 1443114232
-Will run 2 of 2 specs
-
-••
-Ran 2 of 2 Specs in 0.000 seconds
-SUCCESS! -- 2 Passed | 0 Failed | 0 Pending | 0 Skipped --- PASS: TestGinkgoStudy (0.00 seconds)
-PASS
-coverage: 100.0% of statements
-ok      github.com/sgykfjsm/ginkgo-study        0.073s
-</code></pre>
-
-<p>見ての通り、<code>-cover</code>で同時にカバレッジを出すことができる。また、テストに失敗すると、以下の様になる。</p>
-
-<pre><code>$ go test -v -cover
-=== RUN TestGinkgoStudy
-Running Suite: GinkgoStudy Suite
-================================
-Random Seed: 1443114347
-Will run 2 of 2 specs
-
-• Failure [0.004 seconds]
-GinkgoStudy
-/Users/sgyk/local/script/golang/src/github.com/sgykfjsm/ginkgo-study/ginkgo_study_test.go:45
-  Criteria of pass or not
-  /Users/sgyk/local/script/golang/src/github.com/sgykfjsm/ginkgo-study/ginkgo_study_test.go:43
-    With more than 60
-    /Users/sgyk/local/script/golang/src/github.com/sgykfjsm/ginkgo-study/ginkgo_study_test.go:36
-      should be passed [It]
-      /Users/sgyk/local/script/golang/src/github.com/sgykfjsm/ginkgo-study/ginkgo_study_test.go:35
-
-      Expected
-          &lt;bool&gt;: false
-      to equal
-          &lt;bool&gt;: true
-
-      /Users/sgyk/local/script/golang/src/github.com/sgykfjsm/ginkgo-study/ginkgo_study_test.go:34
-------------------------------
-•
-
-Summarizing 1 Failure:
-
-[Fail] GinkgoStudy Criteria of pass or not With more than 60 [It] should be passed
-/Users/sgyk/local/script/golang/src/github.com/sgykfjsm/ginkgo-study/ginkgo_study_test.go:34
-
-Ran 2 of 2 Specs in 0.004 seconds
-FAIL! -- 1 Passed | 1 Failed | 0 Pending | 0 Skipped --- FAIL: TestGinkgoStudy (0.00 seconds)
-FAIL
-exit status 1
-FAIL    github.com/sgykfjsm/ginkgo-study        0.071s
-</code></pre>
-
-<p>見ての通り、かなり丁寧に失敗箇所を教えてくれる。ちなみに、Ginkgoの出力は色付きであり、一部はグレーで表示されるので、ここで見るほど冗長には感じないものと思われる。</p>
-
-<a name="L........."></a>
-<h2>まとめ</h2>
-
-<p>以上、ごくごく簡単にGinkgoの使い方を示した。といっても、内容的には公式ドキュメントの冒頭をなぞっただけだが…。</p>
-
-<p>ただ、見ての通り、かなり使いやすいことがわかると思う。コマンドによるボイラープレートや雛形の生成により、開発者は集中すべきことだけに集中できるし、他のBDDフレームワークと同様に自然言語に近い感覚でテストを書くことができる。</p>
-
-<p>また、テスト失敗時に細かい出力をしてくれるのも地味に嬉しい。標準のtestingパッケージやtestifyなどはシンプルな出力しかしてくれないのでデバッグコードが必要になる時があるが、Ginkgoだとその必要はだいぶ減らすことができるだろう。とはいえ、やや丁寧すぎる気がしないでもないが。</p>
-
-<p>個人的な感覚としてはGinkgoはとても開発者フレンドリーだし、比較的活発に開発されているので、注目すべきライブラリだと思う。</p>
 ]]></content>
   </entry>
   

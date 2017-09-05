@@ -4,7 +4,7 @@
   <title><![CDATA[Category: go | sgykfjsm.github.com]]></title>
   <link href="http://sgykfjsm.github.io/blog/categories/go/atom.xml" rel="self"/>
   <link href="http://sgykfjsm.github.io/"/>
-  <updated>2016-03-14T00:05:55+09:00</updated>
+  <updated>2017-09-05T23:17:50+09:00</updated>
   <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
@@ -12,6 +12,320 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[GolangのSignalハンドリングを同時に複数実行したらどうなるか]]></title>
+    <link href="http://sgykfjsm.github.io/blog/2017/09/05/golangfalsesignalhandoringuwotong-shi-nifu-shu-shi-xing-sitaradounaruka/"/>
+    <updated>2017-09-05T22:03:39+09:00</updated>
+    <id>http://sgykfjsm.github.io/blog/2017/09/05/golangfalsesignalhandoringuwotong-shi-nifu-shu-shi-xing-sitaradounaruka</id>
+    <content type="html"><![CDATA[<p>めっちゃ久しぶりにブログを書く。標題の件が気になったので実際にやってみた。</p>
+
+<!-- more -->
+
+
+<p>シンプルなSignalハンドラはこんな感じになる。ほぼ<a href="https://gobyexample.com/signals">Go By Example</a>と同じ。何度も写経しているうちに暗記した。</p>
+
+<pre><code class="go">package main
+
+import (
+    "fmt"
+    "os"
+    "os/signal"
+    "syscall"
+)
+
+func main() {
+    sig := make(chan os.Signal, 1)
+    done := make(chan bool, 1)
+
+    signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+    go func() {
+        s := &lt;-sig
+        fmt.Printf("\nCatch the signal at main: %v\n", s)
+        done &lt;- true
+    }()
+
+    fmt.Println("Waiting for signal at main ...")
+    &lt;-done
+    fmt.Println("Exit from main")
+}
+</code></pre>
+
+<p>次にほぼこれをコピペしてライブラリとしてインポートする。そうすると、以下のようになる。</p>
+
+<p>main.go</p>
+
+<pre><code class="go">package main
+
+import (
+    "fmt"
+    "os"
+    "os/signal"
+    "syscall"
+
+    "github.com/sgykfjsm/sample-program-by-go/signal-handler/sub1"
+    "github.com/sgykfjsm/sample-program-by-go/signal-handler/sub2"
+    "sync"
+)
+
+func main() {
+    sig := make(chan os.Signal, 1)
+    done := make(chan bool, 1)
+
+    var wg sync.WaitGroup
+
+    go sub1.Sub1(&amp;wg)
+    go sub2.Sub2(&amp;wg)
+
+    signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+    wg.Add(1)
+    go func() {
+        defer wg.Done()
+        s := &lt;-sig
+        fmt.Printf("\nCatch the signal at main: %v\n", s)
+        done &lt;- true
+    }()
+
+    fmt.Println("Waiting for signal at main ...")
+    wg.Wait()
+    &lt;-done
+    fmt.Println("Exit from main")
+}
+</code></pre>
+
+<p>sub1/sub.go</p>
+
+<pre><code class="go">package sub1
+
+import (
+    "fmt"
+    "os"
+    "os/signal"
+    "sync"
+    "syscall"
+)
+
+func Sub1(wg *sync.WaitGroup) {
+    // Don't put wg.Wait(). This should be done at caller function.
+    wg.Add(1)
+    sig := make(chan os.Signal, 1)
+    done := make(chan bool, 1)
+
+    signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+    go func() {
+        defer wg.Done()
+        s := &lt;-sig
+        fmt.Printf("\nCatch the signal at Sub1: %v\n", s)
+        done &lt;- true
+    }()
+
+    fmt.Println("Waiting for signal at Sub1 ...")
+    &lt;-done
+    fmt.Println("Exit from Sub1")
+}
+</code></pre>
+
+<p>sub2/sub.goも作っているけど、sub1/sub.goとほぼ同じなので省略。先にmain.goがexitしないように<code>sync.Waitgroup</code>を使って待ち合わせをする。実行結果は以下の通り。</p>
+
+<pre><code class="console">$ go run ./main.go
+Waiting for signal at main ...
+Waiting for signal at Sub2 ...
+Waiting for signal at Sub1 ...
+^C
+Catch the signal at Sub1: interrupt
+Exit from Sub1
+
+Catch the signal at main: interrupt
+
+Catch the signal at Sub2: interrupt
+Exit from main
+
+$ go run ./main.go
+Waiting for signal at main ...
+Waiting for signal at Sub1 ...
+Waiting for signal at Sub2 ...
+^C
+Catch the signal at main: interrupt
+
+Catch the signal at Sub1: interrupt
+Exit from Sub1
+
+Catch the signal at Sub2: interrupt
+Exit from main
+
+$ go run ./main.go
+Waiting for signal at main ...
+Waiting for signal at Sub2 ...
+Waiting for signal at Sub1 ...
+^C
+Catch the signal at main: interrupt
+
+Catch the signal at Sub2: interrupt
+Exit from Sub2
+
+Catch the signal at Sub1: interrupt
+Exit from main
+</code></pre>
+
+<p>見ての通り、各ハンドラは同一のシグナルを同様に受け取っていることがわかる。まぁそりゃそうだという感じ。実際にコード（というかgodoc）にも以下の様に<a href="https://github.com/golang/go/blob/master/src/os/signal/signal.go#L102-L104">記述されている</a>。</p>
+
+<blockquote><p>It is allowed to call Notify multiple times with different channels
+and the same signals: each channel receives copies of incoming
+signals independently.</p></blockquote>
+
+<p>ただし、上記出力からもう１つわかることとして、ライブラリ側の<code>wg.Done()</code>以降の処理は必ずしも全うするとは限らないということだ。そのため、例えば、シグナルを受け取ったらメモリに溜まっているデータをFlushして何らかの処理などを行う必要がある場合、呼び出し側の処理を止めてライブラリ側の処理を終了させてから次に呼び出し側の処理を再開するような実装をしなければならない。</p>
+
+<p>今回のサンプルの場合であれば、<code>wg.Done</code>を処理の一番最後に持っていけば良い。例えば、以下の様にする。</p>
+
+<pre><code class="go">func Sub2(wg *sync.WaitGroup) {
+    defer wg.Done() // &lt;-- 処理の最初にdeferでwg.Doneを登録する。
+    // Don't put wg.Wait(). This should be done at caller function.
+    wg.Add(1)
+    sig := make(chan os.Signal, 1)
+    done := make(chan bool, 1)
+
+    signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+    go func() {
+        s := &lt;-sig
+        fmt.Printf("\nCatch the signal at Sub2: %v\n", s)
+        done &lt;- true
+    }()
+
+    fmt.Println("Waiting for signal at Sub2 ...")
+    &lt;-done
+    fmt.Println("Exit from Sub2")
+}
+</code></pre>
+
+<p>しかし、現実として呼び出し側から<code>wg *sync.WaitGroup</code>を渡してもらうということは実装として通常はありえない。ではどうするか？</p>
+
+<p>１つの方法としては<a href="https://golang.org/pkg/runtime/#SetFinalizer">runtime.SetFinalizer</a>を使う方法がある。これはGCが発動する際にGC処理のfinalizerとして処理を登録する方法だ。参考の実装は <a href="https://gist.github.com/deltamobile/6511901">https://gist.github.com/deltamobile/6511901</a> がある。<a href="https://play.golang.org/p/jWhRSPNvxJ">https://play.golang.org/p/jWhRSPNvxJ</a> で動作を確認することができる。一見、これは有用に見えるが、GC処理のfinalizerとするのはあまり実用的ではない。</p>
+
+<p>自分がおもいつく限りだと<code>sync.Mutex</code>を使った排他制御かなーと思ったけど、どういう風に実装にすれば良いか思いつかない。やっぱりシンプルにチャンネルを渡して、呼び出し側が渡したチャンネルから終了の合図を受け取る方法かなぁ？</p>
+
+<p>main.go</p>
+
+<pre><code class="go">package main
+
+import (
+    "fmt"
+    "os"
+    "os/signal"
+    "syscall"
+
+    "github.com/sgykfjsm/sample-program-by-go/signal-handler/sub1"
+    "github.com/sgykfjsm/sample-program-by-go/signal-handler/sub2"
+)
+
+func main() {
+    sig := make(chan os.Signal, 1)
+    done := make(chan bool, 1)
+    sub1Done := make(chan bool, 1)
+    sub2Done := make(chan bool, 1)
+
+    go sub1.Sub1(sub1Done)
+    go sub2.Sub2(sub2Done)
+
+    signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+    go func() {
+        s := &lt;-sig
+        fmt.Printf("\nCatch the signal at main: %v\n", s)
+        done &lt;- true
+    }()
+
+    fmt.Println("Waiting for signal at main ...")
+    &lt;-done
+    fmt.Println("Exit from main")
+
+    &lt;-sub1Done
+    &lt;-sub2Done
+}
+</code></pre>
+
+<p>sub1/sub.go</p>
+
+<pre><code class="go">package sub1
+
+import (
+    "fmt"
+    "os"
+    "os/signal"
+    "syscall"
+)
+
+func Sub1(done chan&lt;- bool) {
+    sig := make(chan os.Signal, 1)
+    subDone := make(chan bool, 1)
+
+    signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+    go func() {
+        s := &lt;-sig
+        fmt.Printf("\nCatch the signal at Sub1: %v\n", s)
+        subDone &lt;- true
+    }()
+
+    fmt.Println("Waiting for signal at Sub1 ...")
+    &lt;-subDone
+    fmt.Println("Exit from Sub1")
+
+    done &lt;- true
+}
+</code></pre>
+
+<p>結果は以下の通り。</p>
+
+<pre><code class="console">$ go run ./main.go
+Waiting for signal at main ...
+Waiting for signal at Sub2 ...
+Waiting for signal at Sub1 ...
+^C
+Catch the signal at main: interrupt
+Exit from main
+
+Catch the signal at Sub2: interrupt
+Exit from Sub2
+
+Catch the signal at Sub1: interrupt
+Exit from Sub1
+
+$ go run ./main.go
+Waiting for signal at main ...
+Waiting for signal at Sub2 ...
+Waiting for signal at Sub1 ...
+^C
+Catch the signal at Sub2: interrupt
+Exit from Sub2
+
+Catch the signal at main: interrupt
+Exit from main
+
+Catch the signal at Sub1: interrupt
+Exit from Sub1
+
+$ go run ./main.go
+Waiting for signal at main ...
+Waiting for signal at Sub1 ...
+Waiting for signal at Sub2 ...
+^C
+Catch the signal at Sub2: interrupt
+Exit from Sub2
+
+Catch the signal at main: interrupt
+Exit from main
+
+Catch the signal at Sub1: interrupt
+Exit from Sub1
+</code></pre>
+
+<p>一応は期待通りに、ライブラリ側の処理を全うして呼び出し側が終了させることが出来た。最初の例と何が違うのかって言われるとちょっと困るけど、チャンネルを通じたコミュニケーションということで、こっちのほうがGoっぽいかな？という程度…どこかに最適解がありそうな気がするけど、まぁ今日はこのへんで。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[GoでJSON APIを書く Part2]]></title>

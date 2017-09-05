@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://sgykfjsm.github.io/blog/2017/09/05/golangfalsesignalhandoringuwotong-shi-nifu-shu-shi-xing-sitaradounaruka/</loc>
+    <lastmod>2017-09-05T22:03:39+09:00</lastmod>
+  </url>
+  <url>
     <loc>http://sgykfjsm.github.io/blog/2016/03/13/golang-json-api-tutorial-pt2/</loc>
     <lastmod>2016-03-13T23:27:51+09:00</lastmod>
   </url>
@@ -363,20 +367,5 @@
   </url>
   <url>
     <loc>http://sgykfjsm.github.io/blog/categories/go/</loc>
-  </url>
-  <url>
-    <loc>http://sgykfjsm.github.io/page2/</loc>
-  </url>
-  <url>
-    <loc>http://sgykfjsm.github.io/page3/</loc>
-  </url>
-  <url>
-    <loc>http://sgykfjsm.github.io/page4/</loc>
-  </url>
-  <url>
-    <loc>http://sgykfjsm.github.io/page5/</loc>
-  </url>
-  <url>
-    <loc>http://sgykfjsm.github.io/page6/</loc>
   </url>
 </urlset>
