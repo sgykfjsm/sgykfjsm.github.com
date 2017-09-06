@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: python | sgykfjsm.github.com]]></title>
-  <link href="http://sgykfjsm.github.io/blog/categories/python/atom.xml" rel="self"/>
+  <title><![CDATA[Category: django | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.io/blog/categories/django/atom.xml" rel="self"/>
   <link href="http://sgykfjsm.github.io/"/>
   <updated>2017-09-07T00:31:42+09:00</updated>
   <id>http://sgykfjsm.github.io/</id>
@@ -248,83 +248,6 @@ urlpatterns = [
 </code></pre>
 
 <p>記述内容は先述したとおりなので、ここでは割愛する。重要なのは<code>r'^$'</code>だ。<code>include('rango.urls')</code>によってリクエスト情報が渡されるわけだが、<strong>マッチングするURLから<code>rango/</code>が削除される</strong>。例えば、<code>rango/my-page</code>というURLがリクエストされたとすると、<code>rango.urls</code>が処理するURLは<code>my-page/</code>となる。この点に注意すること。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Pythonでコーディングするときの小ネタ]]></title>
-    <link href="http://sgykfjsm.github.io/blog/2015/04/21/coding-by-python-with-little-tips/"/>
-    <updated>2015-04-21T22:49:59+09:00</updated>
-    <id>http://sgykfjsm.github.io/blog/2015/04/21/coding-by-python-with-little-tips</id>
-    <content type="html"><![CDATA[<p><a href="https://julien.danjou.info/books/the-hacker-guide-to-python">The Hacker&rsquo;s Guide to Python</a>という本を読んでいるんだけれども、その中でちょっと感動したテクニックをメモしておく。</p>
-
-<!-- more -->
-
-
-<p>まずはコレ。</p>
-
-<pre><code class="python">def get_fruits(basket, fruit):
-    """A variation is to use 'if fruit in basket:'"""
-    try:
-        return basket[fruit]
-    except KeyError:
-        return set()
-</code></pre>
-
-<p>dictの中から指定した要素の値を取得する。ただし、指定した要素が無ければ空のsetオブジェクトを返す。っていう、よくあるパターン。これは以下の様に書き換えることができる。</p>
-
-<pre><code class="python">def get_fruits(basket, fruit):
-    # dict.get(key[, default])はkeyが辞書にあればkeyに対する値を返し、
-    # そうでなければdefaultを返す。
-    return basket.get(fruit, set())
-</code></pre>
-
-<p>(コメントを除けば)たった1行になった。しかもこれは<a href="http://docs.python.jp/2/library/stdtypes.html#dict.get">dictの組み込み関数</a>なので、ごく自然に使うことができる。</p>
-
-<p>次の例も意外とありがちだと思う。不正な値が検査対象のオブジェクトに含まれていないかを検める例。</p>
-
-<pre><code class="python">def has_invalid_fields(fields):
-    for field in fields:
-        if field in ['foo', 'bar']:
-            return False
-    return True
-</code></pre>
-
-<p>これは以下の様に書き換えることができる。</p>
-
-<pre><code class="python">def has_invalid_fields(fields):
-    return bool(set(fields) - set(['foo', 'bar']))
-</code></pre>
-
-<p>単純にそれぞれの集合の差で判定しているだけ。極めて自然だし、わかりやすい。なんでこうゆう簡潔なコードを思いつけないんだ、おれは…。先ほどの例もそうだけど、データ構造の特性やデータ構造に組み込まれた関数をうまく使うことでコードをより自然に、かつ簡潔にすることができる。</p>
-
-<p>次の例はデータ特性を活かして、パフォーマンスを改善させる例。まずは改善前のコード。</p>
-
-<pre><code class="python">def add_animal_in_family(species, animal, family):
-    if family not in species:
-        species[family] = set()
-    species[family].add(animal)
-
-species = {}
-add_animal_in_family(species, 'cat', 'felidea')
-</code></pre>
-
-<p>speciesという辞書に新たな要素を追加する場合に、追加する種別(ここでは<code>add_animal_in_family</code>の3つ目の引数)がキーにあるかどうかを確認して、なければ空の集合を入れておく。そののちに指定された値を辞書に追加している。コレ自体は極めて真っ当なコードなんだけど、もし、この<code>add_animal_in_family</code>が100回、1000回と実行されるとしたらどうだろうか？おそらく実行回数が増えるにつれて、if文の条件判定が無駄になることが多くなってくるはずだ。</p>
-
-<p>この問題を改善するのが<code>collections.defalutdict</code>というデータ構造。こいつをうまいこと使ってあげると、エレガントに対応できる。</p>
-
-<pre><code class="python">import collections
-
-def add_animal_in_family(species, animal, family):
-    species[family].add(animal)
-
-species = collections.defalutdict(set)
-add_animal_in_family(species, 'cat', 'felidea')
-</code></pre>
-
-<p>見ての通り、<code>collections</code>パッケージをimportして、データの初期化に<code>collections.defaultdict</code>を使うだけで、<code>add_animal_in_family</code>のif文が不要になってしまった。詳しくは<a href="http://docs.python.jp/2/library/collections.html#collections.defaultdict">ドキュメント</a>を参照するのが一番確実なんだけど、簡単に説明すると、<code>collections.defalutdict</code>に対して存在しない要素へアクセスをしようとすると、<code>defaultdict</code>はKeyErrorを送出する代わりに初期化時に渡されたオブジェクトを使って新たな値を構築して自身である辞書に登録して値を返してくれる。ただし、初期化時に渡す値が<code>None</code>の場合はKeyErrorが送出されるので、注意すること。また、<a href="http://docs.python.jp/2/library/collections.html#id2">ドキュメントに記載されている使用例</a>には初期化時に渡すオブジェクトとしてintを指定しているユニークな例があって、有用。</p>
-
-<p>こんな感じでは、pythonではデータの特性をうまく使うことで小賢しいロジックやアルゴリズムの実装を不要にしてくれて、かつパフォーマンス的にも嬉しい実装をすることができる。もちろん、これはpythonに限った話では無いので、どんな言語であっても扱うデータの特性や組み込み関数についてちゃんと把握しておくことは重要っすな。</p>
 ]]></content>
   </entry>
   

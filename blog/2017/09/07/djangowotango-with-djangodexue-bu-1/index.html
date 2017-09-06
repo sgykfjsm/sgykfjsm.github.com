@@ -1,0 +1,553 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>DjangoをTango with Djangoで学ぶ - 1 - - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="仕事でDjangoアプリケーションを扱うことになったのでDjangoについて勉強を始めた。参考書としてTango With Djangoを購入した。古いバージョンなら無料で入手できるっぽいけど大して高価な本というわけでもないし購入したほうが良いかなと思って買った。 さて、最初は環境の準備を行い、 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.io/blog/2017/09/07/djangowotango-with-djangodexue-bu-1">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.io" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">DjangoをTango with Djangoで学ぶ - 1 -</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2017-09-07T00:12:56+09:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>7</span><span class='date-suffix'>th</span>, <span class='date-year'>2017</span></span> <span class='time'>12:12 am</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>仕事でDjangoアプリケーションを扱うことになったのでDjangoについて勉強を始めた。参考書として<a href="http://www.tangowithdjango.com/">Tango With Django</a>を購入した。古いバージョンなら無料で入手できるっぽいけど大して高価な本というわけでもないし購入したほうが良いかなと思って買った。</p>
+
+<p>さて、最初は環境の準備を行い、それからViewの基本とURLマッピングについての学習だ。</p>
+
+<!-- more -->
+
+
+<a name="L......"></a>
+<h1>準備</h1>
+
+<p>これはTango With Djangoに書いてあるやり方ではなくて、いつも自分がPython環境を構築するときのやり方だ。要はDjangoを指定のPythonバージョンで動かせばよいわけだから、いつものやり方で良い。</p>
+
+<a name="L..............."></a>
+<h2>必要なもの</h2>
+
+<p><a href="https://github.com/pyenv/pyenv">pyenv</a>と<a href="https://github.com/pyenv/pyenv-virtualenv">pyenv-virtualenv</a>がinstallされていること。</p>
+
+<a name="L......"></a>
+<h2>手順</h2>
+
+<p>pyenvにバージョン3.5.3をインストールする。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ pyenv install 3.5.3
+</span><span class='line'>Downloading Python-3.5.3.tar.xz...
+</span><span class='line'>-&gt; https://www.python.org/ftp/python/3.5.3/Python-3.5.3.tar.xz
+</span><span class='line'>Installing Python-3.5.3...
+</span><span class='line'>Installed Python-3.5.3 to /Users/sgyk/.pyenv/versions/3.5.3</span></code></pre></td></tr></table></div></figure>
+
+
+<p>作業用Pythonの設定をする。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ eval "$(pyenv init -)"
+</span><span class='line'>$ eval "$(pyenv virtualenv-init -)"
+</span><span class='line'>$ pyenv virtualenv 3.5.3 tango-with-django-env
+</span><span class='line'>$ pyenv activate tango-with-django-env
+</span><span class='line'>$ python --version
+</span><span class='line'>Python 3.5.3</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="Django...install................................."></a>
+<h2>Djangoをinstallしてプロジェクトを作る</h2>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ pip install django
+</span><span class='line'># Confirm django is installed as expected
+</span><span class='line'>$ python
+</span><span class='line'>Python 3.5.3 (default, Sep  4 2017, 22:33:15)
+</span><span class='line'>[GCC 4.2.1 Compatible Apple LLVM 8.1.0 (clang-802.0.42)] on darwin
+</span><span class='line'>Type "help", "copyright", "credits" or "license" for more information.
+</span><span class='line'>&gt;&gt;&gt; import django
+</span><span class='line'>&gt;&gt;&gt; django.get_version()
+</span><span class='line'>'1.11.4'
+</span><span class='line'>&gt;&gt;&gt; exit()
+</span><span class='line'># $ cd ${YOUR_WORKSPACE}
+</span><span class='line'>$ cd tango_with_django_project
+</span><span class='line'>$ django-admin.py startproject tango_with_django_project
+</span><span class='line'>$ cd tango_with_django_project/
+</span><span class='line'>$ ls -l
+</span><span class='line'>total 4
+</span><span class='line'>drwxr-xr-x 4 sgyk 136  9  4 22:40 ./
+</span><span class='line'>drwxr-xr-x 9 sgyk 306  9  4 22:40 ../
+</span><span class='line'>-rwxr-xr-x 1 sgyk 823  9  4 22:40 manage.py*
+</span><span class='line'>drwxr-xr-x 6 sgyk 204  9  4 22:40 tango_with_django_project/   # &lt;- project configuration directrory</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ここまでで準備は完了。とりあえず起動してみる</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ python manage.py runserver
+</span><span class='line'>Performing system checks...
+</span><span class='line'>
+</span><span class='line'>System check identified no issues (0 silenced).
+</span><span class='line'>
+</span><span class='line'>You have 13 unapplied migration(s). Your project may not work properly until you apply the migrations for app(s): admin, auth, contenttypes, sessions.
+</span><span class='line'>Run 'python manage.py migrate' to apply them.
+</span><span class='line'>
+</span><span class='line'>....
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>warningが出ているが、これはDBを使うようになるまで放置で良い。<a href="http://127.0.0.1:8000/">http://127.0.0.1:8000/</a> にアクセスして&#8221;It worked!&ldquo;が表示されることを確認すること。</p>
+
+<a name="L................................."></a>
+<h2>アプリケーションの準備</h2>
+
+<p>ここまではプロジェクトの準備。ここからはアプリケーションの準備を始める。今回はテキストに則ってrangoというアプリケーションを作成する。アプリケーションの準備は以下の通りにコマンドを叩けば良い。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ python manage.py startapp rango</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>startapp</code>コマンドはプロジェクトディレクトリのルートに新しいディレクトリを作成する。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ ls -l
+</span><span class='line'>total 16
+</span><span class='line'>drwxr-xr-x 6 sgyk   204  9  4 22:58 ./
+</span><span class='line'>drwxr-xr-x 9 sgyk   306  9  4 22:40 ../
+</span><span class='line'>-rw-r--r-- 1 sgyk 12288  9  4 22:52 db.sqlite3
+</span><span class='line'>-rwxr-xr-x 1 sgyk   823  9  4 22:40 manage.py*
+</span><span class='line'>drwxr-xr-x 9 sgyk   306  9  4 22:58 rango/
+</span><span class='line'>drwxr-xr-x 7 sgyk   238  9  4 22:52 tango_with_django_project/</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>db.sqlite3</code>と<code>rango</code>ディレクトリが作成されたことが確認できる。<code>rango</code>ディレクトリの中身は以下の通り。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ ls -l ./rango/
+</span><span class='line'>total 20
+</span><span class='line'>drwxr-xr-x 9 sgyk 306  9  4 22:58 ./
+</span><span class='line'>drwxr-xr-x 6 sgyk 204  9  4 22:58 ../
+</span><span class='line'>-rw-r--r-- 1 sgyk   0  9  4 22:58 __init__.py
+</span><span class='line'>-rw-r--r-- 1 sgyk  63  9  4 22:58 admin.py
+</span><span class='line'>-rw-r--r-- 1 sgyk  85  9  4 22:58 apps.py
+</span><span class='line'>drwxr-xr-x 3 sgyk 102  9  4 22:58 migrations/
+</span><span class='line'>-rw-r--r-- 1 sgyk  57  9  4 22:58 models.py
+</span><span class='line'>-rw-r--r-- 1 sgyk  60  9  4 22:58 tests.py
+</span><span class='line'>-rw-r--r-- 1 sgyk  63  9  4 22:58 views.py</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Djangoの開発では主に<code>views.py</code>と<code>models.py</code>を扱う。Djangoのmodel, viewsそしてtemplatesがどのように関連しているかは <a href="https://docs.djangoproject.com/en/1.11/intro/overview/">https://docs.djangoproject.com/en/1.11/intro/overview/</a> を参照すると良い。</p>
+
+<p>なお、このあたりで<code>git init</code>しておくと良い。</p>
+
+<a name="L..............."></a>
+<h2>最後の準備</h2>
+
+<p>これでアプリケーションの準備ができたので開発を始めることができると思いきや、まだしなければならないことがある。それは、Djangoにこれから開発するアプリケーションについて教えてあげないといけない。具体的には<code>tango_with_django_project/settings.py</code>にこれから追加するアプリケーションの情報を追加しなければならない。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='diff'><span class='line'>$ git diff
+</span><span class='line'><span class="gh">diff --git a/tango_with_django_project/settings.py b/tango_with_django_project/settings.py</span>
+</span><span class='line'><span class="gh">index 63c1c9a..8d38aa9 100644</span>
+</span><span class='line'><span class="gd">--- a/tango_with_django_project/settings.py</span>
+</span><span class='line'><span class="gi">+++ b/tango_with_django_project/settings.py</span>
+</span><span class='line'><span class="gu">@@ -37,6 +37,7 @@ INSTALLED_APPS = [</span>
+</span><span class='line'>     &#39;django.contrib.sessions&#39;,
+</span><span class='line'>     &#39;django.contrib.messages&#39;,
+</span><span class='line'>     &#39;django.contrib.staticfiles&#39;,
+</span><span class='line'><span class="gi">+    &#39;rango&#39;,</span>
+</span><span class='line'> ]
+</span><span class='line'>
+</span><span class='line'> MIDDLEWARE = [
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>上記を追加したら<code>python manage.py runserver</code>を実行し、先ほどと同じようにサーバーが起動することを確認する。</p>
+
+<a name="View....................."></a>
+<h1>Viewの開発の１歩目</h1>
+
+<p>Viewの開発を始める。まずは既存のviews.pyを以下の様に書き換えてみる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='diff'><span class='line'>$ git diff
+</span><span class='line'><span class="gh">diff --git a/rango/views.py b/rango/views.py</span>
+</span><span class='line'><span class="gh">index 91ea44a..117afb3 100644</span>
+</span><span class='line'><span class="gd">--- a/rango/views.py</span>
+</span><span class='line'><span class="gi">+++ b/rango/views.py</span>
+</span><span class='line'><span class="gu">@@ -1,3 +1,5 @@</span>
+</span><span class='line'><span class="gd">-from django.shortcuts import render</span>
+</span><span class='line'><span class="gi">+from django.http import HttpResponse</span>
+</span><span class='line'>
+</span><span class='line'><span class="gd">-# Create your views here.</span>
+</span><span class='line'><span class="gi">+</span>
+</span><span class='line'><span class="gi">+def index(request):</span>
+</span><span class='line'><span class="gi">+    return HttpResponse(&quot;Rango says hey there partner!&quot;)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ここからわかることは、Viewの仕事は基本的に<code>HttpResponse</code>を返すことだ。</p>
+
+<p><code>index</code>が受け取っている<code>request</code>とは簡単に言うとRequestオブジェクトである。この中に様々なリクエスト情報が含まれているが、ここでは使っていない。そのため、引数<code>request</code>を削除しても良いかと思うかもしれないが、これは残しておかないと次に設定するURLのマッピング処理に失敗するので、残しておくこと。</p>
+
+<p>すでに触れたが、上記のviews.pyの修正だけでは、<code>index</code>の処理にアクセスすることはできない。なぜならば、Djangoに<code>index</code>へのアクセスするルートを教えていないからだ。このURLマッピング処理は以下の通りに行えば良い。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='diff'><span class='line'>$ git diff tango_with_django_project/urls.py
+</span><span class='line'><span class="gh">diff --git a/tango_with_django_project/urls.py b/tango_with_django_project/urls.py</span>
+</span><span class='line'><span class="gh">index af5caa3..c385489 100644</span>
+</span><span class='line'><span class="gd">--- a/tango_with_django_project/urls.py</span>
+</span><span class='line'><span class="gi">+++ b/tango_with_django_project/urls.py</span>
+</span><span class='line'><span class="gu">@@ -15,7 +15,9 @@ Including another URLconf</span>
+</span><span class='line'> &quot;&quot;&quot;
+</span><span class='line'> from django.conf.urls import url
+</span><span class='line'> from django.contrib import admin
+</span><span class='line'><span class="gi">+from rango import views</span>
+</span><span class='line'>
+</span><span class='line'> urlpatterns = [
+</span><span class='line'><span class="gi">+    url(r&#39;^$&#39;, views.index, name=&#39;index&#39;),</span>
+</span><span class='line'>     url(r&#39;^admin/&#39;, admin.site.urls),
+</span><span class='line'> ]
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>url(r'^$', views.index, name='index')</code>が意味するのは、URLのルートにアクセスしたら(<code>r'^$'</code>), <code>views.index</code>にリクエスト情報を渡して処理をさせる、この処理の名前を<code>index</code>とする(<code>name='index'</code>)、ということだ。<code>name='index'</code>は一見すると無意味な設定に見えるかもしれないが、DjangoのWarningに使われたりするので、いざという時に重要な情報となる。また、Djangoの<a href="https://docs.djangoproject.com/en/1.11/topics/http/urls/#reverse-resolution-of-urls">Reverse URL Matching</a>にも利用される。よって、設定しておくのが良い。</p>
+
+<a name="URL............................................."></a>
+<h2>URLのマッピングに関するテクニック</h2>
+
+<p>上述したようにURLを一つずつ設定していくことによって、URLとViewを対応付けることができる。しかし、設定したファイルは<code>tango_with_django_project</code>というプロジェクトの全体設定ファイルである。今は良いが、今後開発が進んでチームで開発するようになることを考えると、いつまでも全体設定ファイルを扱うことはあまり好ましくない。なぜならば、変更の衝突などが発生しうるからだ。これを避けるためには、以下の様にアプローチすれば良い。</p>
+
+<ol>
+<li>全体設定ファイルにはアプリケーションのURLのプレフィックスを設定する。</li>
+<li>設定したプレフィックスに該当するURLが参照するURLマッピング設定ファイルをアプリケーションのディレクトリ以下に配置する。</li>
+</ol>
+
+
+<p>これにより、アプリケーションとURLマッピング設定ファイルを１：１対応させることができ、アプリケーション開発者は他のアプリケーション設定に関して気にしなくて良くなる。具体的には以下の様に設定すれば良い。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='diff'><span class='line'>$ git diff
+</span><span class='line'><span class="gh">diff --git a/tango_with_django_project/urls.py b/tango_with_django_project/urls.py</span>
+</span><span class='line'><span class="gh">index c385489..85abbc4 100644</span>
+</span><span class='line'><span class="gd">--- a/tango_with_django_project/urls.py</span>
+</span><span class='line'><span class="gi">+++ b/tango_with_django_project/urls.py</span>
+</span><span class='line'><span class="gu">@@ -15,9 +15,11 @@ Including another URLconf</span>
+</span><span class='line'> &quot;&quot;&quot;
+</span><span class='line'> from django.conf.urls import url
+</span><span class='line'> from django.contrib import admin
+</span><span class='line'><span class="gi">+from django.conf.urls import include</span>
+</span><span class='line'> from rango import views
+</span><span class='line'>
+</span><span class='line'> urlpatterns = [
+</span><span class='line'>     url(r&#39;^$&#39;, views.index, name=&#39;index&#39;),
+</span><span class='line'><span class="gi">+    url(r&#39;^rango/&#39;, include(&#39;rango.urls&#39;)),</span>
+</span><span class='line'>     url(r&#39;^admin/&#39;, admin.site.urls),
+</span><span class='line'> ]
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>url(r'^rango/', include('rango.urls'))</code>の重要な部分は<code>include('rango.urls')</code>だ。これは<code>rango/</code>から始まるURLのマッピング処理を<code>rango.urls</code>に任せる、という意味になる。<code>rango.urls</code>とは言うまでもなく、rangoアプリケーションの下にある<code>urls</code>というモジュール（あるいは<code>rango/urls.py</code>と言い換えることもできる）のことだ。この設定に従い、rangoディレクトリに<code>urls.py</code>というファイルを作成する。<code>tango_with_django_project/urls.py</code>をコピペして作ればよい。具体的には以下のようになる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="err">$</span> <span class="n">cat</span> <span class="n">rango</span><span class="o">/</span><span class="n">urls</span><span class="o">.</span><span class="n">py</span>
+</span><span class='line'><span class="kn">from</span> <span class="nn">django.conf.urls</span> <span class="kn">import</span> <span class="n">url</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">from</span> <span class="nn">rango</span> <span class="kn">import</span> <span class="n">views</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
+</span><span class='line'>    <span class="n">url</span><span class="p">(</span><span class="s">r&#39;^$&#39;</span><span class="p">,</span> <span class="n">views</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;rango_index&#39;</span><span class="p">),</span>
+</span><span class='line'><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>記述内容は先述したとおりなので、ここでは割愛する。重要なのは<code>r'^$'</code>だ。<code>include('rango.urls')</code>によってリクエスト情報が渡されるわけだが、<strong>マッチングするURLから<code>rango/</code>が削除される</strong>。例えば、<code>rango/my-page</code>というURLがリクエストされたとすると、<code>rango.urls</code>が処理するURLは<code>my-page/</code>となる。この点に注意すること。</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2017-09-07T00:12:56+09:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>7</span><span class='date-suffix'>th</span>, <span class='date-year'>2017</span></span> <span class='time'>12:12 am</span></time>
+      
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/django/'>django</a>, <a class='category' href='/blog/categories/python/'>python</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2017/09/05/golangfalsesignalhandoringuwotong-shi-nifu-shu-shi-xing-sitaradounaruka/" title="Previous Post: GolangのSignalハンドリングを同時に複数実行したらどうなるか">&laquo; GolangのSignalハンドリングを同時に複数実行したらどうなるか</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2017 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
