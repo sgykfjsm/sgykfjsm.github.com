@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://sgykfjsm.github.io/blog/2017/09/10/dockerkontenafalsezhong-desystemdwocao-zuo-sitaifalsezhu-yi-dian/</loc>
+    <lastmod>2017-09-10T15:27:44+09:00</lastmod>
+  </url>
+  <url>
     <loc>http://sgykfjsm.github.io/blog/2017/09/07/djangowotango-with-djangodexue-bu-1/</loc>
     <lastmod>2017-09-07T00:12:56+09:00</lastmod>
   </url>
@@ -374,5 +378,20 @@
   </url>
   <url>
     <loc>http://sgykfjsm.github.io/blog/categories/django/</loc>
+  </url>
+  <url>
+    <loc>http://sgykfjsm.github.io/page2/</loc>
+  </url>
+  <url>
+    <loc>http://sgykfjsm.github.io/page3/</loc>
+  </url>
+  <url>
+    <loc>http://sgykfjsm.github.io/page4/</loc>
+  </url>
+  <url>
+    <loc>http://sgykfjsm.github.io/page5/</loc>
+  </url>
+  <url>
+    <loc>http://sgykfjsm.github.io/page6/</loc>
   </url>
 </urlset>

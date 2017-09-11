@@ -1,0 +1,242 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Dockerコンテナの中でsystemdを操作したいの注意点 - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="Dockerコンテナを使ってAnsibleのPlaybookをテストする際に、Playbookでsystemctlを実行しようとして以下のようなエラーが発生した。 1
+Failed to get D-Bus connection: Operation not permitted TR;DL &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.io/blog/2017/09/10/dockerkontenafalsezhong-desystemdwocao-zuo-sitaifalsezhu-yi-dian">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.io" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">Dockerコンテナの中でsystemdを操作したいの注意点</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2017-09-10T15:27:44+09:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>10</span><span class='date-suffix'>th</span>, <span class='date-year'>2017</span></span> <span class='time'>3:27 pm</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Dockerコンテナを使ってAnsibleのPlaybookをテストする際に、Playbookで<code>systemctl</code>を実行しようとして以下のようなエラーが発生した。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Failed to get D-Bus connection: Operation not permitted</span></code></pre></td></tr></table></div></figure>
+
+
+<a name="TR.DL"></a>
+<h1>TR;DL</h1>
+
+<p>以下の様にコンテナを起動しておいて、それから<code>docker exec</code>で<code>systemctl</code>を実行すればよい。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ docker run --rm --privileged -d -it --security-opt seccomp=unconfined -e "container=docker" centos:7 /sbin/init</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<!-- more -->
+
+
+<a name="L......"></a>
+<h1>説明</h1>
+
+<p>今回の問題は大まかに言うとコンテナからホストへのリソースアクセスが制限されていることによるものである。よって、このリソース制限を以下の様に緩和してあげれば良い。なお、<strong>これらの設定はプロダクション環境では絶対に行ってはならない。あくまで一時的なテスト環境などでのみ利用するべきであり、プライベート環境であっても持続的に起動するコンテナには付与してはならない。</strong></p>
+
+<a name="L1..privileged............."></a>
+<h2>1. privileged をつける</h2>
+
+<p>エラー内容から察するに、どうやら<a href="https://ja.wikipedia.org/wiki/D-Bus">D-Busデーモン</a>へのアクセスに失敗しているっぽい。また、<code>Operation not permitted</code>というよく見るエラーメッセージからは権限の不足が予測される。Dockerはホスト側に色々と依存しているので、きっとコンテナ内部で起動する<code>systemd</code>はホスト側のD-Busにも依存しているのだろうということで、起動オプションに<code>--privileged</code>をとりあえずつける。これでホスト側のリソースにほぼ無制限にアクセスできる。当然のことながら、プロダクション環境で<code>--privileged</code>をつけてはいけない。</p>
+
+<a name="cap-add.SYS_ADMIN................"></a>
+<h3>cap-add=SYS_ADMIN で十分か？</h3>
+
+<p>今回の解決策は<a href="https://github.com/moby/moby/issues/2296#issuecomment-238530205">GitHubでのIssueコメント</a>を参考にしたけど、コメントで示された<code>--cap-add=SYS_ADMIN</code>ではダメで、<code>--privileged</code>でなければならなかった。<a href="https://linuxjm.osdn.jp/html/LDP_man-pages/man7/capabilities.7.html">https://linuxjm.osdn.jp/html/LDP_man-pages/man7/capabilities.7.html</a> によれば、今回のD-Bus Connectionの取得はできそうな気がするけど、もしかしたら<code>SYS_MODULE</code>も必要なのかもしれない。検証してないけれど。</p>
+
+<a name="L2..security-opt.seccomp.unconfined............."></a>
+<h2>2. security-opt seccomp=unconfined をつける</h2>
+
+<p>これは必須ではないけど、Dockerはどんどんセキュリティ（ホスト側へのリソースアクセス）を厳しくしているので、これも付けておいたほうが良い。ここで設定している<code>seccomp</code>は簡単に言うと、コンテナの中での行動に制約を設けるためのプロファイル設定のこと。「行動」とはどういうものを指すのかというと、実行可能なsyscallのこと。具体的な内容は <a href="https://docs.docker.com/engine/security/seccomp/#significant-syscalls-blocked-by-the-default-profile">https://docs.docker.com/engine/security/seccomp/#significant-syscalls-blocked-by-the-default-profile</a> を参照すれば良いけど、そんなものがあるんだなぁぐらいの理解でとりあえず良いと思う。ちゃんと使う時は見ておいたほうが良いとは思うけど。</p>
+
+<p>で、結局<code>--security-opt seccomp=unconfined</code>とは何かというと、プロファイル設定を無効にする、つまり無制限ということになる。これにより、コンテナが実行できるsysycallに制約が無くなる。当然のことながら、これもプロダクション環境で<code>--security-opt seccomp=unconfined</code>としてはいけない。</p>
+
+<a name="L3...sbin.init................................."></a>
+<h2>3. /sbin/initでコンテナを起動させる</h2>
+
+<p><code>/sbin/init</code>については <a href="https://access.redhat.com/documentation/ja-JP/Red_Hat_Enterprise_Linux/6/html/Installation_Guide/s2-boot-init-shutdown-init.html">https://access.redhat.com/documentation/ja-JP/Red_Hat_Enterprise_Linux/6/html/Installation_Guide/s2-boot-init-shutdown-init.html</a> を参照すれば良い。要は環境の初期化である。これまでに述べたセキュリティレベルの変更を反映することになる。</p>
+
+<hr />
+
+<p>docker(そう言えば今はmodyプロジェクトと呼ばれている)は昔からコンテナからホストへのリソースアクセスについて多方面から警告されており、今回の問題もそれらの警告を受けたものなのだと思う。dockerは便利でなんでも出来るように思えるが、実際には微妙なバランスを試行錯誤しながら実現されているので、今後のアップデートでも特にリソースアクセスに関する制約を始めとするセキュリティには注目しておかなければならない。</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2017-09-10T15:27:44+09:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>10</span><span class='date-suffix'>th</span>, <span class='date-year'>2017</span></span> <span class='time'>3:27 pm</span></time>
+      
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/docker/'>docker</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2017/09/07/djangowotango-with-djangodexue-bu-1/" title="Previous Post: DjangoをTango with Djangoで学ぶ - 1 -">&laquo; DjangoをTango with Djangoで学ぶ - 1 -</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2017 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

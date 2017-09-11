@@ -9,11 +9,9 @@
   <meta name="author" content="sgykfjsm">
 
   
-  <meta name="description" content="データベース設計徹底指南 正しいデータ型を使うのが大事。
-テーブルが演算の単位となるので、ここの設計が非常に重要
-テーブルを正しく定義しないとまともなクエリがかけない
-データベースはリファクタリングが難しい DDLに時間がかかる
-appへの影響範囲が大きい &hellip;">
+  <meta name="description" content="Scala at ISUCON 資料 ISUCONのお題を元にScalaと各言語のベンチマークを比較する ベンチマークとしてはPlay = Perl/Ruby あんまり早くない？
+- GCチューニング - あんまり早くならなかった
+- Nettyを4つ並べる、nginxでバランシング - &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -92,6 +90,98 @@ appへの影響範囲が大きい &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2013/11/28/fud-scala/">fud_scala</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2013-11-28T19:35:00+09:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>28</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>7:35 pm</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><a name="Scala.at.ISUCON"></a>
+<h1>Scala at ISUCON</h1>
+
+<p><a href="https://dl.dropboxusercontent.com/u/261418/scala_at_isucon3/index.html#/">資料</a></p>
+
+<p>ISUCONのお題を元にScalaと各言語のベンチマークを比較する</p>
+
+<p>ベンチマークとしてはPlay = Perl/Ruby</p>
+
+<p>あんまり早くない？
+- GCチューニング
+  - あんまり早くならなかった
+- Nettyを4つ並べる、nginxでバランシング
+  - あんまり早くならなかった
+- ベンチマークの多重度を上げる
+  - あんまり早くならなかった
+  - go/perlは早くなった
+- Playが重いだけ？
+  - Skinny Framework
+  - スコアがダメだった</p>
+
+<p>解答を元にDB周りのボトルネックを外した
+- その他いろいろ</p>
+
+<p>現時点ではPerl > Play</p>
+
+<p>一般的なWebアプリケーションだと性能はイマイチ
+→DB I/Oがブロックしている
+→mysql-async的なnon-blobking database driverがあれば、状況は変わるかもしれない。</p>
+
+<p>コード自体のプロファイリングが必要。</p>
+
+<a name="L......Scala."></a>
+<h1>怖いScala!</h1>
+
+<p><a href="http://xuwei-k.github.io/slides/kowai_scala/#0">資料</a></p>
+
+<p>-</p>
+
+<a name="Scala.with.TDD"></a>
+<h1>Scala with TDD</h1>
+
+<p>問題の領域がドメイン
+ドメインの語彙→シナリオ
+シナリオ→モデうr→実装→シナリオ→…
+DDDで書かれたコードならば、それを読めばドメインの概念（ビジネス）がわかるようになる。</p>
+
+<p>モデルの実装
+- エンティティ: 見分けるおkとができる
+- 普遍の識別子を持つ
+  - 可変な要素を透過判定に使わない
+  - 要素を変更してもIDを変えない</p>
+
+<p>ドメインモデルはユビキタス言語と対応づくこと
+（クラス名、属性、振る舞い）
+- ソーシャルゲームのようにこれからドメインが作られる場合は内部で合意を取りながら作る</p>
+
+<p>リポジトリ
+- エンティティをリポジトリに保存したり、識別子からエンティティを取得できる。</p>
+
+<p>コストがかかる。複雑でない問題には使わない。
+Cocを前提にするF/Wとは相性が悪い。F/Wと喧嘩しない方法を選ぶべき。
+OOPよりデータと手続きのほうが高速とはいえ、DDDはオブジェクト指向を使う。</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -617,51 +707,6 @@ ASCII文字なので、普通にcatしてもパッと見は区切りが無いよ
   
     <footer>
       <a rel="full-article" href="/blog/2013/04/29/ascii-delimiter/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/04/15/lean-analytics/">リーン・アナリティクス入門に行ってきた</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2013-04-15T16:17:56+09:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>15</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>4:17 pm</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>URL: <a href="http://peatix.com/event/11791">http://peatix.com/event/11791</a></p>
-
-<p>Open NetWork Labにて行われた標記の勉強会に行ってきた。</p>
-
-<p>講師の人は<a href="http://leananalyticsbook.com/authors/alistair-croll/">Alistair Croll</a>という方で、今回の勉強会というかカンファレンスは以下の目的で行われた。</p>
-
-<blockquote><p>リーンアナリティクスでは、解決しようとしている課題が本当に実在するものなのかを検証し、そのプロダクトやサービスを必要とする正しいユーザーを見つけ出し、何を創るかを定義し、どのようにマネタイズするか、そしてどのように世界へ広めるかを定義することができます。スタートアップや新規事業開発においていちばんのリスクは&#8221;誰も望まないものを作ってしまうこと&#8221;です。</p>
-
-<p>常に計測・分析をすることで、本当に望まれるサービスを最短の道筋で作る方法であるリーンアナリティクスについての概要のレクチャーを行います。</p></blockquote>
-
-<p>一応、データ部隊の一員として、今回のカンファレンスに参加した。</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2013/04/15/lean-analytics/">Read on &rarr;</a>
     </footer>
   
 

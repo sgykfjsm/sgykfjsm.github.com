@@ -4,7 +4,7 @@
   <title><![CDATA[Category: docker | sgykfjsm.github.com]]></title>
   <link href="http://sgykfjsm.github.io/blog/categories/docker/atom.xml" rel="self"/>
   <link href="http://sgykfjsm.github.io/"/>
-  <updated>2017-09-07T00:31:42+09:00</updated>
+  <updated>2017-09-11T22:47:56+09:00</updated>
   <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
@@ -12,6 +12,60 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Dockerコンテナの中でsystemdを操作したいの注意点]]></title>
+    <link href="http://sgykfjsm.github.io/blog/2017/09/10/dockerkontenafalsezhong-desystemdwocao-zuo-sitaifalsezhu-yi-dian/"/>
+    <updated>2017-09-10T15:27:44+09:00</updated>
+    <id>http://sgykfjsm.github.io/blog/2017/09/10/dockerkontenafalsezhong-desystemdwocao-zuo-sitaifalsezhu-yi-dian</id>
+    <content type="html"><![CDATA[<p>Dockerコンテナを使ってAnsibleのPlaybookをテストする際に、Playbookで<code>systemctl</code>を実行しようとして以下のようなエラーが発生した。</p>
+
+<pre><code>Failed to get D-Bus connection: Operation not permitted
+</code></pre>
+
+<a name="TR.DL"></a>
+<h1>TR;DL</h1>
+
+<p>以下の様にコンテナを起動しておいて、それから<code>docker exec</code>で<code>systemctl</code>を実行すればよい。</p>
+
+<pre><code>$ docker run --rm --privileged -d -it --security-opt seccomp=unconfined -e "container=docker" centos:7 /sbin/init
+</code></pre>
+
+<!-- more -->
+
+
+<a name="L......"></a>
+<h1>説明</h1>
+
+<p>今回の問題は大まかに言うとコンテナからホストへのリソースアクセスが制限されていることによるものである。よって、このリソース制限を以下の様に緩和してあげれば良い。なお、<strong>これらの設定はプロダクション環境では絶対に行ってはならない。あくまで一時的なテスト環境などでのみ利用するべきであり、プライベート環境であっても持続的に起動するコンテナには付与してはならない。</strong></p>
+
+<a name="L1..privileged............."></a>
+<h2>1. privileged をつける</h2>
+
+<p>エラー内容から察するに、どうやら<a href="https://ja.wikipedia.org/wiki/D-Bus">D-Busデーモン</a>へのアクセスに失敗しているっぽい。また、<code>Operation not permitted</code>というよく見るエラーメッセージからは権限の不足が予測される。Dockerはホスト側に色々と依存しているので、きっとコンテナ内部で起動する<code>systemd</code>はホスト側のD-Busにも依存しているのだろうということで、起動オプションに<code>--privileged</code>をとりあえずつける。これでホスト側のリソースにほぼ無制限にアクセスできる。当然のことながら、プロダクション環境で<code>--privileged</code>をつけてはいけない。</p>
+
+<a name="cap-add.SYS_ADMIN................"></a>
+<h3>cap-add=SYS_ADMIN で十分か？</h3>
+
+<p>今回の解決策は<a href="https://github.com/moby/moby/issues/2296#issuecomment-238530205">GitHubでのIssueコメント</a>を参考にしたけど、コメントで示された<code>--cap-add=SYS_ADMIN</code>ではダメで、<code>--privileged</code>でなければならなかった。<a href="https://linuxjm.osdn.jp/html/LDP_man-pages/man7/capabilities.7.html">https://linuxjm.osdn.jp/html/LDP_man-pages/man7/capabilities.7.html</a> によれば、今回のD-Bus Connectionの取得はできそうな気がするけど、もしかしたら<code>SYS_MODULE</code>も必要なのかもしれない。検証してないけれど。</p>
+
+<a name="L2..security-opt.seccomp.unconfined............."></a>
+<h2>2. security-opt seccomp=unconfined をつける</h2>
+
+<p>これは必須ではないけど、Dockerはどんどんセキュリティ（ホスト側へのリソースアクセス）を厳しくしているので、これも付けておいたほうが良い。ここで設定している<code>seccomp</code>は簡単に言うと、コンテナの中での行動に制約を設けるためのプロファイル設定のこと。「行動」とはどういうものを指すのかというと、実行可能なsyscallのこと。具体的な内容は <a href="https://docs.docker.com/engine/security/seccomp/#significant-syscalls-blocked-by-the-default-profile">https://docs.docker.com/engine/security/seccomp/#significant-syscalls-blocked-by-the-default-profile</a> を参照すれば良いけど、そんなものがあるんだなぁぐらいの理解でとりあえず良いと思う。ちゃんと使う時は見ておいたほうが良いとは思うけど。</p>
+
+<p>で、結局<code>--security-opt seccomp=unconfined</code>とは何かというと、プロファイル設定を無効にする、つまり無制限ということになる。これにより、コンテナが実行できるsysycallに制約が無くなる。当然のことながら、これもプロダクション環境で<code>--security-opt seccomp=unconfined</code>としてはいけない。</p>
+
+<a name="L3...sbin.init................................."></a>
+<h2>3. /sbin/initでコンテナを起動させる</h2>
+
+<p><code>/sbin/init</code>については <a href="https://access.redhat.com/documentation/ja-JP/Red_Hat_Enterprise_Linux/6/html/Installation_Guide/s2-boot-init-shutdown-init.html">https://access.redhat.com/documentation/ja-JP/Red_Hat_Enterprise_Linux/6/html/Installation_Guide/s2-boot-init-shutdown-init.html</a> を参照すれば良い。要は環境の初期化である。これまでに述べたセキュリティレベルの変更を反映することになる。</p>
+
+<hr />
+
+<p>docker(そう言えば今はmodyプロジェクトと呼ばれている)は昔からコンテナからホストへのリソースアクセスについて多方面から警告されており、今回の問題もそれらの警告を受けたものなのだと思う。dockerは便利でなんでも出来るように思えるが、実際には微妙なバランスを試行錯誤しながら実現されているので、今後のアップデートでも特にリソースアクセスに関する制約を始めとするセキュリティには注目しておかなければならない。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[docker-weekly: April 16th, 2015]]></title>
