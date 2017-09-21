@@ -9,9 +9,7 @@
   <meta name="author" content="sgykfjsm">
 
   
-  <meta name="description" content="Scala at ISUCON 資料 ISUCONのお題を元にScalaと各言語のベンチマークを比較する ベンチマークとしてはPlay = Perl/Ruby あんまり早くない？
-- GCチューニング - あんまり早くならなかった
-- Nettyを4つ並べる、nginxでバランシング - &hellip;">
+  <meta name="description" content="前回、mesosをDEBパッケージを使ってインストールする方法を示した。これを前提としてmesosが動いているクラスタにHadoopをインストールし、wordcountをchrnosを通じて動かすところまでの手順を示す。 ちなみに見てくれている人の時間をムダにしないために言うと、 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -90,6 +88,78 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/01/10/install-hadoop-on-mesos/">mesos上にHadoopをインストールする</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-01-10T00:51:00+09:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>10</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>12:51 am</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>前回、mesosをDEBパッケージを使ってインストールする方法を示した。これを前提としてmesosが動いているクラスタにHadoopをインストールし、wordcountをchrnosを通じて動かすところまでの手順を示す。</p>
+
+<p>ちなみに見てくれている人の時間をムダにしないために言うと、一部を除けば普通の手順(Clouderaのチュートリアルとか)でやれば大抵は普通に動くはず。なのでHadoopに詳しい人は、<a href="https://www.google.co.jp/search?q=hadoop+mesos&amp;oq=hadoop+mesos&amp;aqs=chrome..69i57j69i60l3j0l2.2556j0j7&amp;sourceid=chrome&amp;espv=210&amp;es_sm=91&amp;ie=UTF-8">「Hadoop mesos」でググったほう</a>が良いと思う。ここではSparkの利用を見越しての設定を行なうのと、とHadoopもmesosもあまり詳しくない人向けに記述する。Chronosについては、まぁついでにというレベルだし、実際非常に導入が楽なので、<a href="http://airbnb.github.io/chronos/#Quick%20Start">公式のQuick Start</a>でも見たほうが良い。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2014/01/10/install-hadoop-on-mesos/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/01/09/install-mesos-with-deb/">mesosをDEBパッケージからインストールする</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-01-09T06:48:00+09:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>9</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>6:48 am</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>mesosをインストールする場合、ソースをコンパイルしてインストールすることが公式の<a href="http://mesos.apache.org/gettingstarted/">Getting Started with Apache Mesos</a>に記載されているが、この方法だとコンパイルに非常に時間がかかる（10分から20分ぐらい）ので、<a href="http://mesosphere.io/downloads/">mesosphereが提供しているパッケージ</a>を利用したほうが良い。<br>ここでは、パッケージからインストールする手順をまとめる。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2014/01/09/install-mesos-with-deb/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -635,78 +705,6 @@ DB設計鉄則三箇条
   
     <footer>
       <a rel="full-article" href="/blog/2013/08/11/fluentd-on-ec2-with-s3/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/05/21/install-gitflow-to-equals-windows/">windowsにgit-flowをインストールする</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2013-05-21T02:00:00+09:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>21</span><span class='date-suffix'>st</span>, <span class='date-year'>2013</span></span> <span class='time'>2:00 am</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>会社のPCがWindowsで、VMはプロキシの関係でインストールできなかったので仕方なく。<br />
-で、<a href="https://github.com/nvie/gitflow/wiki/Windows">ここ</a>にあるやり方に従った。</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2013/05/21/install-gitflow-to-equals-windows/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/04/29/ascii-delimiter/">区切り文字がASCII 001なファイルを扱う</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2013-04-29T00:20:00+09:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>29</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>12:20 am</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>awsのhiveでS3に直接ファイルを出力すると区切り文字がASCII 001(Ctrl + A)になる。<br>
-ASCII文字なので、普通にcatしてもパッと見は区切りが無いように見えるがvimなどで開いてみると以下のように見える。<br></p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2013/04/29/ascii-delimiter/">Read on &rarr;</a>
     </footer>
   
 

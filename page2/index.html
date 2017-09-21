@@ -9,7 +9,7 @@
   <meta name="author" content="sgykfjsm">
 
   
-  <meta name="description" content="JenkinsでgolangプロジェクトをCIするときに少しハマったので、同じミスをしないで済むようにここにメモする。 ">
+  <meta name="description" content="最近、golangでプログラムを書く機会が増えてきた。golangでTDDをする場合、標準のtestingパッケージを使うのが一般的なようだ。ただし、標準パッケージだけだとちょっとテストが書きづらいので、stretchr/testifyを使っている人も多いと思う。 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,78 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/09/24/ginkgo-getting-start/">Ginkgo 基本的な使い方編</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-09-24T22:51:20+09:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>24</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>10:51 pm</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>最近、golangでプログラムを書く機会が増えてきた。golangでTDDをする場合、標準の<a href="https://golang.org/pkg/testing/">testingパッケージ</a>を使うのが一般的なようだ。ただし、標準パッケージだけだとちょっとテストが書きづらいので、<a href="https://github.com/stretchr/testify">stretchr/testify</a>を使っている人も多いと思う。</p>
+
+<p>関数のテストをしたいときは標準パッケージなりtestifyを使うなりで良いのだけど、振る舞いをテストしたい、つまりBDDをしたいなーと思った時にちょっと調べらたら<a href="http://onsi.github.io/ginkgo/">Ginkgo</a>というのが良さ気だったので、ちょっと試してみる。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2015/09/24/ginkgo-getting-start/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/09/13/svn-tutorial-for-me/">svnのデータ移行手順を確認する</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-09-13T03:47:12+09:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>3:47 am</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>色々あってsvnを触ることになった。今回はその過程で知ったことをメモする。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2015/09/13/svn-tutorial-for-me/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -377,78 +449,6 @@
   
     <footer>
       <a rel="full-article" href="/blog/2015/02/13/dereg-instance-under-beanstalk/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/02/13/how-to-analysis-unlaunched-instance/">起動に失敗したインスタンスを調査する例</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-02-13T03:43:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>3:43 am</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>先日、とあるサービスで利用しているBeanstalk環境でインスタンスが起動に失敗した。ログを見ると、S3からリソースの取得に失敗していたようだ。<br>ネットワーク接続の状態としては、AWS内のネットワークでは疎通可能だが、インターネットを経由した通信は不可、という状況。具体的には、例えばAWSのインスタンスからはsshログイン可能だが、グローバルからのsshログインはできないといったような感じ。色々調べたけど、不意に調査対象のインスタンスがTerminateしてしまい、結局原因がわからないままになってしまった。</p>
-
-<p>調査はAWS Supportとやりとりしながら行ったのだけれども、色々と情報収集を都度指示されて捗らなかった。<br>なので、ここには次また事象が再発した場合に備えて、障害発生時に取得しておきべきこと、確認すべきことを整理する。</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2015/02/13/how-to-analysis-unlaunched-instance/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/04/09/about-db-configuration-in-play/">Play!のDB設定について</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-04-09T00:27:00+09:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>9</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>12:27 am</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>自分が開発したわけでもないのだけれど、APIのパフォーマンスをどうにかしろ、チューニングしろと言われた。チューニング対象のAPIは<a href="http://www.playframework.com/">Play!</a>を利用しており、DBのI/Oにパフォーマンスが強く依存するので、まずはDB周りのパラメータをしらべて改善していくことにした。</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2014/04/09/about-db-configuration-in-play/">Read on &rarr;</a>
     </footer>
   
 

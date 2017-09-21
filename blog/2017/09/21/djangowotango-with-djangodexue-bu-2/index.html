@@ -1,0 +1,758 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>DjangoをTango with Djangoで学ぶ - 2 - - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="DjangoをTango with Djangoで学ぶ - 1 -の続き これまでは表示するHTML（ただのテキストだけど）をviews.pyに直接記載していたが、Djangoでも他のWebフレームワークと同様にテンプレートシステムを備えている。 テンプレートシステムとは簡単に言うと、 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.io/blog/2017/09/21/djangowotango-with-djangodexue-bu-2">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.io" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">DjangoをTango with Djangoで学ぶ - 2 -</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2017-09-21T00:19:39+09:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>21</span><span class='date-suffix'>st</span>, <span class='date-year'>2017</span></span> <span class='time'>12:19 am</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p><a href="http://sgykfjsm.github.io/blog/2017/09/07/djangowotango-with-djangodexue-bu-1/">DjangoをTango with Djangoで学ぶ - 1 -</a>の続き</p>
+
+<p>これまでは表示するHTML（ただのテキストだけど）をviews.pyに直接記載していたが、Djangoでも他のWebフレームワークと同様にテンプレートシステムを備えている。</p>
+
+<p>テンプレートシステムとは簡単に言うと、独自のシンタックスとHTMLを混ぜておきて、独自シンタックスの部分をサーバーサイドで指定された文字列などに置き換えたりすることだ。場合によっては多少の制御構文を備えており、ループ文やIF文を提供するテンプレートシステムも多い。</p>
+
+<!-- more -->
+
+
+<p>Djangoでテンプレートシステムを利用する場合、<code>${workspace}/tango_with_django_project/templates/${application}</code>というフォルダを作ればよい。今回の場合だと以下の様になる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> ls -la
+</span><span class='line'><span class="go">total 20</span>
+</span><span class='line'><span class="go">drwxr-xr-x  9 sgyk   306  9  6 09:40 ./</span>
+</span><span class='line'><span class="go">drwxr-xr-x  9 sgyk   306  9  4 22:40 ../</span>
+</span><span class='line'><span class="go">drwxr-xr-x 12 sgyk   408  9  6 09:35 .git/</span>
+</span><span class='line'><span class="go">-rw-r--r--  1 sgyk  3329  9  4 23:09 .gitignore</span>
+</span><span class='line'><span class="go">drwxr-xr-x 12 sgyk   408  9  6 09:35 .idea/</span>
+</span><span class='line'><span class="go">-rw-r--r--  1 sgyk 12288  9  4 22:52 db.sqlite3</span>
+</span><span class='line'><span class="go">-rwxr-xr-x  1 sgyk   823  9  4 22:40 manage.py*</span>
+</span><span class='line'><span class="go">drwxr-xr-x 11 sgyk   374  9  4 23:50 rango/</span>
+</span><span class='line'><span class="go">drwxr-xr-x  8 sgyk   272  9  6 09:40 tango_with_django_project/</span>
+</span><span class='line'>
+</span><span class='line'><span class="gp">$</span> ls -la tango_with_django_project/
+</span><span class='line'><span class="go">total 12</span>
+</span><span class='line'><span class="go">drwxr-xr-x 8 sgyk  272  9  6 09:40 ./</span>
+</span><span class='line'><span class="go">drwxr-xr-x 9 sgyk  306  9  6 09:40 ../</span>
+</span><span class='line'><span class="go">-rw-r--r-- 1 sgyk    0  9  4 22:40 __init__.py</span>
+</span><span class='line'><span class="go">drwxr-xr-x 6 sgyk  204  9  4 23:39 __pycache__/</span>
+</span><span class='line'><span class="go">-rw-r--r-- 1 sgyk 3166  9  4 23:10 settings.py</span>
+</span><span class='line'><span class="go">drwxr-xr-x 3 sgyk  102  9  6 09:40 templates/</span>
+</span><span class='line'><span class="go">-rw-r--r-- 1 sgyk  930  9  4 23:39 urls.py</span>
+</span><span class='line'><span class="go">-rw-r--r-- 1 sgyk  428  9  4 22:40 wsgi.py</span>
+</span><span class='line'>
+</span><span class='line'><span class="gp">$</span> ls -la tango_with_django_project/templates/
+</span><span class='line'><span class="go">total 0</span>
+</span><span class='line'><span class="go">drwxr-xr-x 3 sgyk 102  9  6 09:40 ./</span>
+</span><span class='line'><span class="go">drwxr-xr-x 8 sgyk 272  9  6 09:40 ../</span>
+</span><span class='line'><span class="go">drwxr-xr-x 2 sgyk  68  9  6 09:40 rango/</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>次にDjangoに<code>tango_with_django_project/templates/rango</code>あるテンプレートを利用するということを教えてあげる必要がある。具体的には<code>tango_with_django_project/settings.py</code>に以下に設定を追加する必要がある。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">...</span>
+</span><span class='line'><span class="n">TEMPLATES</span> <span class="o">=</span> <span class="p">[</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="s">&#39;BACKEND&#39;</span><span class="p">:</span> <span class="s">&#39;django.template.backends.django.DjangoTemplates&#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="s">&#39;DIRS&#39;</span><span class="p">:</span> <span class="p">[],</span>  <span class="c"># &lt;-- ここにテンプレートのパスを追加する</span>
+</span><span class='line'>        <span class="s">&#39;APP_DIRS&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+</span><span class='line'><span class="o">...</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>早速追加したいところだけど注意点がある。それは、<code>DIRS</code>に追加するパスは<strong>絶対パス</strong>でなければならないということだ。しかし、通常、開発時のテンプレートのパスとプロダクション環境で動作させるときに配置されるテンプレートのパスは異なるはず。異なる部分はワークスペース部分のパスになる。例えば、開発時は<code>/Users/you/workspace</code>がワークスペースかもしれないが、デプロイ時のパスは<code>/home/production/application</code>となるかもしれない。この違いの吸収するようにしないといけない。</p>
+
+<p>もちろん、各環境ごとのパスを１つずつハードコーディングするのはダメである。一方、<code>tango_with_django_project/settings.py</code>をよく見てみると、次の１文に気づくはずだ。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Build paths inside the project like this: os.path.join(BASE_DIR, ...)</span>
+</span><span class='line'><span class="n">BASE_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">__file__</span><span class="p">)))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>BASE_DIR</code>は<code>tango_with_django_project/settings.py</code>の絶対パスを取得して、２つ上のディレクトリパスを取得している。もし<code>/Users/you/workspace/tango_with_django_project/settings.py</code>だとすると、<code>BASE_DIR</code>には<code>/Users/you/workspace</code>が格納される。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="err">$</span> <span class="n">python</span>
+</span><span class='line'><span class="n">Python</span> <span class="mf">3.5</span><span class="o">.</span><span class="mi">3</span> <span class="p">(</span><span class="n">default</span><span class="p">,</span> <span class="n">Sep</span>  <span class="mi">4</span> <span class="mi">2017</span><span class="p">,</span> <span class="mi">22</span><span class="p">:</span><span class="mi">33</span><span class="p">:</span><span class="mi">15</span><span class="p">)</span>
+</span><span class='line'><span class="p">[</span><span class="n">GCC</span> <span class="mf">4.2</span><span class="o">.</span><span class="mi">1</span> <span class="n">Compatible</span> <span class="n">Apple</span> <span class="n">LLVM</span> <span class="mf">8.1</span><span class="o">.</span><span class="mi">0</span> <span class="p">(</span><span class="n">clang</span><span class="o">-</span><span class="mf">802.0</span><span class="o">.</span><span class="mi">42</span><span class="p">)]</span> <span class="n">on</span> <span class="n">darwin</span>
+</span><span class='line'><span class="n">Type</span> <span class="s">&quot;help&quot;</span><span class="p">,</span> <span class="s">&quot;copyright&quot;</span><span class="p">,</span> <span class="s">&quot;credits&quot;</span> <span class="ow">or</span> <span class="s">&quot;license&quot;</span> <span class="k">for</span> <span class="n">more</span> <span class="n">information</span><span class="o">.</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">os</span>
+</span><span class='line'><span class="o">&gt;&gt;&gt;</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="s">&quot;/Users/you/workspace/tango_with_django_project/settings.py&quot;</span><span class="p">))</span>
+</span><span class='line'><span class="s">&#39;/Users/you/workspace&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ということで、<code>/Users/you/workspace/tango_with_django_project/templates/rango</code>のようにパスをハードコートするのではなく、<code>BASE_DIR</code>を利用して以下の様に設定すれば良いことになる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='diff'><span class='line'>$ git diff
+</span><span class='line'><span class="gh">diff --git a/tango_with_django_project/settings.py b/tango_with_django_project/settings.py</span>
+</span><span class='line'><span class="gh">index 8d38aa9..3b12343 100644</span>
+</span><span class='line'><span class="gd">--- a/tango_with_django_project/settings.py</span>
+</span><span class='line'><span class="gi">+++ b/tango_with_django_project/settings.py</span>
+</span><span class='line'><span class="gu">@@ -52,10 +52,12 @@ MIDDLEWARE = [</span>
+</span><span class='line'>
+</span><span class='line'> ROOT_URLCONF = &#39;tango_with_django_project.urls&#39;
+</span><span class='line'>
+</span><span class='line'><span class="gi">+TEMPLATE_DIR = os.path.join(BASE_DIR, &#39;templates&#39;)</span>
+</span><span class='line'><span class="gi">+</span>
+</span><span class='line'> TEMPLATES = [
+</span><span class='line'>     {
+</span><span class='line'>         &#39;BACKEND&#39;: &#39;django.template.backends.django.DjangoTemplates&#39;,
+</span><span class='line'><span class="gd">-        &#39;DIRS&#39;: [],</span>
+</span><span class='line'><span class="gi">+        &#39;DIRS&#39;: [TEMPLATE_DIR, ],</span>
+</span><span class='line'>         &#39;APP_DIRS&#39;: True,
+</span><span class='line'>         &#39;OPTIONS&#39;: {
+</span><span class='line'>             &#39;context_processors&#39;: [
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>テンプレートの場所の設定が済んだので実際にテンプレートファイルを記述していく。ここでは以下のようなファイルを<code>rango/templates/index.html</code>として用意する。</p>
+
+<p>templates/rango/index.html</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="cp">&lt;!DOCTYPE html&gt;</span>
+</span><span class='line'><span class="nt">&lt;html</span> <span class="na">lang=</span><span class="s">&quot;en&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'><span class="nt">&lt;head&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;UTF-8&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;title&gt;</span>Rango says...<span class="nt">&lt;/title&gt;</span>
+</span><span class='line'><span class="nt">&lt;/head&gt;</span>
+</span><span class='line'><span class="nt">&lt;body&gt;</span>
+</span><span class='line'><span class="nt">&lt;h1&gt;</span>Rango says...<span class="nt">&lt;/h1&gt;</span>
+</span><span class='line'><span class="nt">&lt;div&gt;</span>
+</span><span class='line'>  hey there parther!<span class="nt">&lt;br</span> <span class="nt">/&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;strong&gt;</span><span class="nt">&lt;/strong&gt;&lt;br</span> <span class="nt">/&gt;</span>
+</span><span class='line'><span class="nt">&lt;/div&gt;</span>
+</span><span class='line'><span class="nt">&lt;div&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">&quot;/rango/about/&quot;</span><span class="nt">&gt;</span>About<span class="nt">&lt;/a&gt;</span>
+</span><span class='line'><span class="nt">&lt;/div&gt;</span>
+</span><span class='line'><span class="nt">&lt;/body&gt;</span>
+</span><span class='line'><span class="nt">&lt;/html&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ほとんどはただのHTMLファイルだが、&#8220;をプレースホルダーとして設定している。AnsibleやJinja2などを経験しているならわかるが、このプレースホルダーがサーバーサイドで任意の変数に置き換えられる。</p>
+
+<p>次にレンダリング処理を記述する。記述する箇所はもちろん<code>rango/views.py</code>だ。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='diff'><span class='line'>$ git diff rango/views.py
+</span><span class='line'><span class="gh">diff --git a/rango/views.py b/rango/views.py</span>
+</span><span class='line'><span class="gh">index 117afb3..6aeae71 100644</span>
+</span><span class='line'><span class="gd">--- a/rango/views.py</span>
+</span><span class='line'><span class="gi">+++ b/rango/views.py</span>
+</span><span class='line'><span class="gu">@@ -1,5 +1,21 @@</span>
+</span><span class='line'> from django.http import HttpResponse
+</span><span class='line'><span class="gi">+from django.shortcuts import render</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'> def index(request):
+</span><span class='line'><span class="gd">-    return HttpResponse(&quot;Rango says hey there partner!&quot;)</span>
+</span><span class='line'><span class="gi">+    &quot;&quot;&quot;</span>
+</span><span class='line'><span class="gi">+    Construct a dicitionary to pass to the template engine as its context.</span>
+</span><span class='line'><span class="gi">+    Note the key boldmessage is the same as  in the template!</span>
+</span><span class='line'><span class="gi">+    &quot;&quot;&quot;</span>
+</span><span class='line'><span class="gi">+    context_dict = {&#39;boldmessage&#39;: &#39;Crunchy, creamy, cookie, candy, cupcake!&#39;}</span>
+</span><span class='line'><span class="gi">+</span>
+</span><span class='line'><span class="gi">+    &quot;&quot;&quot;</span>
+</span><span class='line'><span class="gi">+    Return a rendered response to send to the client.</span>
+</span><span class='line'><span class="gi">+    We make use of the shortcut function to make our lives easier.</span>
+</span><span class='line'><span class="gi">+    Note that the first parameter is the template we wish to use.</span>
+</span><span class='line'><span class="gi">+    &quot;&quot;&quot;</span>
+</span><span class='line'><span class="gi">+    return render(request, &#39;rango/index.html&#39;, context=context_dict)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>これも見れば大体わかるだろう。<code>render(request, 'index.html', context=context_dict)</code>だけに注目すれば良い。<code>render</code>の引数の１つ目はリクエストオブジェクトだ。これはお作法として「１つめはリクエストオブジェクト」とおぼえておけば良い。２つ目の引数は、このレンダリング処理が利用するテンプレートの位置を教えている。ディレクトリの位置は先ほど<code>'DIRS': [TEMPLATE_DIR, ]</code>と設定しているので、ここでは<code>TEMPLATE_DIR</code>以降の相対パスを記述すれば良い、ということになる。では３つ目は？これはcontextを渡している。一口にcontextといっても意味するところはまさにcontextに依存するわけだが、ここでは「テンプレートファイルに渡す情報」と理解しておけば良い。よって<code>context=context_dict</code>は<code>{'boldmessage': 'Crunchy, creamy, cookie, candy, cupcake!'}</code>という辞書変数をテンプレートファイルに渡していることを意味する。</p>
+
+<p>さて、コードの順序とは逆だが、ここでテンプレートファイルに渡しているコンテキスト情報を見てみる。キーが<code>boldmessage</code>で値が<code>Crunchy, creamy, cookie, candy, cupcake!</code>だ。今回の処理では、「テンプレートファイルの中にある<code>boldmessage</code>というプレースホルダーに<code>Crunchy, creamy, cookie, candy, cupcake!</code>という値を渡す」ということになる。実際に<code>python runserver</code>を実行して <a href="http://127.0.0.1:8000/rango/">http://127.0.0.1:8000/rango/</a> にアクセスすると太字になった<strong>Crunchy, creamy, cookie, candy, cupcake!</strong>がブラウザに表示されるはずだ。</p>
+
+<p>HTMLが配信されるようになった。とくれば次はCSSやJavascriptなどを使いたくなる。このような静的なファイルは本来はDjangoの守備範囲ではない。なぜならば、これは「静的」であり、サーバーサイドで生成するようなものではないからだ。とはいえ、Djangoアプリケーションで静的ファイルを配信することはもちろん可能である。</p>
+
+<p>まず静的ファイルを配置するディレクトリを設定する。今回はtemplateディレクトリと同様にプロジェクトのルートに<code>static</code>ディレクトリを配置する。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> ls -l
+</span><span class='line'><span class="go">total 20</span>
+</span><span class='line'><span class="go">drwxr-xr-x 11 sgyk   374  9  6 23:16 ./</span>
+</span><span class='line'><span class="go">drwxr-xr-x  9 sgyk   306  9  4 22:40 ../</span>
+</span><span class='line'><span class="go">drwxr-xr-x 12 sgyk   408  9  6 22:55 .git/</span>
+</span><span class='line'><span class="go">-rw-r--r--  1 sgyk  3329  9  4 23:09 .gitignore</span>
+</span><span class='line'><span class="go">drwxr-xr-x 12 sgyk   408  9  6 23:01 .idea/</span>
+</span><span class='line'><span class="go">-rw-r--r--  1 sgyk 12288  9  4 22:52 db.sqlite3</span>
+</span><span class='line'><span class="go">-rwxr-xr-x  1 sgyk   823  9  4 22:40 manage.py*</span>
+</span><span class='line'><span class="go">drwxr-xr-x 11 sgyk   374  9  6 22:48 rango/</span>
+</span><span class='line'><span class="go">drwxr-xr-x  2 sgyk    68  9  6 23:16 static/    # &lt;- コレ</span>
+</span><span class='line'><span class="go">drwxr-xr-x  7 sgyk   238  9  6 22:48 tango_with_django_project/</span>
+</span><span class='line'><span class="go">drwxr-xr-x  3 sgyk   102  9  6 22:47 templates/</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>次にtemplatesディレクトリのときと同様にDjangoにstaticディレクトリの位置を教えてあげれば良い。ここでも絶対パスとして定義するようにすること。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='diff'><span class='line'>$ git diff
+</span><span class='line'><span class="gh">diff --git a/tango_with_django_project/settings.py b/tango_with_django_project/settings.py</span>
+</span><span class='line'><span class="gh">index 634f1b7..cc817d7 100644</span>
+</span><span class='line'><span class="gd">--- a/tango_with_django_project/settings.py</span>
+</span><span class='line'><span class="gi">+++ b/tango_with_django_project/settings.py</span>
+</span><span class='line'><span class="gu">@@ -121,3 +121,5 @@ USE_TZ = True</span>
+</span><span class='line'> # https://docs.djangoproject.com/en/1.11/howto/static-files/
+</span><span class='line'>
+</span><span class='line'> STATIC_URL = &#39;/static/&#39;
+</span><span class='line'><span class="gi">+</span>
+</span><span class='line'><span class="gi">+STATIC_DIR = os.path.join(BASE_DIR, &#39;static&#39;)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>次に<code>STATICFILES_DIRS</code>を定義する。以下のようにすれば良い。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='diff'><span class='line'>$ git diff
+</span><span class='line'><span class="gh">diff --git a/tango_with_django_project/settings.py b/tango_with_django_project/settings.py</span>
+</span><span class='line'><span class="gh">index 634f1b7..2cec3bc 100644</span>
+</span><span class='line'><span class="gd">--- a/tango_with_django_project/settings.py</span>
+</span><span class='line'><span class="gi">+++ b/tango_with_django_project/settings.py</span>
+</span><span class='line'><span class="gu">@@ -121,3 +121,7 @@ USE_TZ = True</span>
+</span><span class='line'> # https://docs.djangoproject.com/en/1.11/howto/static-files/
+</span><span class='line'>
+</span><span class='line'> STATIC_URL = &#39;/static/&#39;
+</span><span class='line'>
+</span><span class='line'>STATIC_DIR = os.path.join(BASE_DIR, &#39;static&#39;)
+</span><span class='line'><span class="gi">+</span>
+</span><span class='line'><span class="gi">+STATICFILES_DIRS = [STATIC_DIR, ]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>STATICFILES_DIRS</code>については「そういうもの」とおぼえておけばよい。要はお作法なのだ。詳細を知りたいなら <a href="https://docs.djangoproject.com/en/1.11/howto/static-files/">https://docs.djangoproject.com/en/1.11/howto/static-files/</a> を参照すること。また、<code>STATIC_URL = '/static/'</code>もちゃんと定義されていることを確認すること。これはDjangoプロジェクトを始める時点で生成されるファイルに予め記述されているはずだが、なければ上記のように定義しておく。<code>STATIC_URL</code>は定義されている値から想像できるように、静的ファイルを配信するときのURLだ。例えば、画像を/static/rango.jpgとして配置すると、ブラウザ上では <a href="http://127.0.0.1:8000/static/rango.jpg">http://127.0.0.1:8000/static/rango.jpg</a> としてアクセスできるようになる。また、<code>STATIC_URL</code>に定義する値はスラッシュを前後につけること。<code>STATIC_URL  = 'static/'</code>や<code>STATIC_URL  = '/static'</code>ではエラーになる。</p>
+
+<p>では静的ファイルをどのようにテンプレートに組み込むか。これは簡単だ。まずは変更後のテンプレートファイルを見て欲しい。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='diff'><span class='line'>$ git diff templates/rango/index.html
+</span><span class='line'><span class="gh">diff --git a/templates/rango/index.html b/templates/rango/index.html</span>
+</span><span class='line'><span class="gh">index 8d06f2d..6895561 100644</span>
+</span><span class='line'><span class="gd">--- a/templates/rango/index.html</span>
+</span><span class='line'><span class="gi">+++ b/templates/rango/index.html</span>
+</span><span class='line'><span class="gu">@@ -1,4 +1,7 @@</span>
+</span><span class='line'> &lt;!DOCTYPE html&gt;
+</span><span class='line'><span class="gi">+</span>
+</span><span class='line'><span class="gi">+{% load staticfiles %}</span>
+</span><span class='line'><span class="gi">+</span>
+</span><span class='line'> &lt;html lang=&quot;en&quot;&gt;
+</span><span class='line'> &lt;head&gt;
+</span><span class='line'>   &lt;meta charset=&quot;UTF-8&quot;&gt;
+</span><span class='line'><span class="gu">@@ -13,5 +16,9 @@</span>
+</span><span class='line'> &lt;div&gt;
+</span><span class='line'>   &lt;a href=&quot;/rango/about/&quot;&gt;About&lt;/a&gt;
+</span><span class='line'> &lt;/div&gt;
+</span><span class='line'><span class="gi">+&lt;div&gt;</span>
+</span><span class='line'><span class="gi">+  &lt;img src=&quot;{% static &quot;rango.jpg&quot; %}&quot; alt=&quot;Picture of Rango&quot; /&gt;</span>
+</span><span class='line'><span class="gi">+&lt;/div&gt;</span>
+</span><span class='line'><span class="gi">+</span>
+</span><span class='line'> &lt;/body&gt;
+</span><span class='line'> &lt;/html&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>テンプレートファイルの上部で<code>{% load staticfiles %}</code>と書いてDjangoに対して静的ファイルを使うことを宣言する。次に通常のHTMLタグを記述して参照したい静的ファイルを<code>{% static "rango.jpg" %}</code>と書く。これについて説明する。<code>{{ foo }}</code>をプレースホルダーと呼んでいたのに対して、<code>{% ... %}</code>は<strong>テンプレートタグ</strong>と呼ぶ。詳細な説明は一旦スキップして、ここでは<code>{% static %}</code>として先ほど設定した<code>STATIC_URL</code>と結びついて参照先URLを生成する。つまり、コードで表現すると<code>{% static "rango.jpg" %}</code>は<code>STATIC_URL + "rango.jpg"</code>となり<code>/static/smile.jpg</code>という文字列を生成する。</p>
+
+<p>先述した静的ファイルの配信はあくまでサイトないしはWebアプリケーションのアセットを前提としたものだった。しかし、例えばユーザーやサイト管理者が任意に画像をアップロードし、それをコンテンツとして配信しないといけない場合はどうだろうか。こういったファイルは更新または削除されうるため、「静的」なコンテンツとは言えない。しかし、サーバーサイドのアプリケーションが生成するとも言えない。こういった場合、やはりDjangoに「このファイルは外部ユーザーが管理しているファイルですよ」と教えてあげる設定をしてあげれば良い。</p>
+
+<p>まずは以下の様に外部からアップロードされるファイルを保存する場所を設定する。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='diff'><span class='line'>$ git diff tango_with_django_project/settings.py
+</span><span class='line'><span class="gh">diff --git a/tango_with_django_project/settings.py b/tango_with_django_project/settings.py</span>
+</span><span class='line'><span class="gh">index 2cec3bc..7e8a909 100644</span>
+</span><span class='line'><span class="gd">--- a/tango_with_django_project/settings.py</span>
+</span><span class='line'><span class="gi">+++ b/tango_with_django_project/settings.py</span>
+</span><span class='line'><span class="gu">@@ -125,3 +125,9 @@ STATIC_URL = &#39;/static/&#39;</span>
+</span><span class='line'> STATIC_DIR = os.path.join(BASE_DIR, &#39;static&#39;)
+</span><span class='line'>
+</span><span class='line'> STATICFILES_DIRS = [STATIC_DIR, ]
+</span><span class='line'><span class="gi">+</span>
+</span><span class='line'><span class="gi">+MEDIA_DIR = os.path.join(BASE_DIR, &#39;media&#39;)</span>
+</span><span class='line'><span class="gi">+</span>
+</span><span class='line'><span class="gi">+MEDIA_ROOT = MEDIA_DIR</span>
+</span><span class='line'><span class="gi">+</span>
+</span><span class='line'><span class="gi">+MEDIA_URL = &#39;/media/&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>次に、この<code>MEDIA_URL</code>をアプリケーションのURLとして登録してあげる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='diff'><span class='line'>$ git diff tango_with_django_project/urls.py
+</span><span class='line'><span class="gh">diff --git a/tango_with_django_project/urls.py b/tango_with_django_project/urls.py</span>
+</span><span class='line'><span class="gh">index 85abbc4..7050919 100644</span>
+</span><span class='line'><span class="gd">--- a/tango_with_django_project/urls.py</span>
+</span><span class='line'><span class="gi">+++ b/tango_with_django_project/urls.py</span>
+</span><span class='line'><span class="gu">@@ -13,13 +13,15 @@ Including another URLconf</span>
+</span><span class='line'>     1. Import the include() function: from django.conf.urls import url, include
+</span><span class='line'>     2. Add a URL to urlpatterns:  url(r&#39;^blog/&#39;, include(&#39;blog.urls&#39;))
+</span><span class='line'> &quot;&quot;&quot;
+</span><span class='line'><span class="gi">+from django.conf import settings</span>
+</span><span class='line'> from django.conf.urls import url
+</span><span class='line'> from django.contrib import admin
+</span><span class='line'> from django.conf.urls import include
+</span><span class='line'><span class="gi">+from django.conf.urls.static import static</span>
+</span><span class='line'> from rango import views
+</span><span class='line'>
+</span><span class='line'> urlpatterns = [
+</span><span class='line'>     url(r&#39;^$&#39;, views.index, name=&#39;index&#39;),
+</span><span class='line'>     url(r&#39;^rango/&#39;, include(&#39;rango.urls&#39;)),
+</span><span class='line'>     url(r&#39;^admin/&#39;, admin.site.urls),
+</span><span class='line'><span class="gd">-]</span>
+</span><span class='line'><span class="gi">+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>これにより、<a href="http://127.0.0.1:8000/media/user.jpg">http://127.0.0.1:8000/media/user.jpg</a> などのようにアクセスできるようになる。</p>
+
+<p>なお、<code>django.conf.urls.static.static</code>を見ればわかるが、このURLでアクセスできるのはsettings.pyの中で<code>DEBUG = True</code>となっているときだけである。詳細は <a href="https://docs.djangoproject.com/en/1.11/howto/static-files/#serving-files-uploaded-by-a-user-during-development">https://docs.djangoproject.com/en/1.11/howto/static-files/#serving-files-uploaded-by-a-user-during-development</a> を参照すること。</p>
+
+<p>次に、テンプレートで使用する場合はリクエストオブジェクトに<code>MEDIA_URL</code>の情報を与えるために<code>django.template.context_processors.media</code>を与える。このcontext_processorsについては <a href="https://docs.djangoproject.com/en/1.11/ref/templates/api/#django-template-context-processors-media">https://docs.djangoproject.com/en/1.11/ref/templates/api/#django-template-context-processors-media</a> を参照すること。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='diff'><span class='line'>$ git diff tango_with_django_project/settings.py
+</span><span class='line'><span class="gh">diff --git a/tango_with_django_project/settings.py b/tango_with_django_project/settings.py</span>
+</span><span class='line'><span class="gh">index 7e8a909..68b8335 100644</span>
+</span><span class='line'><span class="gd">--- a/tango_with_django_project/settings.py</span>
+</span><span class='line'><span class="gi">+++ b/tango_with_django_project/settings.py</span>
+</span><span class='line'><span class="gu">@@ -65,6 +65,7 @@ TEMPLATES = [</span>
+</span><span class='line'>                 &#39;django.template.context_processors.request&#39;,
+</span><span class='line'>                 &#39;django.contrib.auth.context_processors.auth&#39;,
+</span><span class='line'>                 &#39;django.contrib.messages.context_processors.messages&#39;,
+</span><span class='line'><span class="gi">+                &#39;django.template.context_processors.media&#39;,</span>
+</span><span class='line'>             ],
+</span><span class='line'>         },
+</span><span class='line'>     },
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>テンプレートへの実際の埋め込みは以下の通り。上の設定でリクエストオブジェクトは<code>MEDIA_URL</code>が使えるようになっているので、素直にそのまま設定すれば良い。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='diff'><span class='line'>/tango_with_django_project (git)-[master][!][*]
+</span><span class='line'>$ git diff templates/rango/
+</span><span class='line'><span class="gh">diff --git a/templates/rango/index.html b/templates/rango/index.html</span>
+</span><span class='line'><span class="gh">index 6895561..08398ef 100644</span>
+</span><span class='line'><span class="gd">--- a/templates/rango/index.html</span>
+</span><span class='line'><span class="gi">+++ b/templates/rango/index.html</span>
+</span><span class='line'><span class="gu">@@ -19,6 +19,8 @@</span>
+</span><span class='line'> &lt;div&gt;
+</span><span class='line'>   &lt;img src=&quot;{% static &quot;smile.jpg&quot; %}&quot; alt=&quot;Picture of Rango&quot; /&gt;
+</span><span class='line'> &lt;/div&gt;
+</span><span class='line'><span class="gd">-</span>
+</span><span class='line'><span class="gi">+&lt;div&gt;</span>
+</span><span class='line'><span class="gi">+  &lt;img src=&quot;{{ MEDIA_URL }}user.jpg&quot; %}&quot; alt=&quot;Picture of User&quot; /&gt;</span>
+</span><span class='line'><span class="gi">+&lt;/div&gt;</span>
+</span><span class='line'> &lt;/body&gt;
+</span><span class='line'> &lt;/html&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>テンプレートの話はとりあえずここまで。</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2017-09-21T00:19:39+09:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>21</span><span class='date-suffix'>st</span>, <span class='date-year'>2017</span></span> <span class='time'>12:19 am</span></time>
+      
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/djago/'>djago,</a>, <a class='category' href='/blog/categories/python/'>python</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2017/09/13/godesslzheng-ming-shu-falseqing-bao-woqu-de-sitai/" title="Previous Post: GoでSSL証明書の情報を取得したい">&laquo; GoでSSL証明書の情報を取得したい</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2017 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -9,8 +9,7 @@
   <meta name="author" content="sgykfjsm">
 
   
-  <meta name="description" content="Dockerコンテナを使ってAnsibleのPlaybookをテストする際に、Playbookでsystemctlを実行しようとして以下のようなエラーが発生した。 1
-Failed to get D-Bus connection: Operation not permitted TR;DL &hellip;">
+  <meta name="description" content="DjangoをTango with Djangoで学ぶ - 1 -の続き これまでは表示するHTML（ただのテキストだけど）をviews.pyに直接記載していたが、Djangoでも他のWebフレームワークと同様にテンプレートシステムを備えている。 テンプレートシステムとは簡単に言うと、 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -89,6 +88,82 @@ Failed to get D-Bus connection: Operation not permitted TR;DL &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2017/09/21/djangowotango-with-djangodexue-bu-2/">DjangoをTango with Djangoで学ぶ - 2 -</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2017-09-21T00:19:39+09:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>21</span><span class='date-suffix'>st</span>, <span class='date-year'>2017</span></span> <span class='time'>12:19 am</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><a href="http://sgykfjsm.github.io/blog/2017/09/07/djangowotango-with-djangodexue-bu-1/">DjangoをTango with Djangoで学ぶ - 1 -</a>の続き</p>
+
+<p>これまでは表示するHTML（ただのテキストだけど）をviews.pyに直接記載していたが、Djangoでも他のWebフレームワークと同様にテンプレートシステムを備えている。</p>
+
+<p>テンプレートシステムとは簡単に言うと、独自のシンタックスとHTMLを混ぜておきて、独自シンタックスの部分をサーバーサイドで指定された文字列などに置き換えたりすることだ。場合によっては多少の制御構文を備えており、ループ文やIF文を提供するテンプレートシステムも多い。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2017/09/21/djangowotango-with-djangodexue-bu-2/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2017/09/13/godesslzheng-ming-shu-falseqing-bao-woqu-de-sitai/">GoでSSL証明書の情報を取得したい</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2017-09-13T23:49:31+09:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2017</span></span> <span class='time'>11:49 pm</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>タイトルの通り。GoでSSL証明書の検証を行う簡単なコードを書く必要が出てきたので、それを実現するための検証の記録を残す。</p>
+
+<p>ここでいう「検証」というのは、有効期限が現在より未来かどうかを調べるやり方を意味する。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2017/09/13/godesslzheng-ming-shu-falseqing-bao-woqu-de-sitai/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -395,78 +470,6 @@ Failed to get D-Bus connection: Operation not permitted TR;DL &hellip;">
   
     <footer>
       <a rel="full-article" href="/blog/2015/11/03/compare-gomvpkg-with-gb/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/09/24/ginkgo-getting-start/">Ginkgo 基本的な使い方編</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-09-24T22:51:20+09:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>24</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>10:51 pm</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>最近、golangでプログラムを書く機会が増えてきた。golangでTDDをする場合、標準の<a href="https://golang.org/pkg/testing/">testingパッケージ</a>を使うのが一般的なようだ。ただし、標準パッケージだけだとちょっとテストが書きづらいので、<a href="https://github.com/stretchr/testify">stretchr/testify</a>を使っている人も多いと思う。</p>
-
-<p>関数のテストをしたいときは標準パッケージなりtestifyを使うなりで良いのだけど、振る舞いをテストしたい、つまりBDDをしたいなーと思った時にちょっと調べらたら<a href="http://onsi.github.io/ginkgo/">Ginkgo</a>というのが良さ気だったので、ちょっと試してみる。</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2015/09/24/ginkgo-getting-start/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/09/13/svn-tutorial-for-me/">svnのデータ移行手順を確認する</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-09-13T03:47:12+09:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>3:47 am</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>色々あってsvnを触ることになった。今回はその過程で知ったことをメモする。</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2015/09/13/svn-tutorial-for-me/">Read on &rarr;</a>
     </footer>
   
 

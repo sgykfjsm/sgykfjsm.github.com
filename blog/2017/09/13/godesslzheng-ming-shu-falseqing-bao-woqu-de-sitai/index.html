@@ -1,0 +1,382 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>GoでSSL証明書の情報を取得したい - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="タイトルの通り。GoでSSL証明書の検証を行う簡単なコードを書く必要が出てきたので、それを実現するための検証の記録を残す。 ここでいう「検証」というのは、有効期限が現在より未来かどうかを調べるやり方を意味する。 検証材料のため、自己発行証明書を作る 自己発行証明書は以下のコマンドで簡単に発行できる &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.io/blog/2017/09/13/godesslzheng-ming-shu-falseqing-bao-woqu-de-sitai">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.io" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">GoでSSL証明書の情報を取得したい</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2017-09-13T23:49:31+09:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2017</span></span> <span class='time'>11:49 pm</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>タイトルの通り。GoでSSL証明書の検証を行う簡単なコードを書く必要が出てきたので、それを実現するための検証の記録を残す。</p>
+
+<p>ここでいう「検証」というのは、有効期限が現在より未来かどうかを調べるやり方を意味する。</p>
+
+<!-- more -->
+
+
+<a name="L......................................................"></a>
+<h2>検証材料のため、自己発行証明書を作る</h2>
+
+<p>自己発行証明書は以下のコマンドで簡単に発行できる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>openssl req -x509 -nodes -newkey rsa:2048 -keyout server.rsa.key -out server.rsa.crt -days <span class="m">3650</span> -batch
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>コマンドの詳細は割愛するけど、とりあえずコレで10年間利用できる（もちろん正当な証明書としては利用できない）証明書を発行することができる。</p>
+
+<p>これを実行しても良いけど、せっかくなのでgopherっぽくやるなら、以下のような感じになる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>go run <span class="nv">$GOROOT</span>/src/crypto/tls/generate_cert.go -host <span class="k">$(</span>hostname<span class="k">)</span>
+</span><span class='line'>2017/09/21 23:25:18 written cert.pem
+</span><span class='line'>2017/09/21 23:25:18 written key.pem
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ログの通りにファイルが生成されている。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> ls
+</span><span class='line'><span class="go">total 24</span>
+</span><span class='line'><span class="go">drwxr-xr-x   5 sgyk  staff   170  9 21 23:48 ./</span>
+</span><span class='line'><span class="go">drwxr-xr-x  13 sgyk  staff   442  9 21 23:05 ../</span>
+</span><span class='line'><span class="go">-rw-r--r--   1 sgyk  staff  1099  9 21 23:25 cert.pem</span>
+</span><span class='line'><span class="go">-rw-------   1 sgyk  staff  1675  9 21 23:25 key.pem</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>念のために検証しておく。まずは鍵の確認。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> openssl rsa -in key.pem -check -noout
+</span><span class='line'><span class="go">RSA key ok</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>証明書の確認</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> openssl x509 -in ./cert.pem -text -noout
+</span><span class='line'><span class="go">Certificate:</span>
+</span><span class='line'><span class="go">    Data:</span>
+</span><span class='line'><span class="go">        Version: 3 (0x2)</span>
+</span><span class='line'><span class="go">        Serial Number:</span>
+</span><span class='line'><span class="go">            9c:4e:90:ec:b8:f2:ac:91:91:04:19:e3:2c:d0:cf:b6</span>
+</span><span class='line'><span class="go">        Signature Algorithm: sha256WithRSAEncryption</span>
+</span><span class='line'><span class="go">        Issuer: O=Acme Co</span>
+</span><span class='line'><span class="go">        Validity</span>
+</span><span class='line'><span class="go">            Not Before: Sep 13 15:05:11 2017 GMT</span>
+</span><span class='line'><span class="go">            Not After : Sep 13 15:05:11 2018 GMT</span>
+</span><span class='line'><span class="go">(snip)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>とりあえず大丈夫そう。</p>
+
+<a name="L......"></a>
+<h2>実践</h2>
+
+<p>こんな記事を書いといてアレなんだけど、色々試行錯誤した結果、大変泥臭いやり方になった。というのも、有効期限(notAfterの日付)をスマートに取り出すことができなかった。GoのOpenSSLバインディングだと <a href="https://github.com/spacemonkeygo/openssl">https://github.com/spacemonkeygo/openssl</a> が良さそうだけど、これだと取り出される情報に日付が含まれていなかった。</p>
+
+<p>ということで、結局、以下のようにシェルコマンドで<code>notAfter</code>の日付を取り出して整形するというやり方になった。</p>
+
+<p>シェルで表現するとこうなる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="c"># $ openssl x509 -in ./cert.pem -noout -enddate</span>
+</span><span class='line'><span class="c"># notAfter=Sep 21 14:25:18 2018 GMT</span>
+</span><span class='line'><span class="nv">$ </span>openssl x509 -in ./cert.pem -noout -enddate <span class="p">|</span> cut -d<span class="s1">&#39;=&#39;</span> -f2
+</span><span class='line'>Sep <span class="m">21</span> 14:25:18 <span class="m">2018</span> GMT
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>これと同じことをGoでやると、だいたいこうなる</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;bytes&quot;</span>
+</span><span class='line'>  <span class="s">&quot;fmt&quot;</span>
+</span><span class='line'>  <span class="s">&quot;log&quot;</span>
+</span><span class='line'>  <span class="s">&quot;os/exec&quot;</span>
+</span><span class='line'>  <span class="s">&quot;strings&quot;</span>
+</span><span class='line'>  <span class="s">&quot;time&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">line</span> <span class="o">:=</span> <span class="nx">strings</span><span class="p">.</span><span class="nx">Split</span><span class="p">(</span><span class="s">&quot;openssl x509 -in ./cert.pem -noout -enddate&quot;</span><span class="p">,</span> <span class="s">&quot; &quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">cmd</span> <span class="o">:=</span> <span class="nx">exec</span><span class="p">.</span><span class="nx">Command</span><span class="p">(</span><span class="nx">line</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">line</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">...</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">out</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">cmd</span><span class="p">.</span><span class="nx">CombinedOutput</span><span class="p">()</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="nx">out</span> <span class="p">=</span> <span class="nx">bytes</span><span class="p">.</span><span class="nx">Trim</span><span class="p">(</span><span class="nx">out</span><span class="p">,</span> <span class="s">&quot;notAfter=&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="nx">out</span> <span class="p">=</span> <span class="nx">bytes</span><span class="p">.</span><span class="nx">TrimSpace</span><span class="p">(</span><span class="nx">out</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">const</span> <span class="nx">layout</span> <span class="p">=</span> <span class="s">&quot;Jan 2 15:04:05 2006 MST&quot;</span>
+</span><span class='line'>  <span class="nx">notAfter</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Parse</span><span class="p">(</span><span class="nx">layout</span><span class="p">,</span> <span class="nb">string</span><span class="p">(</span><span class="nx">out</span><span class="p">))</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;notAfter is&quot;</span><span class="p">,</span> <span class="nx">notAfter</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">notAfter</span><span class="p">.</span><span class="nx">After</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">())</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Certification is valid&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Certification is invalid&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>うーん長い。果たしてコレはどうなのか…でもまぁとりあえずはコレで目的は達成できるので、まぁ良しとしよう。</p>
+
+<a name="L......"></a>
+<h1>参考</h1>
+
+<ul>
+<li><a href="https://www.sslshopper.com/article-most-common-openssl-commands.html">https://www.sslshopper.com/article-most-common-openssl-commands.html</a></li>
+</ul>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2017-09-13T23:49:31+09:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2017</span></span> <span class='time'>11:49 pm</span></time>
+      
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/go/'>go,</a>, <a class='category' href='/blog/categories/openssl/'>openssl</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2017/09/10/dockerkontenafalsezhong-desystemdwocao-zuo-sitaifalsezhu-yi-dian/" title="Previous Post: Dockerコンテナの中でsystemdを操作したいの注意点">&laquo; Dockerコンテナの中でsystemdを操作したいの注意点</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2017/09/21/djangowotango-with-djangodexue-bu-2/" title="Next Post: DjangoをTango with Djangoで学ぶ - 2 -">DjangoをTango with Djangoで学ぶ - 2 - &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2017 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
