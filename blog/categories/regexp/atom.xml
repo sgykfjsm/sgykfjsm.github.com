@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: regexp | sgykfjsm.github.com]]></title>
+  <link href="http://sgykfjsm.github.io/blog/categories/regexp/atom.xml" rel="self"/>
+  <link href="http://sgykfjsm.github.io/"/>
+  <updated>2017-09-26T01:32:46+09:00</updated>
+  <id>http://sgykfjsm.github.io/</id>
+  <author>
+    <name><![CDATA[sgykfjsm]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Goの正規表現とReplacerを比較した]]></title>
+    <link href="http://sgykfjsm.github.io/blog/2017/09/26/gofalsezheng-gui-biao-xian-toreplacerwobi-jiao-sita/"/>
+    <updated>2017-09-26T00:42:43+09:00</updated>
+    <id>http://sgykfjsm.github.io/blog/2017/09/26/gofalsezheng-gui-biao-xian-toreplacerwobi-jiao-sita</id>
+    <content type="html"><![CDATA[<p>なんとなく色んな人のISUCON6の記事を読んでたら、Goの正規表現が遅くて苦労した、という話を多く見受けられた。そもそも一般的に正規表現自体が遅いとされており、だからこそ各言語では正規表現エンジンが色々実装されてたりするんだけど、Goではあまりそういう話を聞かない。自分が知らないだけでどこかで話題になっているかもしれないけど。</p>
+
+<p>で、<a href="http://dsas.blog.klab.org/archives/2016-09-20/isucon5q.html">KLabの人の記事</a>では、</p>
+
+<blockquote><p>まずGoの正規表現は遅いので strings.Replacer を使ってキーワードからリンクへの変換をします。</p></blockquote>
+
+<p>とあり、なるほどGoで単語の置き換えをするなら<code>strings.Replacer</code>が早いのか、ということを知った。じゃあ、どのくらい早いんですかっていうのを確認してみた。</p>
+
+<p>結論から言うと、<code>strings.Replacer</code>のほうが圧倒的に早い。</p>
+
+<!-- more -->
+
+
+<p>比較対象に用いた関数は以下のような感じ。ほぼ等価だとは思うけど、もしかしたら不公平な部分があるかもしれない。</p>
+
+<p>regexp_vs_replacer.go</p>
+
+<pre><code class="go">package regexp_vs_replacer
+
+import (
+    "regexp"
+    "strings"
+)
+
+func DoRegexp(re *regexp.Regexp, contents string) string {
+    return re.ReplaceAllStringFunc(contents, func(s string) string {
+        return strings.ToUpper(s)
+    })
+}
+
+func DoReplacer(r *strings.Replacer, contents string) string {
+    return r.Replace(contents)
+}
+</code></pre>
+
+<p>ベンチマークに使ったテストコードは以下。なお、読み込んだテキストファイルは <a href="http://www.blindtextgenerator.com/lorem-ipsum">http://www.blindtextgenerator.com/lorem-ipsum</a> で作成したダミーテキスト。ちなみに中身には<a href="http://www.aozora.gr.jp/cards/001235/card49866.html">カフカの「変身」</a>の原文だ。4000語でファイルサイズはおよそ21KB。</p>
+
+<p>regexp_vs_replacer_test.go</p>
+
+<pre><code>package regexp_vs_replacer
+
+import (
+    "io/ioutil"
+    "regexp"
+    "strings"
+    "testing"
+)
+
+var (
+    r        *strings.Replacer
+    re       *regexp.Regexp
+    contents string
+    keywords = []string{"One", "morning", "when", "Gregor", "Samsa", "woke", "from", "troubled", "dreams"}
+    pairList = make([]string, len(keywords)*2)
+)
+
+func init() {
+    _contents, err := ioutil.ReadFile("kafka.txt")
+    if err != nil {
+        panic(err)
+    }
+    contents = string(_contents)
+
+    re = regexp.MustCompile(`(` + strings.Join(keywords, "|") + `)`)
+
+    for i, keyword := range keywords {
+        pairList[i*2], pairList[i*2+1] = keyword, strings.ToUpper(keyword)
+    }
+    r = strings.NewReplacer(pairList...)
+}
+
+func BenchmarkDoRegexp(b *testing.B) {
+    b.ResetTimer()
+
+    for i := 0; i &lt; b.N; i++ {
+        DoRegexp(re, contents)
+    }
+}
+
+func BenchmarkDoReplacer(b *testing.B) {
+    b.ResetTimer()
+
+    for i := 0; i &lt; b.N; i++ {
+        DoReplacer(r, contents)
+    }
+}
+
+func TestDoRegexp_Equal_To_DoReplacer(t *testing.T) {
+    if DoRegexp(re, contents) != DoReplacer(r, contents) {
+        t.Fatal("DoRegexp is not equal to DoReplacer")
+    }
+}
+</code></pre>
+
+<p>で、ベンチマークの結果は以下の通り。</p>
+
+<pre><code class="console">$ for i in $(seq 1 3); do go test -benchtime=10s -bench=. -benchmem; echo ; done
+goos: darwin
+goarch: amd64
+pkg: github.com/sgykfjsm/sample-program-by-go/regexp_vs_replacer
+BenchmarkDoRegexp-4                 2000           7200480 ns/op          130768 B/op        201 allocs/op
+BenchmarkDoReplacer-4             100000            230524 ns/op           43552 B/op          3 allocs/op
+PASS
+ok      github.com/sgykfjsm/sample-program-by-go/regexp_vs_replacer     40.552s
+
+goos: darwin
+goarch: amd64
+pkg: github.com/sgykfjsm/sample-program-by-go/regexp_vs_replacer
+BenchmarkDoRegexp-4                 2000           6803820 ns/op          130768 B/op        201 allocs/op
+BenchmarkDoReplacer-4             100000            240129 ns/op           43552 B/op          3 allocs/op
+PASS
+ok      github.com/sgykfjsm/sample-program-by-go/regexp_vs_replacer     40.670s
+
+goos: darwin
+goarch: amd64
+pkg: github.com/sgykfjsm/sample-program-by-go/regexp_vs_replacer
+BenchmarkDoRegexp-4                 2000           7402882 ns/op          130769 B/op        201 allocs/op
+BenchmarkDoReplacer-4             100000            238944 ns/op           43552 B/op          3 allocs/op
+PASS
+ok      github.com/sgykfjsm/sample-program-by-go/regexp_vs_replacer     41.822s
+</code></pre>
+
+<p>10秒程度の実行でかなり差がついた。ざっくりと以下の様に言うことができると思う。</p>
+
+<ul>
+<li>実行回数だと<code>strings.Replacer</code>は50倍程度多く実行することが出来る</li>
+<li>1回あたりの所要時間だと、<code>strings.Replacer</code>は1/35程度短い</li>
+<li>1回あたりのメモリ使用量だと、<code>strings.Replacer</code>は1/3程度に抑えることができる</li>
+<li>メモリアロケーションの回数だと、<code>strings.Replacer</code>は1/70程度に抑えることができる</li>
+</ul>
+
+
+<p>この結果から明らかなように、置換前後のリストを予め作成することができるのであれば、<code>strings.Replacer</code>を使うようにするべきだろう。また、なるべくなら正規表現は避けるようにしたほうが良さそうだ。</p>
+]]></content>
+  </entry>
+  
+</feed>

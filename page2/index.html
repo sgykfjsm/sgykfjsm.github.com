@@ -9,7 +9,7 @@
   <meta name="author" content="sgykfjsm">
 
   
-  <meta name="description" content="最近、golangでプログラムを書く機会が増えてきた。golangでTDDをする場合、標準のtestingパッケージを使うのが一般的なようだ。ただし、標準パッケージだけだとちょっとテストが書きづらいので、stretchr/testifyを使っている人も多いと思う。 &hellip;">
+  <meta name="description" content="GO言語には多言語にあるようなパッケージマネジメントの仕組みが(公式には)サポートされていない。GOv1.5では実験的に導入されているが、例えばJavaで言うmaven、Pythonで言うpipなどのような共通として用いられているツールなどは無く、基本的には以下の3つのやり方が主流だと思われる。 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,50 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/11/03/compare-gomvpkg-with-gb/">ベンダリングのためのgomvpkgとgbについて考えてみる</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-11-03T20:02:45+09:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>3</span><span class='date-suffix'>rd</span>, <span class='date-year'>2015</span></span> <span class='time'>8:02 pm</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>GO言語には多言語にあるようなパッケージマネジメントの仕組みが(公式には)サポートされていない。<a href="https://docs.google.com/document/d/1Bz5-UB7g2uPBdOx-rw5t9MxJwkfpx90cqG9AFL0JAYo/edit">GOv1.5では実験的に導入されている</a>が、例えばJavaで言うmaven、Pythonで言うpipなどのような共通として用いられているツールなどは無く、基本的には以下の3つのやり方が主流だと思われる。</p>
+
+<ul>
+<li>依存するパッケージを自分のリポジトリに取り込むVendoring</li>
+<li>3rd partyツールによるRevison指定などといった擬似的なパッケージマネジメント</li>
+<li>そもそもパッケージマネジメントをしない</li>
+</ul>
+
+
+<p>自分の開発では、業務も含めて、あまり外部パッケージに依存するようなことはあまり無いが、もしやるなら1つ目のVendoringになると思う。で、今回はVendoringを行なう際に便利だと思われる2つのツール、<code>gomvpkg</code>と<code>gb</code>を試してみる。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2015/11/03/compare-gomvpkg-with-gb/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -405,50 +449,6 @@
   
     <footer>
       <a rel="full-article" href="/blog/2015/02/15/pass-params-to-sbt-on-cli/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/02/13/dereg-instance-under-beanstalk/">Beanstalk管理下のインスタンスを安全に再起動する</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-02-13T18:40:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>6:40 pm</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>現在のBeanstalkでインスタンスが再起動する場合は主に以下の３つがある。</p>
-
-<ul>
-<li>アプリケーションをデプロイするとき</li>
-<li>Configuration(JVMのパラメータとか)をデプロイするとき</li>
-<li>Management ConsoleなどでRestart Appsを実行した時</li>
-</ul>
-
-
-<p>しかし、運用の中では特定のインスタンスのみを再起動したい場合がある。また、再起動を行う場合、インスタンスを再起動すると自動的にTerminateしてしまうし、インスタンス内部のアプリケーションサーバを再起動すると、ELBからリクエストが来てしまう。ここではこういった点を考慮した安全な再起動の手順を確認する。</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2015/02/13/dereg-instance-under-beanstalk/">Read on &rarr;</a>
     </footer>
   
 

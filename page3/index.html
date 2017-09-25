@@ -9,7 +9,9 @@
   <meta name="author" content="sgykfjsm">
 
   
-  <meta name="description" content="先日、とあるサービスで利用しているBeanstalk環境でインスタンスが起動に失敗した。ログを見ると、S3からリソースの取得に失敗していたようだ。ネットワーク接続の状態としては、AWS内のネットワークでは疎通可能だが、インターネットを経由した通信は不可、という状況。具体的には、 &hellip;">
+  <meta name="description" content="現在のBeanstalkでインスタンスが再起動する場合は主に以下の３つがある。 アプリケーションをデプロイするとき
+Configuration(JVMのパラメータとか)をデプロイするとき
+Management ConsoleなどでRestart Appsを実行した時 しかし、 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +90,50 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/02/13/dereg-instance-under-beanstalk/">Beanstalk管理下のインスタンスを安全に再起動する</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-02-13T18:40:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>6:40 pm</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>現在のBeanstalkでインスタンスが再起動する場合は主に以下の３つがある。</p>
+
+<ul>
+<li>アプリケーションをデプロイするとき</li>
+<li>Configuration(JVMのパラメータとか)をデプロイするとき</li>
+<li>Management ConsoleなどでRestart Appsを実行した時</li>
+</ul>
+
+
+<p>しかし、運用の中では特定のインスタンスのみを再起動したい場合がある。また、再起動を行う場合、インスタンスを再起動すると自動的にTerminateしてしまうし、インスタンス内部のアプリケーションサーバを再起動すると、ELBからリクエストが来てしまう。ここではこういった点を考慮した安全な再起動の手順を確認する。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2015/02/13/dereg-instance-under-beanstalk/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -415,43 +461,6 @@
   
     <footer>
       <a rel="full-article" href="/blog/2014/01/26/online-maintenance-on-rds-mysql/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/01/13/auto-test-on-jenkins/">jenkinsでのテスト自動化いろいろ</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-01-13T12:28:00+09:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>12:28 pm</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>jenkins上でテストを実行したい、自動化したいというリクエストが来たので、その設定方法をまとめた。</p>
-
-<p>今回はplay2.2.1のscalaをサンプルプロジェクトととした。</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2014/01/13/auto-test-on-jenkins/">Read on &rarr;</a>
     </footer>
   
 

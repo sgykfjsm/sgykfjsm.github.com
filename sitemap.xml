@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://sgykfjsm.github.io/blog/2017/09/26/gofalsezheng-gui-biao-xian-toreplacerwobi-jiao-sita/</loc>
+    <lastmod>2017-09-26T00:42:43+09:00</lastmod>
+  </url>
+  <url>
     <loc>http://sgykfjsm.github.io/blog/2017/09/21/djangowotango-with-djangodexue-bu-2/</loc>
     <lastmod>2017-09-21T00:19:39+09:00</lastmod>
   </url>
@@ -395,5 +399,23 @@
   </url>
   <url>
     <loc>http://sgykfjsm.github.io/blog/categories/djago/</loc>
+  </url>
+  <url>
+    <loc>http://sgykfjsm.github.io/blog/categories/regexp/</loc>
+  </url>
+  <url>
+    <loc>http://sgykfjsm.github.io/page2/</loc>
+  </url>
+  <url>
+    <loc>http://sgykfjsm.github.io/page3/</loc>
+  </url>
+  <url>
+    <loc>http://sgykfjsm.github.io/page4/</loc>
+  </url>
+  <url>
+    <loc>http://sgykfjsm.github.io/page5/</loc>
+  </url>
+  <url>
+    <loc>http://sgykfjsm.github.io/page6/</loc>
   </url>
 </urlset>

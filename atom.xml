@@ -4,7 +4,7 @@
   <title><![CDATA[sgykfjsm.github.com]]></title>
   <link href="http://sgykfjsm.github.io/atom.xml" rel="self"/>
   <link href="http://sgykfjsm.github.io/"/>
-  <updated>2017-09-21T23:53:42+09:00</updated>
+  <updated>2017-09-26T01:32:46+09:00</updated>
   <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
@@ -12,6 +12,243 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Goの正規表現とReplacerを比較した]]></title>
+    <link href="http://sgykfjsm.github.io/blog/2017/09/26/gofalsezheng-gui-biao-xian-toreplacerwobi-jiao-sita/"/>
+    <updated>2017-09-26T00:42:43+09:00</updated>
+    <id>http://sgykfjsm.github.io/blog/2017/09/26/gofalsezheng-gui-biao-xian-toreplacerwobi-jiao-sita</id>
+    <content type="html"><![CDATA[<p>なんとなく色んな人のISUCON6の記事を読んでたら、Goの正規表現が遅くて苦労した、という話を多く見受けられた。そもそも一般的に正規表現自体が遅いとされており、だからこそ各言語では正規表現エンジンが色々実装されてたりするんだけど、Goではあまりそういう話を聞かない。自分が知らないだけでどこかで話題になっているかもしれないけど。</p>
+
+<p>で、<a href="http://dsas.blog.klab.org/archives/2016-09-20/isucon5q.html">KLabの人の記事</a>では、</p>
+
+<blockquote><p>まずGoの正規表現は遅いので strings.Replacer を使ってキーワードからリンクへの変換をします。</p></blockquote>
+
+<p>とあり、なるほどGoで単語の置き換えをするなら<code>strings.Replacer</code>が早いのか、ということを知った。じゃあ、どのくらい早いんですかっていうのを確認してみた。</p>
+
+<p>結論から言うと、<code>strings.Replacer</code>のほうが圧倒的に早い。</p>
+
+<!-- more -->
+
+
+<p>比較対象に用いた関数は以下のような感じ。ほぼ等価だとは思うけど、もしかしたら不公平な部分があるかもしれない。</p>
+
+<p>regexp_vs_replacer.go</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">regexp_vs_replacer</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;regexp&quot;</span>
+</span><span class='line'>  <span class="s">&quot;strings&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">DoRegexp</span><span class="p">(</span><span class="nx">re</span> <span class="o">*</span><span class="nx">regexp</span><span class="p">.</span><span class="nx">Regexp</span><span class="p">,</span> <span class="nx">contents</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">re</span><span class="p">.</span><span class="nx">ReplaceAllStringFunc</span><span class="p">(</span><span class="nx">contents</span><span class="p">,</span> <span class="kd">func</span><span class="p">(</span><span class="nx">s</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">strings</span><span class="p">.</span><span class="nx">ToUpper</span><span class="p">(</span><span class="nx">s</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">})</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">DoReplacer</span><span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">strings</span><span class="p">.</span><span class="nx">Replacer</span><span class="p">,</span> <span class="nx">contents</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">r</span><span class="p">.</span><span class="nx">Replace</span><span class="p">(</span><span class="nx">contents</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ベンチマークに使ったテストコードは以下。なお、読み込んだテキストファイルは <a href="http://www.blindtextgenerator.com/lorem-ipsum">http://www.blindtextgenerator.com/lorem-ipsum</a> で作成したダミーテキスト。ちなみに中身には<a href="http://www.aozora.gr.jp/cards/001235/card49866.html">カフカの「変身」</a>の原文だ。4000語でファイルサイズはおよそ21KB。</p>
+
+<p>regexp_vs_replacer_test.go</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">regexp_vs_replacer</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;io/ioutil&quot;</span>
+</span><span class='line'>  <span class="s">&quot;regexp&quot;</span>
+</span><span class='line'>  <span class="s">&quot;strings&quot;</span>
+</span><span class='line'>  <span class="s">&quot;testing&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="p">(</span>
+</span><span class='line'>  <span class="nx">r</span>        <span class="o">*</span><span class="nx">strings</span><span class="p">.</span><span class="nx">Replacer</span>
+</span><span class='line'>  <span class="nx">re</span>       <span class="o">*</span><span class="nx">regexp</span><span class="p">.</span><span class="nx">Regexp</span>
+</span><span class='line'>  <span class="nx">contents</span> <span class="kt">string</span>
+</span><span class='line'>  <span class="nx">keywords</span> <span class="p">=</span> <span class="p">[]</span><span class="kt">string</span><span class="p">{</span><span class="s">&quot;One&quot;</span><span class="p">,</span> <span class="s">&quot;morning&quot;</span><span class="p">,</span> <span class="s">&quot;when&quot;</span><span class="p">,</span> <span class="s">&quot;Gregor&quot;</span><span class="p">,</span> <span class="s">&quot;Samsa&quot;</span><span class="p">,</span> <span class="s">&quot;woke&quot;</span><span class="p">,</span> <span class="s">&quot;from&quot;</span><span class="p">,</span> <span class="s">&quot;troubled&quot;</span><span class="p">,</span> <span class="s">&quot;dreams&quot;</span><span class="p">}</span>
+</span><span class='line'>  <span class="nx">pairList</span> <span class="p">=</span> <span class="nb">make</span><span class="p">([]</span><span class="kt">string</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">keywords</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">init</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">_contents</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">ioutil</span><span class="p">.</span><span class="nx">ReadFile</span><span class="p">(</span><span class="s">&quot;kafka.txt&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="nx">contents</span> <span class="p">=</span> <span class="nb">string</span><span class="p">(</span><span class="nx">_contents</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">re</span> <span class="p">=</span> <span class="nx">regexp</span><span class="p">.</span><span class="nx">MustCompile</span><span class="p">(</span><span class="s">`(`</span> <span class="o">+</span> <span class="nx">strings</span><span class="p">.</span><span class="nx">Join</span><span class="p">(</span><span class="nx">keywords</span><span class="p">,</span> <span class="s">&quot;|&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s">`)`</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">for</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">keyword</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">keywords</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">pairList</span><span class="p">[</span><span class="nx">i</span><span class="o">*</span><span class="mi">2</span><span class="p">],</span> <span class="nx">pairList</span><span class="p">[</span><span class="nx">i</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="p">=</span> <span class="nx">keyword</span><span class="p">,</span> <span class="nx">strings</span><span class="p">.</span><span class="nx">ToUpper</span><span class="p">(</span><span class="nx">keyword</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="nx">r</span> <span class="p">=</span> <span class="nx">strings</span><span class="p">.</span><span class="nx">NewReplacer</span><span class="p">(</span><span class="nx">pairList</span><span class="o">...</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">BenchmarkDoRegexp</span><span class="p">(</span><span class="nx">b</span> <span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">B</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">b</span><span class="p">.</span><span class="nx">ResetTimer</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nx">b</span><span class="p">.</span><span class="nx">N</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">DoRegexp</span><span class="p">(</span><span class="nx">re</span><span class="p">,</span> <span class="nx">contents</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">BenchmarkDoReplacer</span><span class="p">(</span><span class="nx">b</span> <span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">B</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">b</span><span class="p">.</span><span class="nx">ResetTimer</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nx">b</span><span class="p">.</span><span class="nx">N</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">DoReplacer</span><span class="p">(</span><span class="nx">r</span><span class="p">,</span> <span class="nx">contents</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">TestDoRegexp_Equal_To_DoReplacer</span><span class="p">(</span><span class="nx">t</span> <span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">T</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nx">DoRegexp</span><span class="p">(</span><span class="nx">re</span><span class="p">,</span> <span class="nx">contents</span><span class="p">)</span> <span class="o">!=</span> <span class="nx">DoReplacer</span><span class="p">(</span><span class="nx">r</span><span class="p">,</span> <span class="nx">contents</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">t</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="s">&quot;DoRegexp is not equal to DoReplacer&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>で、ベンチマークの結果は以下の通り。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> <span class="k">for</span> i in <span class="k">$(</span>seq <span class="m">1</span> 3<span class="k">)</span><span class="p">;</span> <span class="k">do</span> go <span class="nb">test</span> -benchtime<span class="o">=</span>10s -bench<span class="o">=</span>. -benchmem<span class="p">;</span> <span class="nb">echo</span> <span class="p">;</span> <span class="k">done</span>
+</span><span class='line'><span class="go">goos: darwin</span>
+</span><span class='line'><span class="go">goarch: amd64</span>
+</span><span class='line'><span class="go">pkg: github.com/sgykfjsm/sample-program-by-go/regexp_vs_replacer</span>
+</span><span class='line'><span class="go">BenchmarkDoRegexp-4                 2000           7200480 ns/op          130768 B/op        201 allocs/op</span>
+</span><span class='line'><span class="go">BenchmarkDoReplacer-4             100000            230524 ns/op           43552 B/op          3 allocs/op</span>
+</span><span class='line'><span class="go">PASS</span>
+</span><span class='line'><span class="go">ok      github.com/sgykfjsm/sample-program-by-go/regexp_vs_replacer     40.552s</span>
+</span><span class='line'>
+</span><span class='line'><span class="go">goos: darwin</span>
+</span><span class='line'><span class="go">goarch: amd64</span>
+</span><span class='line'><span class="go">pkg: github.com/sgykfjsm/sample-program-by-go/regexp_vs_replacer</span>
+</span><span class='line'><span class="go">BenchmarkDoRegexp-4                 2000           6803820 ns/op          130768 B/op        201 allocs/op</span>
+</span><span class='line'><span class="go">BenchmarkDoReplacer-4             100000            240129 ns/op           43552 B/op          3 allocs/op</span>
+</span><span class='line'><span class="go">PASS</span>
+</span><span class='line'><span class="go">ok      github.com/sgykfjsm/sample-program-by-go/regexp_vs_replacer     40.670s</span>
+</span><span class='line'>
+</span><span class='line'><span class="go">goos: darwin</span>
+</span><span class='line'><span class="go">goarch: amd64</span>
+</span><span class='line'><span class="go">pkg: github.com/sgykfjsm/sample-program-by-go/regexp_vs_replacer</span>
+</span><span class='line'><span class="go">BenchmarkDoRegexp-4                 2000           7402882 ns/op          130769 B/op        201 allocs/op</span>
+</span><span class='line'><span class="go">BenchmarkDoReplacer-4             100000            238944 ns/op           43552 B/op          3 allocs/op</span>
+</span><span class='line'><span class="go">PASS</span>
+</span><span class='line'><span class="go">ok      github.com/sgykfjsm/sample-program-by-go/regexp_vs_replacer     41.822s</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>10秒程度の実行でかなり差がついた。ざっくりと以下の様に言うことができると思う。</p>
+
+<ul>
+<li>実行回数だと<code>strings.Replacer</code>は50倍程度多く実行することが出来る</li>
+<li>1回あたりの所要時間だと、<code>strings.Replacer</code>は1/35程度短い</li>
+<li>1回あたりのメモリ使用量だと、<code>strings.Replacer</code>は1/3程度に抑えることができる</li>
+<li>メモリアロケーションの回数だと、<code>strings.Replacer</code>は1/70程度に抑えることができる</li>
+</ul>
+
+
+<p>この結果から明らかなように、置換前後のリストを予め作成することができるのであれば、<code>strings.Replacer</code>を使うようにするべきだろう。また、なるべくなら正規表現は避けるようにしたほうが良さそうだ。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[DjangoをTango with Djangoで学ぶ - 2 -]]></title>
@@ -6983,129 +7220,6 @@ signals independently.</p></blockquote>
 
 
 <p><code>run-main ${package-name}.${class-name} arg1 arg2 &hellip;</code>といった感じ。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Beanstalk管理下のインスタンスを安全に再起動する]]></title>
-    <link href="http://sgykfjsm.github.io/blog/2015/02/13/dereg-instance-under-beanstalk/"/>
-    <updated>2015-02-13T18:40:00+09:00</updated>
-    <id>http://sgykfjsm.github.io/blog/2015/02/13/dereg-instance-under-beanstalk</id>
-    <content type="html"><![CDATA[<p>現在のBeanstalkでインスタンスが再起動する場合は主に以下の３つがある。</p>
-
-<ul>
-<li>アプリケーションをデプロイするとき</li>
-<li>Configuration(JVMのパラメータとか)をデプロイするとき</li>
-<li>Management ConsoleなどでRestart Appsを実行した時</li>
-</ul>
-
-
-<p>しかし、運用の中では特定のインスタンスのみを再起動したい場合がある。また、再起動を行う場合、インスタンスを再起動すると自動的にTerminateしてしまうし、インスタンス内部のアプリケーションサーバを再起動すると、ELBからリクエストが来てしまう。ここではこういった点を考慮した安全な再起動の手順を確認する。</p>
-
-<!-- more -->
-
-
-<a name="L.................."></a>
-<h2>大まかな流れ</h2>
-
-<ol>
-<li>Auto ScalingのTerminate処理をSuspendにする。</li>
-<li>ELBから対象のインスタンスを切り離す。</li>
-<li>対象のインスタンス、またはインスタンス内部のアプリケーションサーバを再起動する。</li>
-<li>ELBへ対象のインスタンスを再登録する。
-
-<ul>
-<li>インスタンスの再起動を行った場合、インスタンスの状態（Auto ScalingでのHealth State)はUnhealthyとなってしまうので、事前にAuto ScalingのSetInstanceHealthで対象のインスタンスをHealthyにしておくこと。</li>
-</ul>
-</li>
-<li>Auto ScalingのTerminate処理をResumeにする。</li>
-</ol>
-
-
-<a name="L..............."></a>
-<h3>自動化する</h3>
-
-<p>上述した大まかな流れを自動化する。</p>
-
-<ol>
-<li>対象のインスタンスのinstance-idを取得する
-
-<ul>
-<li>例えば対象のインスタンスにsshログインして<code>curl <a href="http://169.254.169.254/latest/meta-data/instance-id/">http://169.254.169.254/latest/meta-data/instance-id/</a></code></li>
-</ul>
-</li>
-<li>取得したinstance-idを元に、そのインスタンスが所属するAuto Scaling Groupを特定する。
-
-<ul>
-<li><code>aws autoscaling describe-auto-scaling-instances &ndash;instance-ids ${instance_id} | jq &ldquo;.AutoScalingInstances[]|.AutoScalingGroupName&rdquo; -r</code></li>
-</ul>
-</li>
-<li>取得したAuto Scaling GroupをキーにTerminate処理をSuspendにする。
-
-<ul>
-<li><code>aws autoscaling suspend-processes &ndash;auto-scaling-group-name ${auto_scaling_group_name} &ndash;scaling-processes Terminate</code></li>
-</ul>
-</li>
-<li>対象のインスタンスが所属するELBのLoadBalancerNameを特定する。
-
-<ul>
-<li><code>aws autoscaling describe-auto-scaling-groups &ndash;auto-scaling-group-name ${auto_scaling_group_name} | jq &ldquo;.AutoScalingGroups[]|.LoadBalancerNames[]&rdquo; -r</code></li>
-<li>上記のコマンドの返り値を配列などで受け取って、instance-idでフィルタリングする。</li>
-<li><code>aws elb describe-instance-health &ndash;load-balancer-name ${load_balancer_name} &ndash;instances ${instance_id}</code></li>
-</ul>
-</li>
-<li>対象のインスタンスをLBから切り離す。
-
-<ul>
-<li><code>aws elb deregister-instances-from-load-balancer &ndash;load-balancer-name ${load_balancer_name} &ndash;instances ${instance_id}</code></li>
-</ul>
-</li>
-<li>対象のインスタンスにて再起動処理を実行する。</li>
-<li>（アプリケーションサーバではなく）インスタンスの再起動を行った場合はHealthyに変更する。
-
-<ul>
-<li><code>aws autoscaling set-instance-health &ndash;instance-id ${instance_id} &ndash;health-status Healthy</code></li>
-</ul>
-</li>
-<li>ELBへ対象のインスタンスを再登録する。
-
-<ul>
-<li><code>aws elb register-instances-with-load-balancer &ndash;load-balancer-name ${load_balancer_name} &ndash;instances ${instance_id}</code></li>
-</ul>
-</li>
-<li>取得したAuto Scaling GroupをキーにTerminate処理をResumeにする。
-
-<ul>
-<li><code>aws autoscaling resume-processes &ndash;auto-scaling-group-name ${auto_scaling_group_name} &ndash;scaling-processes Terminate</code></li>
-</ul>
-</li>
-</ol>
-
-
-<a name="L........."></a>
-<h2>その他</h2>
-
-<p>今回の手順を整理していく中できづいたこと。</p>
-
-<ul>
-<li>ELBからインスタンスを切り離してInService状態のインスタンスがbeanstalk環境に設定している最低稼働台数を下回っても、インスタンスが自動的に追加されることは無い。これはbeanstalkでデフォルトに設定されるAuto ScalingのHealth Check TypeがEC2モードであるためだと思われる。
-
-<ul>
-<li>なので、アプリケーションサーバを再起動するだけならAuto ScalingのTerminate処理に対する操作は不要と言える。</li>
-</ul>
-</li>
-</ul>
-
-
-<a name="L......"></a>
-<h3>余談</h3>
-
-<p>てっきりbeanstalkでのインスタンス死活監視はELB管理下のインスタンスがInServiceになっている数で判断されているものと思い込んでた…</p>
-
-<a name="L....................."></a>
-<h3>参考にした記事</h3>
-
-<p><a href="http://qiita.com/MasaoDX/items/07e46186c450799c6350">Auto ScalingのSuspend/Resumeを使って、Elastic BeanstalkインスタンスをTerminateしないで停止・再起動する</a></p>
 ]]></content>
   </entry>
   
