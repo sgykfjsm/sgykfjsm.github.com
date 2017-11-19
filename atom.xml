@@ -4,7 +4,7 @@
   <title><![CDATA[sgykfjsm.github.com]]></title>
   <link href="http://sgykfjsm.github.io/atom.xml" rel="self"/>
   <link href="http://sgykfjsm.github.io/"/>
-  <updated>2017-11-19T20:58:46+09:00</updated>
+  <updated>2017-11-19T21:05:40+09:00</updated>
   <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
@@ -14,11 +14,13 @@
 
   
   <entry>
-    <title type="html"><![CDATA[models in basic by tango with django]]></title>
+    <title type="html"><![CDATA[DjangoをTango with Djangoで学ぶ - 3 -]]></title>
     <link href="http://sgykfjsm.github.io/blog/2017/11/19/models-in-basic-by-tango-with-django/"/>
     <updated>2017-11-19T20:15:21+09:00</updated>
     <id>http://sgykfjsm.github.io/blog/2017/11/19/models-in-basic-by-tango-with-django</id>
-    <content type="html"><![CDATA[<p>Webアプリケーションでデータを保存・参照・更新・削除という、いわゆるCRUD操作を行う場合はデータベースを利用するのが一般的で、特にリレーショナル・データベース（RDB）が利用される。RDBに対する操作はSQLを用いられる。これはまぁ一般常識。フルスタックWebアプリケーションの場合、SQLで操作するデータをModelとして定義し、それをORM(Object Relational Mapper)を使って、Modelとデータ(データベースの中にあるテーブル定義)と対応させる。Djangoでもこういった機能を提供しており、今回はこれを学習する。</p>
+    <content type="html"><![CDATA[<p><a href="http://sgykfjsm.github.io/blog/2017/09/21/djangowotango-with-djangodexue-bu-2/">DjangoをTango with Djangoで学ぶ - 2 -</a>の続き。今回はモデルの基礎の話。</p>
+
+<p>Webアプリケーションでデータを保存・参照・更新・削除という、いわゆるCRUD操作を行う場合はデータベースを利用するのが一般的で、特にリレーショナル・データベース（RDB）が利用される。RDBに対する操作はSQLを用いられる。これはまぁ一般常識。フルスタックWebアプリケーションの場合、SQLで操作するデータをModelとして定義し、それをORM(Object Relational Mapper)を使って、Modelとデータ(データベースの中にあるテーブル定義)と対応させる。Djangoでもこういった機能を提供しており、今回はこれを学習する。</p>
 
 <!-- more -->
 
