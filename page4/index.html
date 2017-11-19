@@ -9,7 +9,7 @@
   <meta name="author" content="sgykfjsm">
 
   
-  <meta name="description" content="jenkins上でテストを実行したい、自動化したいというリクエストが来たので、その設定方法をまとめた。 今回はplay2.2.1のscalaをサンプルプロジェクトととした。 ">
+  <meta name="description" content="とりあえず、DBの空き容量とALTERしようとしているテーブルの容量を確認する。 ">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,83 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/01/28/table-is-full-when-alter/">MySQLのALTERで&#8217;The table &#8216;#sql-xxxx&#8217; is full&#8217;と言われたら</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-01-28T09:44:00+09:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>28</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>9:44 am</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>とりあえず、DBの空き容量とALTERしようとしているテーブルの容量を確認する。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2014/01/28/table-is-full-when-alter/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/01/26/online-maintenance-on-rds-mysql/">Amazon RDSのMySQLでオンラインメンテをどうやればいいかを調べた</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-01-26T20:28:00+09:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>26</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>8:28 pm</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>RDSのMySQLでオンラインメンテ、つまり無停止でのスキーマ変更などをどうやれば良いか、という話。 今までは色々小細工をして生のALTER文を発行していたけど、さすがにロック時間とかが気になり始めたので調べた次第。 ざっとググると、<a href="http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html">pt-online-schema-change</a>というツールを使うと良さそうだったので、ここにその作業ログを残す。 以下は参考にしたブログ記事など。</p>
+
+<ul>
+<li><a href="http://blog.livedoor.jp/sasata299/archives/51983526.html">pt-online-schema-changeを利用して無停止でスキーマ変更</a></li>
+<li><a href="https://twitter.com/frsyuki/statuses/291713629177405441">@frsyukiさんのツイート</a></li>
+<li><a href="http://stackoverflow.com/questions/8919907/can-i-create-trigger-in-an-rds-db">Can I CREATE TRIGGER in an rds DB?</a></li>
+</ul>
+
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2014/01/26/online-maintenance-on-rds-mysql/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -612,92 +689,6 @@ DB設計鉄則三箇条
   
     <footer>
       <a rel="full-article" href="/blog/2013/09/10/html5-with-java-meetup/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/08/31/elasticemapreduce-with-dynamodb/">DynamoDBをEMRで扱うときに気をつけること</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2013-08-31T03:57:00+09:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>31</span><span class='date-suffix'>st</span>, <span class='date-year'>2013</span></span> <span class='time'>3:57 am</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>実際に検証したわけではないが、経験的にDynamoDBをEMRで扱うときには以下の点に気を付ける必要がある。</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2013/08/31/elasticemapreduce-with-dynamodb/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/08/18/couchbase-on-ec2-with-td-agent/">ec2にcouchbaseをインストールする。ついでにPython SDKとtd-agentも。</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2013-08-18T22:46:00+09:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>18</span><span class='date-suffix'>th</span>, <span class='date-year'>2013</span></span> <span class='time'>10:46 pm</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><a name="L......"></a>
-<h2>目的</h2>
-
-<p>ec2にCouchbaseを入れるついでに、fluentdで集めたログをcouchbaseに貯めこむ。</p>
-
-<a name="couchbase............"></a>
-<h2>couchbaseについて</h2>
-
-<ul>
-<li>元々はLutus Notesを起源に持つ<a href="http://couchdb.apache.org/">CouchDB</a>の開発者のひとりであるDamien Katz氏が商業展開している製品。</li>
-<li>Memcachedもベースとなっているので、<a href="http://www.couchbase.com/jp/memcached">MemcachedをCouchbaseクラスタにリプレースした事例もある。</a></li>
-<li>Enterprise Edition(EE)とCommunity Edition(CE)の２つがあり、前者は2nodeまで無料、後者は無制限に無料で使える。</li>
-<li>EEとCEの違いは、EEではサポートが購入でき、CEに比べ先進的な機能が付属している。対してCEはEEの型落ちのような位置づけである。</li>
-<li>MongoDBと同じドキュメント型NoSQLに位置づけられる。</li>
-<li>自動シャーディング、分散クエリ、独立したキャッシュ郡などの機能や特徴を持つ。</li>
-</ul>
-
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2013/08/18/couchbase-on-ec2-with-td-agent/">Read on &rarr;</a>
     </footer>
   
 

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: python | sgykfjsm.github.com]]></title>
   <link href="http://sgykfjsm.github.io/blog/categories/python/atom.xml" rel="self"/>
   <link href="http://sgykfjsm.github.io/"/>
-  <updated>2017-09-26T01:32:46+09:00</updated>
+  <updated>2017-11-19T20:58:46+09:00</updated>
   <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
@@ -12,6 +12,346 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[models in basic by tango with django]]></title>
+    <link href="http://sgykfjsm.github.io/blog/2017/11/19/models-in-basic-by-tango-with-django/"/>
+    <updated>2017-11-19T20:15:21+09:00</updated>
+    <id>http://sgykfjsm.github.io/blog/2017/11/19/models-in-basic-by-tango-with-django</id>
+    <content type="html"><![CDATA[<p>Webアプリケーションでデータを保存・参照・更新・削除という、いわゆるCRUD操作を行う場合はデータベースを利用するのが一般的で、特にリレーショナル・データベース（RDB）が利用される。RDBに対する操作はSQLを用いられる。これはまぁ一般常識。フルスタックWebアプリケーションの場合、SQLで操作するデータをModelとして定義し、それをORM(Object Relational Mapper)を使って、Modelとデータ(データベースの中にあるテーブル定義)と対応させる。Djangoでもこういった機能を提供しており、今回はこれを学習する。</p>
+
+<!-- more -->
+
+
+<p>さて、Tango with Djangoというテキストで開発するアプリケーションはRangoであるが、ここで改めてRangoの要件を簡単に説明とすると、以下の様になる。</p>
+
+<ul>
+<li>RangoはWebサイトのURLリンク集である。</li>
+<li>WebサイトのURLはCategoryエンティティが持つ分類に関する情報と紐づく</li>
+<li>WebサイトのURLで参照されるページの情報（タイトル、URLそして閲覧回数）を持つ。これをPageエンティティと呼ぶ。</li>
+<li>PageエンティティはCateforyエンティティを参照する。RDB的に言うと、Categoryエンティティに外部キーを持つ。</li>
+<li>CategoryエンティティとPageエンティティはhousesオブジェクトを介して1 to manyの関係を持つ。下図参照。</li>
+</ul>
+
+
+<pre><code>[Category]-|---------&lt;houses&gt;-----|-&lt;[Page]
+</code></pre>
+
+<p>さて、早速Modelに関するコーディングを始めていきたいところだが、その前にDjangoアプリケーションにおけるデータベースの設定を確認する。</p>
+
+<p>通常、Djangoアプリケーションをセットアップした時点で以下のような設定が<code>settings.py</code>に含まれているはず。</p>
+
+<p>settings.py</p>
+
+<pre><code class="python"># Database
+# https://docs.djangoproject.com/en/1.11/ref/settings/#databases
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+}
+</code></pre>
+
+<p>デフォルト設定だとSQlite3を利用することになっているが、もちろんMySQLなど他のデータベースエンジンを利用することができる。その場合の設定の詳細は<a href="https://docs.djangoproject.com/en/1.11/ref/databases/">公式ドキュメントの&#8221;Databases&#8221;</a>を参照すること。</p>
+
+<p>では、これからモデルの定義を行なう。これまでと同様にアプリケーション固有の設定は各アプリケーションディレクトリの下で行う。今回の場合だと<code>rango/model.py</code>が対象だ。</p>
+
+<p>rango/model.py</p>
+
+<pre><code class="python">from django.db import models
+
+
+class Category(models.Model):
+    name = models.CharField(max_length=128, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Page(models.Model):
+    category = models.ForeignKey(Category)
+    title = models.CharField(max_length=128)
+    url = models.URLField()
+    views = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.title
+</code></pre>
+
+<p>上のコードを見れば何となくそれぞれの意味がわかると思う。<code>class Category</code>はCategoryテーブルを表現している。もう１つの<code>class Page</code>はPageテーブルを表現している。</p>
+
+<p>ここで最も気をつけなければならないことは、各クラスともに<code>models.Model</code>を継承していることだ。これは忘れてはならない。</p>
+
+<p><code>class Category</code>には１つのフィールドが定義されており、それは見ての通りChar型で最大データ長は128バイトでユニーク制約を持つ。これらはメソッド名や引数名を見たら分かると思う。<code>class Page</code>についても同様だ。ここでは利用されていないが、デフォルトを<code>default=</code>で指定することもできるし、カラムがnullableかどうかも指定できる。</p>
+
+<p>テーブル間の関係は<code>one-to-one</code>, <code>one-to-many</code>そして<code>many-to-many</code>の３つに大別できるが、<code>models.ForeignKey</code>によって、<code>one-to-many</code>を表現している。この場合、PageテーブルがCategoryテーブルを参照しているので、PageテーブルがManyで、CategoryテーブルがOneとなる。なお、<code>one-to-one</code>は<code>OneToOneField</code>, <code>many-to-many</code>は<code>ManyToManyField</code>という見たままのネーミングとなっている。</p>
+
+<p>それぞれのクラスには<code>__str__</code>が定義されている。このメソッドは各クラスのオブジェクトを文字列として扱うときに利用されるメソッドだ。これを定義しないと継承元の<code>__str__</code>が呼び出されて、<code>&lt;Category:Category object&gt;</code>というよく分からない文字列が出力されるので、モデルを定義する際には<code>__str__</code>も定義することがベストプラクティスの１つとなる。</p>
+
+<p>最後に注意する点として、各クラスには暗黙的に<code>id</code>カラムが設定され、そのカラムは<code>integer NOT NULL PRIMARY KEY AUTOINCREMENT</code>という設定がされていることだ。</p>
+
+<p>とりあえずはテーブルの定義が完了したので、ここでDjangoのマイグレーションツールを試してみる。</p>
+
+<p>まずはデフォルトで設定されているテーブル類のマイグレーションを行なう。「デフォルトで設定されているテーブル」とは<code>settings.py</code>の中にある<code>INSTALLED_APPS</code>だ。</p>
+
+<p>なお、久しぶりのDjangoコマンドの実行なので、virtualenvのactivateを忘れないようにしよう。</p>
+
+<pre><code class="console">$ python manage.py migrate
+Operations to perform:
+  Apply all migrations: admin, auth, contenttypes, sessions
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying sessions.0001_initial... OK
+</code></pre>
+
+<p>これでDjangoにとっての基本的なテーブルが出来た。次にテーブルを操作するためのスーパーユーザー（要はrootユーザーみたいなもの）を用意する。</p>
+
+<pre><code class="console">$ python manage.py createsuperuser
+Username (leave blank to use 'you'):
+Email address:
+Password:
+Password (again):
+Superuser created successfully.
+</code></pre>
+
+<p>つぎに、アプリケーション固有のテーブルのマイグレーション、つまり先ほど定義した<code>rango/models.py</code>を元にマイグレーションを行なう。</p>
+
+<pre><code class="console">$ python manage.py makemigrations rango
+Migrations for 'rango':
+  rango/migrations/0001_initial.py
+    - Create model Category
+    - Create model Page
+</code></pre>
+
+<p>生成されたファイルの中身を見ても良いが、より確実な確認として、生成したファイルから更に生成されるSQLを確認してみよう</p>
+
+<pre><code>$ python manage.py sqlmigrate rango 0001
+BEGIN;
+--
+-- Create model Category
+--
+CREATE TABLE "rango_category" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "name" varchar(128) NOT NULL UNIQUE);
+--
+-- Create model Page
+--
+CREATE TABLE "rango_page" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "title" varchar(128) NOT NULL, "url" varchar(200) NOT NULL, "views" integer NOT NULL, "category_id" integer NOT NULL REFERENCES "rango_category" ("id"));
+CREATE INDEX "rango_page_category_id_0872388a" ON "rango_page" ("category_id");
+COMMIT;
+</code></pre>
+
+<p>改行されていないので少し見にくいが、期待通りのSQLが生成されていることがわかると思う。</p>
+
+<p><code>makemigrations</code>で生成されたのは<code>migrate</code>で利用されるパーツのようなもの。このパーツをDjangoアプリケーションとして組み込むためにはもう1度<code>migrate</code>を実行すれば良い。</p>
+
+<pre><code>$ python manage.py migrate
+Operations to perform:
+  Apply all migrations: admin, auth, contenttypes, rango, sessions
+Running migrations:
+  Applying rango.0001_initial... OK
+</code></pre>
+
+<p>これでrango固有のテーブルがDjangoアプリケーションに取り込まれた。今回はSQLiteなのでブラウザとして <a href="http://sqlitebrowser.org/">SQLite Database Browser</a> を使うと、取り込まれている様子がわかると思う。</p>
+
+<p>DjangoはShell機能を提供している。といっても実際はただのPythonのREPLではあるけど。起動方法はいつものようにmanage.pyを使う。以下の通り。</p>
+
+<pre><code>$ python manage.py shell
+Python 3.5.3 (default, Sep  4 2017, 22:33:15)
+[GCC 4.2.1 Compatible Apple LLVM 8.1.0 (clang-802.0.42)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+(InteractiveConsole)
+&gt;&gt;&gt;
+</code></pre>
+
+<p>この起動によってプロジェクトの諸々の設定も取り込まれる。</p>
+
+<pre><code>$ python manage.py shell
+Python 3.5.3 (default, Sep  4 2017, 22:33:15)
+[GCC 4.2.1 Compatible Apple LLVM 8.1.0 (clang-802.0.42)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+(InteractiveConsole)
+&gt;&gt;&gt; from rango.models import Category
+&gt;&gt;&gt; print(Category.objects.all())
+&lt;QuerySet []&gt;
+&gt;&gt;&gt; c = Category(name="Test")
+&gt;&gt;&gt; c.save()
+&gt;&gt;&gt; print(Category.objects.all())
+&lt;QuerySet [&lt;Category: Test&gt;]&gt;
+&gt;&gt;&gt; quit()
+</code></pre>
+
+<p>上で紹介したDB Browserを使うと、ちゃんとDBに&#8221;Test&#8221;が保存されていることを確認することができる。</p>
+
+<p>Djangoの目を引く特徴の1つとしてWebの管理画面をデフォルトで提供していることが挙げられる。これを使って、DBの中のデータを見たり編集することができる。ここで改めてプロジェクトディレクトリにある<code>settings.py</code>と<code>urls.py</code>を見ると、以下があることに気づくだろう。</p>
+
+<p>settings.py</p>
+
+<pre><code class="python">...
+INSTALLED_APPS = [
+    'django.contrib.admin',   # &lt;- これ
+...
+    'rango',
+]
+...
+</code></pre>
+
+<p>urls.py</p>
+
+<pre><code class="python">...
+urlpatterns = [
+...
+    url(r'^admin/', admin.site.urls),  # &lt;- これ
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+...
+</code></pre>
+
+<p>上記2つの設定があることを確認したら<code>python manage.py runserver</code>でアプリケーションを起動してみよう。</p>
+
+<pre><code class="console">$ python manage.py runserver
+</code></pre>
+
+<p>早速ブラウザで<a href="http://localhost:8000/admin/">http://localhost:8000/admin/</a> にアクセスするとログイン画面が出てくるので、<code>python manage.py createsuperuser</code>で作成したユーザでログインすれば良い。もしどんなユーザを作成したか忘れてしまったのならば、改めて再作成すれば良い。</p>
+
+<p>ログイン後、表示された画面には<em>AUTHENTICATION AND AUTHORIZATION</em>というタイトルの項目があるが、肝心のrangoアプリケーションのテーブルが存在しないことに気づくだろう。これはDjangoのAdmin機能がrangoアプリケーションのmodelsの存在を知らないからだ。なので、教えてあげる必要がある。<code>rango/admin.py</code>に以下のように編集する。</p>
+
+<p>rango/admin.py</p>
+
+<pre><code class="diff">--- a/rango/admin.py
++++ b/rango/admin.py
+@@ -1,3 +1,5 @@
+ from django.contrib import admin
++from rango.models import Category, Page
+
+-# Register your models here.
++admin.site.register(Category)
++admin.site.register(Page)
+</code></pre>
+
+<p>上記のとおりに編集してWebの画面をリロードすると、<em>RANGO</em>という項目が追加されるはず。&#8221;Categorys&#8221;をクリックすると、先ほどShell機能を使って追加した&#8221;Test&#8221;が存在することがわかる。このような方法でもDBを確認することができるし、おそらくDjangoの開発中はこちらを利用することが多いだろう。</p>
+
+<p>ところで、Webの管理画面では&#8221;Category&#8221;が&#8221;Categorys&#8221;となっていることに気づいただろうか？これは別にDjangoがtypoしているわけではなくて、モデルのメタデータの<code>verbose_name_plural</code>のデフォルト設定によるもの。気になるようであれば、自分で修正することができる。以下の様に。</p>
+
+<p>rango/models.py</p>
+
+<pre><code class="diff">$ git diff | cat -
+diff --git a/rango/models.py b/rango/models.py
+index c65a919..b9b694d 100644
+--- a/rango/models.py
++++ b/rango/models.py
+@@ -4,6 +4,9 @@ from django.db import models
+ class Category(models.Model):
+     name = models.CharField(max_length=128, unique=True)
+
++    class Meta:
++        verbose_name_plural = 'Categories'
++
+     def __str__(self):
+         return self.name
+</code></pre>
+
+<p>編集後は再度画面をリロードして確認しておくこと。</p>
+
+<p>ここまでの作業でモデルが用意できた。実際の開発では、このモデルにデータを入れて動作確認やテストをしたりするわけだけど、そのためのテストデータを毎回用意するのは正直ダルい。ので、一般的にはpopulation scriptと呼ばれるダミーデータ生成のためのスクリプトを用意する。ダミーデータとは言え、ランダムな文字列を適当に入れても、あまり役に立たない。ここでは、それっぽいデータを用意してDBに格納するスクリプトを書く。<code>populate_rango.py</code>という名前でプロジェクトディレクトリの直下にファイルを用意しよう。こんな感じ。</p>
+
+<p>populate_rango.py</p>
+
+<pre><code class="python">import os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tango_with_django_project.settings')
+
+import django
+django.setup()
+
+from rango.models import Category, Page
+
+
+def populate():
+    python_pages = [
+        {"title": "Official Python Tutorial",  "url": "http://docs.python.org/2/tutorial"},
+        {"title": "How to Think like a Computer Scientis",  "url": "http://www.greenteapress.com/thinkpython"},
+        {"title": "Learn Python in 10 Minutes",  "url": "http://www.korokithakis.net/tutorials/python"},
+    ]
+
+    django_pages = [
+        {"title": "Official Django Tutorial", "url": "https://docs.djangoproject.com/en/1.9/intro/tutorial01/"},
+        {"title": "Django Rocks", "url": "http://djangorocks.com"},
+        {"title": "How to Tango with Django", "url": "http://www.tangowithdjango.com/"},
+    ]
+
+    other_pages = [
+        {"title": "Bottle", "url": "https://bottlepy.org/docs/dev/"},
+        {"title": "Flask", "url": "http://flask.pocoo.org/"},
+    ]
+
+    cats = {
+        "Python": {"pages": python_pages},
+        "Django": {"pages": django_pages},
+        "Other Frameworks": {"pages": other_pages},
+    }
+
+    for cat, cat_data in cats.items():
+        c = add_cat(cat)
+        for p in cat_data["pages"]:
+            add_page(c, p["title"], p["url"])
+
+    for c in Category.objects.all():
+        for p in Page.objects.filter(category=c):
+            print("- {0} - {1}".format(str(c), str(p)))
+
+
+def add_page(cat, title, url, views=0):
+    p = Page.objects.get_or_create(category=cat, title=title)[0]
+    p.url = url
+    p.views = views
+    p.save()
+
+    return p
+
+
+def add_cat(name):
+    c = Category.objects.get_or_create(name=name)[0]
+    c.save()
+
+    return c
+
+
+if __name__ == '__main__':
+    print("Starting Rango population script...")
+    populate()
+</code></pre>
+
+<p>このスクリプトを簡単に解説する。まず、一番下の<code>if __name__ == '__main__':</code>は「ファイルを直接実行したかどうか」を判定していて、直接実行した場合には<code>"Starting Rango population script..."</code>をターミナルに表示して、<code>populate()</code>という関数を実行する。<code>populate()</code>のほとんどはテストデータの定義だけど、後半の数行は<code>foo</code>ループを実行している。最初のループでは、Categoryテーブルにデータを入れて、それからPageテーブルにデータを追加している。次のループはちゃんとデータが格納されているかどうかを確認するために、テーブルからデータを取り出してターミナルに表示している。それだけ。</p>
+
+<p>実際にpopulate scriptを実行してから<code>python manage.py runserver</code>を実行、ブラウザで<a href="http://127.0.0.1:8000/admin/">http://127.0.0.1:8000/admin/</a> にアクセスして各テーブルのページを開くと、追加したデータを確認できる。</p>
+
+<a name="L..........................."></a>
+<h2>ここまでのおさらい</h2>
+
+<p>DjangoにおけるModelsとはデータモデル、より直接的に言うと、データの定義や操作のこととなる。Djangoでは以下のような作業順序で行なうことが一般的だ。</p>
+
+<ol>
+<li>自分のDjangoアプリケーションの中に<code>models.py</code>を用意して、その中にテーブル定義をモデルクラスとして記述する。</li>
+<li><code>admin.py</code>の中に定義したモデルクラスを登録する。</li>
+<li><code>python manage.py makemigrations ${app_name}</code>を実行してマイグレーションの準備を行なう。</li>
+<li><code>python manage.py migrate</code>を実行してDBに対するマイグレーションを行なう。</li>
+<li>モデルの動作確認やテストのためにpopulation script（ダミーデータの生成スクリプト）を用意する。</li>
+</ol>
+
+
+<p>色々な理由でDBを削除して作り直すことが発生すると思うけど、その場合は<code>python manage.py migrate</code>を実行すればDBが新たに作成される。その際には、ちゃんとマイグレーションのスクリプト（アプリケーションのディレクトリにある<code>migrations</code>ディレクトリの中のスクリプト）がちゃんと存在していることを確認しておくこと。また、管理者用アカウントは<code>`python manage.py createsuperuser</code>を実行して作成する。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[DjangoをTango with Djangoで学ぶ - 2 -]]></title>

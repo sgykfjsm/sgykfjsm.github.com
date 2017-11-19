@@ -9,9 +9,7 @@
   <meta name="author" content="sgykfjsm">
 
   
-  <meta name="description" content="現在のBeanstalkでインスタンスが再起動する場合は主に以下の３つがある。 アプリケーションをデプロイするとき
-Configuration(JVMのパラメータとか)をデプロイするとき
-Management ConsoleなどでRestart Appsを実行した時 しかし、 &hellip;">
+  <meta name="description" content="AWSなんかを使ってると、イチからMySQLなどの基本的なミドルウェアをセットアップすることは減ってくる。そんな中、AnsibleでMySQLをインストールする事になったのだけど、意外と忘れてたりAnsibleで作業するのと手作業で進めることの差異でちょっと詰まったりしたので、ここに備忘しておく。 ">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -90,6 +88,76 @@ Management ConsoleなどでRestart Appsを実行した時 しかし、 &hellip;"
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/02/17/install-mysql-with-ansible/">AnsibleでMySQLをインストールする。</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-02-17T09:19:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>17</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>9:19 am</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>AWSなんかを使ってると、イチからMySQLなどの基本的なミドルウェアをセットアップすることは減ってくる。そんな中、AnsibleでMySQLをインストールする事になったのだけど、意外と忘れてたりAnsibleで作業するのと手作業で進めることの差異でちょっと詰まったりしたので、ここに備忘しておく。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2015/02/17/install-mysql-with-ansible/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/02/15/pass-params-to-sbt-on-cli/">sbtから起動させる処理にコマンドラインから引数を渡す</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-02-15T02:02:00+09:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>15</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>2:02 am</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>以下はskinny frameworkをつかって処理を書いているが、sbtからの起動させる際にはskinny frameworkを使ってるかどうかは関係ないはず。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2015/02/15/pass-params-to-sbt-on-cli/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -384,83 +452,6 @@ Management ConsoleなどでRestart Appsを実行した時 しかし、 &hellip;"
   
     <footer>
       <a rel="full-article" href="/blog/2014/02/04/big-data-forum/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/01/28/table-is-full-when-alter/">MySQLのALTERで&#8217;The table &#8216;#sql-xxxx&#8217; is full&#8217;と言われたら</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-01-28T09:44:00+09:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>28</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>9:44 am</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>とりあえず、DBの空き容量とALTERしようとしているテーブルの容量を確認する。</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2014/01/28/table-is-full-when-alter/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/01/26/online-maintenance-on-rds-mysql/">Amazon RDSのMySQLでオンラインメンテをどうやればいいかを調べた</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-01-26T20:28:00+09:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>26</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>8:28 pm</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>RDSのMySQLでオンラインメンテ、つまり無停止でのスキーマ変更などをどうやれば良いか、という話。 今までは色々小細工をして生のALTER文を発行していたけど、さすがにロック時間とかが気になり始めたので調べた次第。 ざっとググると、<a href="http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html">pt-online-schema-change</a>というツールを使うと良さそうだったので、ここにその作業ログを残す。 以下は参考にしたブログ記事など。</p>
-
-<ul>
-<li><a href="http://blog.livedoor.jp/sasata299/archives/51983526.html">pt-online-schema-changeを利用して無停止でスキーマ変更</a></li>
-<li><a href="https://twitter.com/frsyuki/statuses/291713629177405441">@frsyukiさんのツイート</a></li>
-<li><a href="http://stackoverflow.com/questions/8919907/can-i-create-trigger-in-an-rds-db">Can I CREATE TRIGGER in an rds DB?</a></li>
-</ul>
-
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2014/01/26/online-maintenance-on-rds-mysql/">Read on &rarr;</a>
     </footer>
   
 

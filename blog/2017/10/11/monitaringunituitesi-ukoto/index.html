@@ -1,0 +1,256 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>モニタリングについて思うこと - sgykfjsm.github.com</title>
+  <meta name="author" content="sgykfjsm">
+
+  
+  <meta name="description" content="色々思うところがあって、こんな文章を書いたけど、途中で考えが整理できなくなった。でもまぁ、脳内の考えを一旦吐き出しておいて、いつか気が向いたら、改めて書き直そうと思う。 最近、SRE(Site Reliablity Engineering)だとかなんとかでモニタリングが流行っている気がする。 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://sgykfjsm.github.io/blog/2017/10/11/monitaringunituitesi-ukoto">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="sgykfjsm.github.com" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" type="text/css">
+<!--- MathJax Configuration -->
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-38784817-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   class="collapse-sidebar sidebar-footer" >
+  <header role="banner"><hgroup>
+  <h1><a href="/">sgykfjsm.github.com</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscribe" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS" target="_blank"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="25" viewbox="0 0 100 100"><path class="social" d="M 13.310204,73.332654 C 5.967347,73.332654 0,79.322448 0,86.621428 c 0,7.338776 5.967347,13.262246 13.310204,13.262246 7.370408,0 13.328572,-5.92245 13.328572,-13.262246 0,-7.29898 -5.958164,-13.288774 -13.328572,-13.288774 z M 0.01530612,33.978572 V 53.143878 C 12.493878,53.143878 24.229592,58.02347 33.068368,66.865306 41.894898,75.685714 46.767346,87.47449 46.767346,100 h 19.25 C 66.017346,63.592858 36.4,33.979592 0.01530612,33.978572 l 0,0 z M 0.03877552,0 V 19.17449 C 44.54796,19.17551 80.77551,55.437756 80.77551,100 H 100 C 100,44.87653 55.15102,0 0.03877552,0 z"></path></svg></a></li>
+  
+</ul>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+      <form action="http://google.com/search" method="get">
+        <fieldset role="search">
+          <input type="hidden" name="sitesearch" value="sgykfjsm.github.io" />
+    
+          <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+        </fieldset>
+      </form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">モニタリングについて思うこと</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2017-10-11T21:25:29+09:00'><span class='date'><span class='date-month'>Oct</span> <span class='date-day'>11</span><span class='date-suffix'>th</span>, <span class='date-year'>2017</span></span> <span class='time'>9:25 pm</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>色々思うところがあって、こんな文章を書いたけど、途中で考えが整理できなくなった。でもまぁ、脳内の考えを一旦吐き出しておいて、いつか気が向いたら、改めて書き直そうと思う。</p>
+
+<p>最近、SRE(Site Reliablity Engineering)だとかなんとかでモニタリングが流行っている気がする。流行っているというか、今までもモニタリングをやっていたんだけど&#8221;SRE&#8221;という言葉が流行って行く中で、モニタリングの責任が明らかになって、より一般的になったというべきか。また、ポジションとしてのSRE(Site Reliablity Engineer)が確立し、職責として「だれがモニタリングを行なうべきか」ということも明確になったし、DataDogやMackerelなどのようにモニタリングがビジネスとして成立するようになってきたという背景もモニタリングの重要性を高めているのだと思う。あとはGrafanaなんかが提供するダッシュボードがカッコイイというのもあるかな。</p>
+
+<!-- more -->
+
+
+<p>で、じゃあどういう風にモニタリングしているのかというと、DataDogやMackerelのようなモニタリング・プラットフォームを利用している場合はちょっと違うかもしれないけど、自分たちで収集するメトリクスを決めて、メトリクスを収集するスクリプトを書き、アラートを設定して、というのが一般的だろう。Prometheusのような場合はコミュニティが提供するExporterを使うこともあるだろう。</p>
+
+<p>モニタリングのアーキテクチャ（Pull or Pushなど）に関してもいくつか思うところはあるのだけれども、個人的にすごくモヤモヤしているのが、「とりあえず集めておく」という姿勢だ。もちろん、メトリクスを集めること自体は悪くない。データが多ければ、その分だけ検証できる内容や深みを増すことができる。しかし、一方でそれに比例してアラートも増える。ある程度の規模の会社やチームだと、こういったメトリクスやアラートは共通化されていき、次第にそれが社内のモニタリング基盤となる。</p>
+
+<p>こういったシナリオは一見すると良さそうに見える。しかし、本当にそうだろうか。集めたメトリクスはサービスを超えて本当に共有できるだろうか。例えばCPUが90%を超えたとして、次に見るべきものは何か。ディスク使用量が85%を超えているという事実は大きなディスクを持つストレージサービスと比較的ディスクが少ないAPIサービスとで同じ意味を持つだろうか。また、同種のサービスであっても、稼働環境がテスト環境かプロダクション環境かによってメトリクスが示唆するものは異なるはずだ。こういったメトリクスの意味や重要性の違いは、サービスやアプリケーション、稼働環境によって異なるはずだ。そしてモニタリングの利用者は膨大なアラートの中から必要なものだけを選択していく。アラートなどによって省みられることがないメトリクスは存在しないことと同じだ。そのため、次第に多くのメトリクスはゴミデータとしてただストレージに蓄積されていく。メトリクスを収集するスクリプトやエージェントは貴重なリソースを消費しているにもかかわらず。</p>
+
+<p>自分は現在、いわゆる&#8221;SRE&#8221;チームと分類される組織に所属している(&ldquo;SRE&#8221;を生業にしていると明言できないのは、SREが出来ていないからだという自覚があるからだ)。だから、ここで述べる視点はサービス開発者ではなく、モニタリングを提供する側の視点となる。また、ここで問題視したいのは「とりあえず集めた」メトリクスに何の価値があるのか、ということだ。私自身の考えとしては以下の通りだ。</p>
+
+<ul>
+<li>メトリクスはアクションを起こすものでなければならない</li>
+<li>メトリクスは示唆をあたえるものでなければならない</li>
+<li>上記を1つも満たさないメトリクスは価値がなく、貴重なサーバーリソースを浪費するコストとなる</li>
+</ul>
+
+
+<a name="L................................."></a>
+<h2>ここで問題としたいこと</h2>
+
+<p>モニタリングによって集められているデータは次の通り大きく２つに分けることができるだろう。１つは数値データだ。場合によっては数字で表現されたアプリケーションのバージョン情報ということあるだろうが、異常値あるいは閾値を設定しなければ評価できないことを考えると、数字で表現されたバージョン情報は数値データとみなすことが出来る。もう１つは&#8221;INFO&#8221;, &ldquo;WARN&rdquo;, &ldquo;FATAL&#8221;といったような意味をもつ情報だ。この場合、情報自体が意味をもっているため、価値云々を議論する余地は無いものと考える。もちろん、付与された情報のレベルが妥当かどうかという議論は発生するが、それはここでは問題としない。なぜならば、情報のレベルはサービス開発側で予め決められているおり、すでに情報としての価値が決定されているからだ。よって、今回の議論の対象にはしない。ここで議論したいのは数値データであるメトリクスであり、それの運用についてだ。</p>
+
+<a name="L...................................."></a>
+<h2>メトリクスを運用するとは</h2>
+
+<p>先にも少し触れたが、メトリクスは必ずしもアラートのためだけではない。アプリケーションやサーバーの稼働状況を数値で表現し、期待通りの動作をしているかというパフォーマンスの検証に用いることもできる。この場合、どのメトリクスを見ることで期待通りの動作をしていると言えるかは一概にいえるものではないと思う。例えばWebサーバーならば処理したリクエストの数だったり、リクエストを受け取ってからレスポンスを返すまでのレイテンシかもしれない。ストレージサービスであれば、如何にディスクIOが少ないかということになるかもしれない。このように、適切な指標の決定はサービス開発者あるいはサービス開発のチームに所属にしていなければ決められないはずだ。これらを踏まえると、「メトリクスを運用する」とは「どのようにメトリクスを評価するか」ということになる。</p>
+
+<a name="L...................................."></a>
+<h2>メトリクスを評価するとは</h2>
+
+<p>では、メトリクスを評価するとは具体的にどのようなことだろうか。これもまた繰り返しになるが、結局のところ、サービスやアプリケーション、そして環境によって異なる。しかしながら、それでも共通する点を見出すとするならば、メトリクスの値のどこからどこまでが異常で、どこが異常と正常の閾値になるのかを決定しなければならないということだ。「評価」とはこのような決定を意味している。メトリクスの種類や収集した環境やサービスの違いにかかわらず、メトリクスの閾値は必ず設定されなければならない。</p>
+
+<p>ただし、共通しているのはここまでで、ここから先、つまり決定的な閾値はやはりメトリクスだけで決まるものではない。仮に過去1ヶ月間のCPUが10%から20%で推移していたからといって、これから1ヶ月のうちにCPU使用率が30%になったら、それは異常事態だと言えるだろうか。単純な統計に基づくなら異常と言えるかもしれない。しかし現実にはそう判断できないはずだ。なぜならば、ユーザーの増加、アプリケーションに実装したアルゴリズムの変化など、「正常(起きてしかるべき)な変化」とみなす要因が常に存在しうるからだ。もちろん正常な変化だからといって、そのままにしておいて良いというわけではない。</p>
+
+<a name="L......................................................"></a>
+<h2>モニタリングの提供者ができることは？</h2>
+
+<p>こうなってくると、メトリクスの評価はサービス開発者の専有事項となりそうだ。確かに多くの場合はそうかもしれない。サービスに携わることなくサービスを評価することは出来ないし、ましてや、そのサービスのアプリケーションが使用するリソースの多寡の良し悪しを判断することなど出来るはずもない。このような前提を基にすると、SREはどのようにモニタリングに関わることができるのだろうか？単にサービス開発者のモニタリング設定作業を代行するだけ？オンコールを受けてトラブルシューティング？そうではないはずだ。SREが文字通りにWebサイトやサービスの安定化に資するエンジニアであるならば、モニタリングにおいては主導的にならなければならないし、それは作業代行者であってはならないはず。</p>
+
+<p>モニタリングを提供する側はサービス開発者に対してメトリクスを評価するための示唆を与えることができるはずだ。例えば&hellip;(ここから先は考えがまとまらなかった)</p>
+
+<p>以下はメモランダム。あとで推敲して書き直す</p>
+
+<ul>
+<li>メトリクスはむやみに収集するのではなく、目的をもって収集すべき。</li>
+<li>メトリクスの目的はかならず共有されていなければならない。</li>
+<li>メトリクスはアクションを導き出すべき</li>
+<li>メトリクスが導出するアクションを具体的な手順に落とし込んだ文書があるべき</li>
+<li>モニタリングの提供者はメトリクスの評価者に対して示唆を与える表現（例えばダッシュボードだったり、関連情報の添付、わかりやすいアラートメールのぶん面など）を提供するべき</li>
+<li>モニタリングにはコストが発生していることを自覚するべき</li>
+</ul>
+
+
+<p>これもメモランダム。なんとなくだけど、SREっていうムーブメントは、かつては「フルスタックエンジニア」と称する何かをもてはやしたり、「ビッグデータ活用」みたいな「とりあえずウチは大規模に何かやってます！」みたいな中身のない何かになってやしないかなという思いがある。もちろんSRE本がテキストとして存在しているので、これらほど適当なものではないけど、カンバンを変えただけでやってることは今まで通りだったり、逆にモニタリングをそれっぽいアプリケーションでやってるからSREと言ったり…あるいはタチの悪いところだと、リクルーティングのためだけにSREと自称しているところもありそうな気がする。</p>
+
+<p>SREは特定の職能や役割を表現するものではなくて、求められる技術や経験、知識はとても幅広い。だから、個人がSREとなるというよりかは、組織がSREとなるほうが実態としては自然なのかもしれない。それはかつてDevOpsという言葉で表現していたような、ただOpsだけをやるエンジニアだけじゃなくてコードで問題を解決するというDevを取り込むようなチームづくりと基本的な考え方は同じかもしれない。縦割りの組織じゃなくて、横方向に人材を広げて組織として役割の柔軟性や弾力性を持たせる。そうすることでサービス開発者の足元を確かにし、成功への道筋を確かにしていくような役割。SREはスーパーエンジニアの代名詞などではなくて、そういった弾力性に富んだ組織のことを意味するのではないかなぁと思うけど、それって別にSREって表現しなくても今までにも必要とされたし、成功している組織には当たり前にいるんだろうな。</p>
+
+<p>とりとめがないので、このへんで。もう少し考えを整理する必要がある。</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+
+
+  <span class="byline author vcard">Authored by <span class="fn">
+  
+    sgykfjsm
+  
+  </span></span>
+
+
+      
+
+
+
+
+<time class='entry-date' datetime='2017-10-11T21:25:29+09:00'><span class='date'><span class='date-month'>Oct</span> <span class='date-day'>11</span><span class='date-suffix'>th</span>, <span class='date-year'>2017</span></span> <span class='time'>9:25 pm</span></time>
+      
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/monitoring/'>monitoring</a>, <a class='category' href='/blog/categories/poem/'>poem</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2017/09/26/gofalsezheng-gui-biao-xian-toreplacerwobi-jiao-sita/" title="Previous Post: Goの正規表現とReplacerを比較した">&laquo; Goの正規表現とReplacerを比較した</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2017/11/19/models-in-basic-by-tango-with-django/" title="Next Post: models in basic by tango with django">models in basic by tango with django &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+
+</div>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2017 - sgykfjsm -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a> | Themed with <a href="https://github.com/lucaslew/whitespace">Whitespace</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -4,7 +4,7 @@
   <title><![CDATA[sgykfjsm.github.com]]></title>
   <link href="http://sgykfjsm.github.io/atom.xml" rel="self"/>
   <link href="http://sgykfjsm.github.io/"/>
-  <updated>2017-09-26T01:32:46+09:00</updated>
+  <updated>2017-11-19T20:58:46+09:00</updated>
   <id>http://sgykfjsm.github.io/</id>
   <author>
     <name><![CDATA[sgykfjsm]]></name>
@@ -12,6 +12,623 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[models in basic by tango with django]]></title>
+    <link href="http://sgykfjsm.github.io/blog/2017/11/19/models-in-basic-by-tango-with-django/"/>
+    <updated>2017-11-19T20:15:21+09:00</updated>
+    <id>http://sgykfjsm.github.io/blog/2017/11/19/models-in-basic-by-tango-with-django</id>
+    <content type="html"><![CDATA[<p>Webアプリケーションでデータを保存・参照・更新・削除という、いわゆるCRUD操作を行う場合はデータベースを利用するのが一般的で、特にリレーショナル・データベース（RDB）が利用される。RDBに対する操作はSQLを用いられる。これはまぁ一般常識。フルスタックWebアプリケーションの場合、SQLで操作するデータをModelとして定義し、それをORM(Object Relational Mapper)を使って、Modelとデータ(データベースの中にあるテーブル定義)と対応させる。Djangoでもこういった機能を提供しており、今回はこれを学習する。</p>
+
+<!-- more -->
+
+
+<p>さて、Tango with Djangoというテキストで開発するアプリケーションはRangoであるが、ここで改めてRangoの要件を簡単に説明とすると、以下の様になる。</p>
+
+<ul>
+<li>RangoはWebサイトのURLリンク集である。</li>
+<li>WebサイトのURLはCategoryエンティティが持つ分類に関する情報と紐づく</li>
+<li>WebサイトのURLで参照されるページの情報（タイトル、URLそして閲覧回数）を持つ。これをPageエンティティと呼ぶ。</li>
+<li>PageエンティティはCateforyエンティティを参照する。RDB的に言うと、Categoryエンティティに外部キーを持つ。</li>
+<li>CategoryエンティティとPageエンティティはhousesオブジェクトを介して1 to manyの関係を持つ。下図参照。</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[Category]-|---------&lt;houses&gt;-----|-&lt;[Page]</span></code></pre></td></tr></table></div></figure>
+
+
+<p>さて、早速Modelに関するコーディングを始めていきたいところだが、その前にDjangoアプリケーションにおけるデータベースの設定を確認する。</p>
+
+<p>通常、Djangoアプリケーションをセットアップした時点で以下のような設定が<code>settings.py</code>に含まれているはず。</p>
+
+<p>settings.py</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># Database</span>
+</span><span class='line'><span class="c"># https://docs.djangoproject.com/en/1.11/ref/settings/#databases</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>    <span class="s">&#39;default&#39;</span><span class="p">:</span> <span class="p">{</span>
+</span><span class='line'>        <span class="s">&#39;ENGINE&#39;</span><span class="p">:</span> <span class="s">&#39;django.db.backends.sqlite3&#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="s">&#39;NAME&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">BASE_DIR</span><span class="p">,</span> <span class="s">&#39;db.sqlite3&#39;</span><span class="p">),</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>デフォルト設定だとSQlite3を利用することになっているが、もちろんMySQLなど他のデータベースエンジンを利用することができる。その場合の設定の詳細は<a href="https://docs.djangoproject.com/en/1.11/ref/databases/">公式ドキュメントの&#8221;Databases&#8221;</a>を参照すること。</p>
+
+<p>では、これからモデルの定義を行なう。これまでと同様にアプリケーション固有の設定は各アプリケーションディレクトリの下で行う。今回の場合だと<code>rango/model.py</code>が対象だ。</p>
+
+<p>rango/model.py</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Category</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Page</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">category</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">Category</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">title</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">url</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">URLField</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">views</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>上のコードを見れば何となくそれぞれの意味がわかると思う。<code>class Category</code>はCategoryテーブルを表現している。もう１つの<code>class Page</code>はPageテーブルを表現している。</p>
+
+<p>ここで最も気をつけなければならないことは、各クラスともに<code>models.Model</code>を継承していることだ。これは忘れてはならない。</p>
+
+<p><code>class Category</code>には１つのフィールドが定義されており、それは見ての通りChar型で最大データ長は128バイトでユニーク制約を持つ。これらはメソッド名や引数名を見たら分かると思う。<code>class Page</code>についても同様だ。ここでは利用されていないが、デフォルトを<code>default=</code>で指定することもできるし、カラムがnullableかどうかも指定できる。</p>
+
+<p>テーブル間の関係は<code>one-to-one</code>, <code>one-to-many</code>そして<code>many-to-many</code>の３つに大別できるが、<code>models.ForeignKey</code>によって、<code>one-to-many</code>を表現している。この場合、PageテーブルがCategoryテーブルを参照しているので、PageテーブルがManyで、CategoryテーブルがOneとなる。なお、<code>one-to-one</code>は<code>OneToOneField</code>, <code>many-to-many</code>は<code>ManyToManyField</code>という見たままのネーミングとなっている。</p>
+
+<p>それぞれのクラスには<code>__str__</code>が定義されている。このメソッドは各クラスのオブジェクトを文字列として扱うときに利用されるメソッドだ。これを定義しないと継承元の<code>__str__</code>が呼び出されて、<code>&lt;Category:Category object&gt;</code>というよく分からない文字列が出力されるので、モデルを定義する際には<code>__str__</code>も定義することがベストプラクティスの１つとなる。</p>
+
+<p>最後に注意する点として、各クラスには暗黙的に<code>id</code>カラムが設定され、そのカラムは<code>integer NOT NULL PRIMARY KEY AUTOINCREMENT</code>という設定がされていることだ。</p>
+
+<p>とりあえずはテーブルの定義が完了したので、ここでDjangoのマイグレーションツールを試してみる。</p>
+
+<p>まずはデフォルトで設定されているテーブル類のマイグレーションを行なう。「デフォルトで設定されているテーブル」とは<code>settings.py</code>の中にある<code>INSTALLED_APPS</code>だ。</p>
+
+<p>なお、久しぶりのDjangoコマンドの実行なので、virtualenvのactivateを忘れないようにしよう。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> python manage.py migrate
+</span><span class='line'><span class="go">Operations to perform:</span>
+</span><span class='line'><span class="go">  Apply all migrations: admin, auth, contenttypes, sessions</span>
+</span><span class='line'><span class="go">Running migrations:</span>
+</span><span class='line'><span class="go">  Applying contenttypes.0001_initial... OK</span>
+</span><span class='line'><span class="go">  Applying auth.0001_initial... OK</span>
+</span><span class='line'><span class="go">  Applying admin.0001_initial... OK</span>
+</span><span class='line'><span class="go">  Applying admin.0002_logentry_remove_auto_add... OK</span>
+</span><span class='line'><span class="go">  Applying contenttypes.0002_remove_content_type_name... OK</span>
+</span><span class='line'><span class="go">  Applying auth.0002_alter_permission_name_max_length... OK</span>
+</span><span class='line'><span class="go">  Applying auth.0003_alter_user_email_max_length... OK</span>
+</span><span class='line'><span class="go">  Applying auth.0004_alter_user_username_opts... OK</span>
+</span><span class='line'><span class="go">  Applying auth.0005_alter_user_last_login_null... OK</span>
+</span><span class='line'><span class="go">  Applying auth.0006_require_contenttypes_0002... OK</span>
+</span><span class='line'><span class="go">  Applying auth.0007_alter_validators_add_error_messages... OK</span>
+</span><span class='line'><span class="go">  Applying auth.0008_alter_user_username_max_length... OK</span>
+</span><span class='line'><span class="go">  Applying sessions.0001_initial... OK</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>これでDjangoにとっての基本的なテーブルが出来た。次にテーブルを操作するためのスーパーユーザー（要はrootユーザーみたいなもの）を用意する。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> python manage.py createsuperuser
+</span><span class='line'><span class="go">Username (leave blank to use &#39;you&#39;):</span>
+</span><span class='line'><span class="go">Email address:</span>
+</span><span class='line'><span class="go">Password:</span>
+</span><span class='line'><span class="go">Password (again):</span>
+</span><span class='line'><span class="go">Superuser created successfully.</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>つぎに、アプリケーション固有のテーブルのマイグレーション、つまり先ほど定義した<code>rango/models.py</code>を元にマイグレーションを行なう。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> python manage.py makemigrations rango
+</span><span class='line'><span class="go">Migrations for &#39;rango&#39;:</span>
+</span><span class='line'><span class="go">  rango/migrations/0001_initial.py</span>
+</span><span class='line'><span class="go">    - Create model Category</span>
+</span><span class='line'><span class="go">    - Create model Page</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>生成されたファイルの中身を見ても良いが、より確実な確認として、生成したファイルから更に生成されるSQLを確認してみよう</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> python manage.py sqlmigrate rango 0001
+</span><span class='line'><span class="go">BEGIN;</span>
+</span><span class='line'><span class="go">--</span>
+</span><span class='line'><span class="go">-- Create model Category</span>
+</span><span class='line'><span class="go">--</span>
+</span><span class='line'><span class="go">CREATE TABLE &quot;rango_category&quot; (&quot;id&quot; integer NOT NULL PRIMARY KEY AUTOINCREMENT, &quot;name&quot; varchar(128) NOT NULL UNIQUE);</span>
+</span><span class='line'><span class="go">--</span>
+</span><span class='line'><span class="go">-- Create model Page</span>
+</span><span class='line'><span class="go">--</span>
+</span><span class='line'><span class="go">CREATE TABLE &quot;rango_page&quot; (&quot;id&quot; integer NOT NULL PRIMARY KEY AUTOINCREMENT, &quot;title&quot; varchar(128) NOT NULL, &quot;url&quot; varchar(200) NOT NULL, &quot;views&quot; integer NOT NULL, &quot;category_id&quot; integer NOT NULL REFERENCES &quot;rango_category&quot; (&quot;id&quot;));</span>
+</span><span class='line'><span class="go">CREATE INDEX &quot;rango_page_category_id_0872388a&quot; ON &quot;rango_page&quot; (&quot;category_id&quot;);</span>
+</span><span class='line'><span class="go">COMMIT;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>改行されていないので少し見にくいが、期待通りのSQLが生成されていることがわかると思う。</p>
+
+<p><code>makemigrations</code>で生成されたのは<code>migrate</code>で利用されるパーツのようなもの。このパーツをDjangoアプリケーションとして組み込むためにはもう1度<code>migrate</code>を実行すれば良い。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> python manage.py migrate
+</span><span class='line'><span class="go">Operations to perform:</span>
+</span><span class='line'><span class="go">  Apply all migrations: admin, auth, contenttypes, rango, sessions</span>
+</span><span class='line'><span class="go">Running migrations:</span>
+</span><span class='line'><span class="go">  Applying rango.0001_initial... OK</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>これでrango固有のテーブルがDjangoアプリケーションに取り込まれた。今回はSQLiteなのでブラウザとして <a href="http://sqlitebrowser.org/">SQLite Database Browser</a> を使うと、取り込まれている様子がわかると思う。</p>
+
+<p>DjangoはShell機能を提供している。といっても実際はただのPythonのREPLではあるけど。起動方法はいつものようにmanage.pyを使う。以下の通り。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> python manage.py shell
+</span><span class='line'><span class="go">Python 3.5.3 (default, Sep  4 2017, 22:33:15)</span>
+</span><span class='line'><span class="go">[GCC 4.2.1 Compatible Apple LLVM 8.1.0 (clang-802.0.42)] on darwin</span>
+</span><span class='line'><span class="go">Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;license&quot; for more information.</span>
+</span><span class='line'><span class="go">(InteractiveConsole)</span>
+</span><span class='line'><span class="gp">&gt;</span>&gt;&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>この起動によってプロジェクトの諸々の設定も取り込まれる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> python manage.py shell
+</span><span class='line'><span class="go">Python 3.5.3 (default, Sep  4 2017, 22:33:15)</span>
+</span><span class='line'><span class="go">[GCC 4.2.1 Compatible Apple LLVM 8.1.0 (clang-802.0.42)] on darwin</span>
+</span><span class='line'><span class="go">Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;license&quot; for more information.</span>
+</span><span class='line'><span class="go">(InteractiveConsole)</span>
+</span><span class='line'><span class="gp">&gt;</span>&gt;&gt; from rango.models import Category
+</span><span class='line'><span class="gp">&gt;</span>&gt;&gt; print<span class="o">(</span>Category.objects.all<span class="o">())</span>
+</span><span class='line'><span class="go">&lt;QuerySet []&gt;</span>
+</span><span class='line'><span class="gp">&gt;</span>&gt;&gt; <span class="nv">c</span> <span class="o">=</span> Category<span class="o">(</span><span class="nv">name</span><span class="o">=</span><span class="s2">&quot;Test&quot;</span><span class="o">)</span>
+</span><span class='line'><span class="gp">&gt;</span>&gt;&gt; c.save<span class="o">()</span>
+</span><span class='line'><span class="gp">&gt;</span>&gt;&gt; print<span class="o">(</span>Category.objects.all<span class="o">())</span>
+</span><span class='line'><span class="go">&lt;QuerySet [&lt;Category: Test&gt;]&gt;</span>
+</span><span class='line'><span class="gp">&gt;</span>&gt;&gt; quit<span class="o">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>上で紹介したDB Browserを使うと、ちゃんとDBに&#8221;Test&#8221;が保存されていることを確認することができる。</p>
+
+<p>Djangoの目を引く特徴の1つとしてWebの管理画面をデフォルトで提供していることが挙げられる。これを使って、DBの中のデータを見たり編集することができる。ここで改めてプロジェクトディレクトリにある<code>settings.py</code>と<code>urls.py</code>を見ると、以下があることに気づくだろう。</p>
+
+<p>settings.py</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">...</span>
+</span><span class='line'><span class="n">INSTALLED_APPS</span> <span class="o">=</span> <span class="p">[</span>
+</span><span class='line'>    <span class="s">&#39;django.contrib.admin&#39;</span><span class="p">,</span>   <span class="c"># &lt;- これ</span>
+</span><span class='line'><span class="o">...</span>
+</span><span class='line'>    <span class="s">&#39;rango&#39;</span><span class="p">,</span>
+</span><span class='line'><span class="p">]</span>
+</span><span class='line'><span class="o">...</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>urls.py</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="o">...</span>
+</span><span class='line'><span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
+</span><span class='line'><span class="o">...</span>
+</span><span class='line'>    <span class="n">url</span><span class="p">(</span><span class="s">r&#39;^admin/&#39;</span><span class="p">,</span> <span class="n">admin</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">urls</span><span class="p">),</span>  <span class="c"># &lt;- これ</span>
+</span><span class='line'><span class="p">]</span> <span class="o">+</span> <span class="n">static</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">MEDIA_URL</span><span class="p">,</span> <span class="n">document_root</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">MEDIA_ROOT</span><span class="p">)</span>
+</span><span class='line'><span class="o">...</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>上記2つの設定があることを確認したら<code>python manage.py runserver</code>でアプリケーションを起動してみよう。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> python manage.py runserver
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>早速ブラウザで<a href="http://localhost:8000/admin/">http://localhost:8000/admin/</a> にアクセスするとログイン画面が出てくるので、<code>python manage.py createsuperuser</code>で作成したユーザでログインすれば良い。もしどんなユーザを作成したか忘れてしまったのならば、改めて再作成すれば良い。</p>
+
+<p>ログイン後、表示された画面には<em>AUTHENTICATION AND AUTHORIZATION</em>というタイトルの項目があるが、肝心のrangoアプリケーションのテーブルが存在しないことに気づくだろう。これはDjangoのAdmin機能がrangoアプリケーションのmodelsの存在を知らないからだ。なので、教えてあげる必要がある。<code>rango/admin.py</code>に以下のように編集する。</p>
+
+<p>rango/admin.py</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='diff'><span class='line'><span class="gd">--- a/rango/admin.py</span>
+</span><span class='line'><span class="gi">+++ b/rango/admin.py</span>
+</span><span class='line'><span class="gu">@@ -1,3 +1,5 @@</span>
+</span><span class='line'> from django.contrib import admin
+</span><span class='line'><span class="gi">+from rango.models import Category, Page</span>
+</span><span class='line'>
+</span><span class='line'><span class="gd">-# Register your models here.</span>
+</span><span class='line'><span class="gi">+admin.site.register(Category)</span>
+</span><span class='line'><span class="gi">+admin.site.register(Page)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>上記のとおりに編集してWebの画面をリロードすると、<em>RANGO</em>という項目が追加されるはず。&#8221;Categorys&#8221;をクリックすると、先ほどShell機能を使って追加した&#8221;Test&#8221;が存在することがわかる。このような方法でもDBを確認することができるし、おそらくDjangoの開発中はこちらを利用することが多いだろう。</p>
+
+<p>ところで、Webの管理画面では&#8221;Category&#8221;が&#8221;Categorys&#8221;となっていることに気づいただろうか？これは別にDjangoがtypoしているわけではなくて、モデルのメタデータの<code>verbose_name_plural</code>のデフォルト設定によるもの。気になるようであれば、自分で修正することができる。以下の様に。</p>
+
+<p>rango/models.py</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='diff'><span class='line'>$ git diff | cat -
+</span><span class='line'><span class="gh">diff --git a/rango/models.py b/rango/models.py</span>
+</span><span class='line'><span class="gh">index c65a919..b9b694d 100644</span>
+</span><span class='line'><span class="gd">--- a/rango/models.py</span>
+</span><span class='line'><span class="gi">+++ b/rango/models.py</span>
+</span><span class='line'><span class="gu">@@ -4,6 +4,9 @@ from django.db import models</span>
+</span><span class='line'> class Category(models.Model):
+</span><span class='line'>     name = models.CharField(max_length=128, unique=True)
+</span><span class='line'>
+</span><span class='line'><span class="gi">+    class Meta:</span>
+</span><span class='line'><span class="gi">+        verbose_name_plural = &#39;Categories&#39;</span>
+</span><span class='line'><span class="gi">+</span>
+</span><span class='line'>     def __str__(self):
+</span><span class='line'>         return self.name
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>編集後は再度画面をリロードして確認しておくこと。</p>
+
+<p>ここまでの作業でモデルが用意できた。実際の開発では、このモデルにデータを入れて動作確認やテストをしたりするわけだけど、そのためのテストデータを毎回用意するのは正直ダルい。ので、一般的にはpopulation scriptと呼ばれるダミーデータ生成のためのスクリプトを用意する。ダミーデータとは言え、ランダムな文字列を適当に入れても、あまり役に立たない。ここでは、それっぽいデータを用意してDBに格納するスクリプトを書く。<code>populate_rango.py</code>という名前でプロジェクトディレクトリの直下にファイルを用意しよう。こんな感じ。</p>
+
+<p>populate_rango.py</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">os</span>
+</span><span class='line'><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s">&#39;DJANGO_SETTINGS_MODULE&#39;</span><span class="p">,</span> <span class="s">&#39;tango_with_django_project.settings&#39;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">django</span>
+</span><span class='line'><span class="n">django</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">from</span> <span class="nn">rango.models</span> <span class="kn">import</span> <span class="n">Category</span><span class="p">,</span> <span class="n">Page</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">populate</span><span class="p">():</span>
+</span><span class='line'>    <span class="n">python_pages</span> <span class="o">=</span> <span class="p">[</span>
+</span><span class='line'>        <span class="p">{</span><span class="s">&quot;title&quot;</span><span class="p">:</span> <span class="s">&quot;Official Python Tutorial&quot;</span><span class="p">,</span>  <span class="s">&quot;url&quot;</span><span class="p">:</span> <span class="s">&quot;http://docs.python.org/2/tutorial&quot;</span><span class="p">},</span>
+</span><span class='line'>        <span class="p">{</span><span class="s">&quot;title&quot;</span><span class="p">:</span> <span class="s">&quot;How to Think like a Computer Scientis&quot;</span><span class="p">,</span>  <span class="s">&quot;url&quot;</span><span class="p">:</span> <span class="s">&quot;http://www.greenteapress.com/thinkpython&quot;</span><span class="p">},</span>
+</span><span class='line'>        <span class="p">{</span><span class="s">&quot;title&quot;</span><span class="p">:</span> <span class="s">&quot;Learn Python in 10 Minutes&quot;</span><span class="p">,</span>  <span class="s">&quot;url&quot;</span><span class="p">:</span> <span class="s">&quot;http://www.korokithakis.net/tutorials/python&quot;</span><span class="p">},</span>
+</span><span class='line'>    <span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">django_pages</span> <span class="o">=</span> <span class="p">[</span>
+</span><span class='line'>        <span class="p">{</span><span class="s">&quot;title&quot;</span><span class="p">:</span> <span class="s">&quot;Official Django Tutorial&quot;</span><span class="p">,</span> <span class="s">&quot;url&quot;</span><span class="p">:</span> <span class="s">&quot;https://docs.djangoproject.com/en/1.9/intro/tutorial01/&quot;</span><span class="p">},</span>
+</span><span class='line'>        <span class="p">{</span><span class="s">&quot;title&quot;</span><span class="p">:</span> <span class="s">&quot;Django Rocks&quot;</span><span class="p">,</span> <span class="s">&quot;url&quot;</span><span class="p">:</span> <span class="s">&quot;http://djangorocks.com&quot;</span><span class="p">},</span>
+</span><span class='line'>        <span class="p">{</span><span class="s">&quot;title&quot;</span><span class="p">:</span> <span class="s">&quot;How to Tango with Django&quot;</span><span class="p">,</span> <span class="s">&quot;url&quot;</span><span class="p">:</span> <span class="s">&quot;http://www.tangowithdjango.com/&quot;</span><span class="p">},</span>
+</span><span class='line'>    <span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">other_pages</span> <span class="o">=</span> <span class="p">[</span>
+</span><span class='line'>        <span class="p">{</span><span class="s">&quot;title&quot;</span><span class="p">:</span> <span class="s">&quot;Bottle&quot;</span><span class="p">,</span> <span class="s">&quot;url&quot;</span><span class="p">:</span> <span class="s">&quot;https://bottlepy.org/docs/dev/&quot;</span><span class="p">},</span>
+</span><span class='line'>        <span class="p">{</span><span class="s">&quot;title&quot;</span><span class="p">:</span> <span class="s">&quot;Flask&quot;</span><span class="p">,</span> <span class="s">&quot;url&quot;</span><span class="p">:</span> <span class="s">&quot;http://flask.pocoo.org/&quot;</span><span class="p">},</span>
+</span><span class='line'>    <span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">cats</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>        <span class="s">&quot;Python&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;pages&quot;</span><span class="p">:</span> <span class="n">python_pages</span><span class="p">},</span>
+</span><span class='line'>        <span class="s">&quot;Django&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;pages&quot;</span><span class="p">:</span> <span class="n">django_pages</span><span class="p">},</span>
+</span><span class='line'>        <span class="s">&quot;Other Frameworks&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;pages&quot;</span><span class="p">:</span> <span class="n">other_pages</span><span class="p">},</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">for</span> <span class="n">cat</span><span class="p">,</span> <span class="n">cat_data</span> <span class="ow">in</span> <span class="n">cats</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span class='line'>        <span class="n">c</span> <span class="o">=</span> <span class="n">add_cat</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">cat_data</span><span class="p">[</span><span class="s">&quot;pages&quot;</span><span class="p">]:</span>
+</span><span class='line'>            <span class="n">add_page</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="s">&quot;title&quot;</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="s">&quot;url&quot;</span><span class="p">])</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">Category</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+</span><span class='line'>        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">Page</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="n">c</span><span class="p">):</span>
+</span><span class='line'>            <span class="k">print</span><span class="p">(</span><span class="s">&quot;- {0} - {1}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)))</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">add_page</span><span class="p">(</span><span class="n">cat</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">views</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">p</span> <span class="o">=</span> <span class="n">Page</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="n">cat</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</span><span class='line'>    <span class="n">p</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
+</span><span class='line'>    <span class="n">p</span><span class="o">.</span><span class="n">views</span> <span class="o">=</span> <span class="n">views</span>
+</span><span class='line'>    <span class="n">p</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">p</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">add_cat</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">c</span> <span class="o">=</span> <span class="n">Category</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</span><span class='line'>    <span class="n">c</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">c</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Starting Rango population script...&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">populate</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>このスクリプトを簡単に解説する。まず、一番下の<code>if __name__ == '__main__':</code>は「ファイルを直接実行したかどうか」を判定していて、直接実行した場合には<code>"Starting Rango population script..."</code>をターミナルに表示して、<code>populate()</code>という関数を実行する。<code>populate()</code>のほとんどはテストデータの定義だけど、後半の数行は<code>foo</code>ループを実行している。最初のループでは、Categoryテーブルにデータを入れて、それからPageテーブルにデータを追加している。次のループはちゃんとデータが格納されているかどうかを確認するために、テーブルからデータを取り出してターミナルに表示している。それだけ。</p>
+
+<p>実際にpopulate scriptを実行してから<code>python manage.py runserver</code>を実行、ブラウザで<a href="http://127.0.0.1:8000/admin/">http://127.0.0.1:8000/admin/</a> にアクセスして各テーブルのページを開くと、追加したデータを確認できる。</p>
+
+<a name="L..........................."></a>
+<h2>ここまでのおさらい</h2>
+
+<p>DjangoにおけるModelsとはデータモデル、より直接的に言うと、データの定義や操作のこととなる。Djangoでは以下のような作業順序で行なうことが一般的だ。</p>
+
+<ol>
+<li>自分のDjangoアプリケーションの中に<code>models.py</code>を用意して、その中にテーブル定義をモデルクラスとして記述する。</li>
+<li><code>admin.py</code>の中に定義したモデルクラスを登録する。</li>
+<li><code>python manage.py makemigrations ${app_name}</code>を実行してマイグレーションの準備を行なう。</li>
+<li><code>python manage.py migrate</code>を実行してDBに対するマイグレーションを行なう。</li>
+<li>モデルの動作確認やテストのためにpopulation script（ダミーデータの生成スクリプト）を用意する。</li>
+</ol>
+
+
+<p>色々な理由でDBを削除して作り直すことが発生すると思うけど、その場合は<code>python manage.py migrate</code>を実行すればDBが新たに作成される。その際には、ちゃんとマイグレーションのスクリプト（アプリケーションのディレクトリにある<code>migrations</code>ディレクトリの中のスクリプト）がちゃんと存在していることを確認しておくこと。また、管理者用アカウントは<code>`python manage.py createsuperuser</code>を実行して作成する。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[モニタリングについて思うこと]]></title>
+    <link href="http://sgykfjsm.github.io/blog/2017/10/11/monitaringunituitesi-ukoto/"/>
+    <updated>2017-10-11T21:25:29+09:00</updated>
+    <id>http://sgykfjsm.github.io/blog/2017/10/11/monitaringunituitesi-ukoto</id>
+    <content type="html"><![CDATA[<p>色々思うところがあって、こんな文章を書いたけど、途中で考えが整理できなくなった。でもまぁ、脳内の考えを一旦吐き出しておいて、いつか気が向いたら、改めて書き直そうと思う。</p>
+
+<p>最近、SRE(Site Reliablity Engineering)だとかなんとかでモニタリングが流行っている気がする。流行っているというか、今までもモニタリングをやっていたんだけど&#8221;SRE&#8221;という言葉が流行って行く中で、モニタリングの責任が明らかになって、より一般的になったというべきか。また、ポジションとしてのSRE(Site Reliablity Engineer)が確立し、職責として「だれがモニタリングを行なうべきか」ということも明確になったし、DataDogやMackerelなどのようにモニタリングがビジネスとして成立するようになってきたという背景もモニタリングの重要性を高めているのだと思う。あとはGrafanaなんかが提供するダッシュボードがカッコイイというのもあるかな。</p>
+
+<!-- more -->
+
+
+<p>で、じゃあどういう風にモニタリングしているのかというと、DataDogやMackerelのようなモニタリング・プラットフォームを利用している場合はちょっと違うかもしれないけど、自分たちで収集するメトリクスを決めて、メトリクスを収集するスクリプトを書き、アラートを設定して、というのが一般的だろう。Prometheusのような場合はコミュニティが提供するExporterを使うこともあるだろう。</p>
+
+<p>モニタリングのアーキテクチャ（Pull or Pushなど）に関してもいくつか思うところはあるのだけれども、個人的にすごくモヤモヤしているのが、「とりあえず集めておく」という姿勢だ。もちろん、メトリクスを集めること自体は悪くない。データが多ければ、その分だけ検証できる内容や深みを増すことができる。しかし、一方でそれに比例してアラートも増える。ある程度の規模の会社やチームだと、こういったメトリクスやアラートは共通化されていき、次第にそれが社内のモニタリング基盤となる。</p>
+
+<p>こういったシナリオは一見すると良さそうに見える。しかし、本当にそうだろうか。集めたメトリクスはサービスを超えて本当に共有できるだろうか。例えばCPUが90%を超えたとして、次に見るべきものは何か。ディスク使用量が85%を超えているという事実は大きなディスクを持つストレージサービスと比較的ディスクが少ないAPIサービスとで同じ意味を持つだろうか。また、同種のサービスであっても、稼働環境がテスト環境かプロダクション環境かによってメトリクスが示唆するものは異なるはずだ。こういったメトリクスの意味や重要性の違いは、サービスやアプリケーション、稼働環境によって異なるはずだ。そしてモニタリングの利用者は膨大なアラートの中から必要なものだけを選択していく。アラートなどによって省みられることがないメトリクスは存在しないことと同じだ。そのため、次第に多くのメトリクスはゴミデータとしてただストレージに蓄積されていく。メトリクスを収集するスクリプトやエージェントは貴重なリソースを消費しているにもかかわらず。</p>
+
+<p>自分は現在、いわゆる&#8221;SRE&#8221;チームと分類される組織に所属している(&ldquo;SRE&#8221;を生業にしていると明言できないのは、SREが出来ていないからだという自覚があるからだ)。だから、ここで述べる視点はサービス開発者ではなく、モニタリングを提供する側の視点となる。また、ここで問題視したいのは「とりあえず集めた」メトリクスに何の価値があるのか、ということだ。私自身の考えとしては以下の通りだ。</p>
+
+<ul>
+<li>メトリクスはアクションを起こすものでなければならない</li>
+<li>メトリクスは示唆をあたえるものでなければならない</li>
+<li>上記を1つも満たさないメトリクスは価値がなく、貴重なサーバーリソースを浪費するコストとなる</li>
+</ul>
+
+
+<a name="L................................."></a>
+<h2>ここで問題としたいこと</h2>
+
+<p>モニタリングによって集められているデータは次の通り大きく２つに分けることができるだろう。１つは数値データだ。場合によっては数字で表現されたアプリケーションのバージョン情報ということあるだろうが、異常値あるいは閾値を設定しなければ評価できないことを考えると、数字で表現されたバージョン情報は数値データとみなすことが出来る。もう１つは&#8221;INFO&#8221;, &ldquo;WARN&rdquo;, &ldquo;FATAL&#8221;といったような意味をもつ情報だ。この場合、情報自体が意味をもっているため、価値云々を議論する余地は無いものと考える。もちろん、付与された情報のレベルが妥当かどうかという議論は発生するが、それはここでは問題としない。なぜならば、情報のレベルはサービス開発側で予め決められているおり、すでに情報としての価値が決定されているからだ。よって、今回の議論の対象にはしない。ここで議論したいのは数値データであるメトリクスであり、それの運用についてだ。</p>
+
+<a name="L...................................."></a>
+<h2>メトリクスを運用するとは</h2>
+
+<p>先にも少し触れたが、メトリクスは必ずしもアラートのためだけではない。アプリケーションやサーバーの稼働状況を数値で表現し、期待通りの動作をしているかというパフォーマンスの検証に用いることもできる。この場合、どのメトリクスを見ることで期待通りの動作をしていると言えるかは一概にいえるものではないと思う。例えばWebサーバーならば処理したリクエストの数だったり、リクエストを受け取ってからレスポンスを返すまでのレイテンシかもしれない。ストレージサービスであれば、如何にディスクIOが少ないかということになるかもしれない。このように、適切な指標の決定はサービス開発者あるいはサービス開発のチームに所属にしていなければ決められないはずだ。これらを踏まえると、「メトリクスを運用する」とは「どのようにメトリクスを評価するか」ということになる。</p>
+
+<a name="L...................................."></a>
+<h2>メトリクスを評価するとは</h2>
+
+<p>では、メトリクスを評価するとは具体的にどのようなことだろうか。これもまた繰り返しになるが、結局のところ、サービスやアプリケーション、そして環境によって異なる。しかしながら、それでも共通する点を見出すとするならば、メトリクスの値のどこからどこまでが異常で、どこが異常と正常の閾値になるのかを決定しなければならないということだ。「評価」とはこのような決定を意味している。メトリクスの種類や収集した環境やサービスの違いにかかわらず、メトリクスの閾値は必ず設定されなければならない。</p>
+
+<p>ただし、共通しているのはここまでで、ここから先、つまり決定的な閾値はやはりメトリクスだけで決まるものではない。仮に過去1ヶ月間のCPUが10%から20%で推移していたからといって、これから1ヶ月のうちにCPU使用率が30%になったら、それは異常事態だと言えるだろうか。単純な統計に基づくなら異常と言えるかもしれない。しかし現実にはそう判断できないはずだ。なぜならば、ユーザーの増加、アプリケーションに実装したアルゴリズムの変化など、「正常(起きてしかるべき)な変化」とみなす要因が常に存在しうるからだ。もちろん正常な変化だからといって、そのままにしておいて良いというわけではない。</p>
+
+<a name="L......................................................"></a>
+<h2>モニタリングの提供者ができることは？</h2>
+
+<p>こうなってくると、メトリクスの評価はサービス開発者の専有事項となりそうだ。確かに多くの場合はそうかもしれない。サービスに携わることなくサービスを評価することは出来ないし、ましてや、そのサービスのアプリケーションが使用するリソースの多寡の良し悪しを判断することなど出来るはずもない。このような前提を基にすると、SREはどのようにモニタリングに関わることができるのだろうか？単にサービス開発者のモニタリング設定作業を代行するだけ？オンコールを受けてトラブルシューティング？そうではないはずだ。SREが文字通りにWebサイトやサービスの安定化に資するエンジニアであるならば、モニタリングにおいては主導的にならなければならないし、それは作業代行者であってはならないはず。</p>
+
+<p>モニタリングを提供する側はサービス開発者に対してメトリクスを評価するための示唆を与えることができるはずだ。例えば&hellip;(ここから先は考えがまとまらなかった)</p>
+
+<p>以下はメモランダム。あとで推敲して書き直す</p>
+
+<ul>
+<li>メトリクスはむやみに収集するのではなく、目的をもって収集すべき。</li>
+<li>メトリクスの目的はかならず共有されていなければならない。</li>
+<li>メトリクスはアクションを導き出すべき</li>
+<li>メトリクスが導出するアクションを具体的な手順に落とし込んだ文書があるべき</li>
+<li>モニタリングの提供者はメトリクスの評価者に対して示唆を与える表現（例えばダッシュボードだったり、関連情報の添付、わかりやすいアラートメールのぶん面など）を提供するべき</li>
+<li>モニタリングにはコストが発生していることを自覚するべき</li>
+</ul>
+
+
+<p>これもメモランダム。なんとなくだけど、SREっていうムーブメントは、かつては「フルスタックエンジニア」と称する何かをもてはやしたり、「ビッグデータ活用」みたいな「とりあえずウチは大規模に何かやってます！」みたいな中身のない何かになってやしないかなという思いがある。もちろんSRE本がテキストとして存在しているので、これらほど適当なものではないけど、カンバンを変えただけでやってることは今まで通りだったり、逆にモニタリングをそれっぽいアプリケーションでやってるからSREと言ったり…あるいはタチの悪いところだと、リクルーティングのためだけにSREと自称しているところもありそうな気がする。</p>
+
+<p>SREは特定の職能や役割を表現するものではなくて、求められる技術や経験、知識はとても幅広い。だから、個人がSREとなるというよりかは、組織がSREとなるほうが実態としては自然なのかもしれない。それはかつてDevOpsという言葉で表現していたような、ただOpsだけをやるエンジニアだけじゃなくてコードで問題を解決するというDevを取り込むようなチームづくりと基本的な考え方は同じかもしれない。縦割りの組織じゃなくて、横方向に人材を広げて組織として役割の柔軟性や弾力性を持たせる。そうすることでサービス開発者の足元を確かにし、成功への道筋を確かにしていくような役割。SREはスーパーエンジニアの代名詞などではなくて、そういった弾力性に富んだ組織のことを意味するのではないかなぁと思うけど、それって別にSREって表現しなくても今までにも必要とされたし、成功している組織には当たり前にいるんだろうな。</p>
+
+<p>とりとめがないので、このへんで。もう少し考えを整理する必要がある。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Goの正規表現とReplacerを比較した]]></title>
@@ -6777,449 +7394,6 @@ signals independently.</p></blockquote>
 <hr />
 
 <p>色々試行錯誤した割に、こう言う結果になって残念…</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[AnsibleでMySQLをインストールする。]]></title>
-    <link href="http://sgykfjsm.github.io/blog/2015/02/17/install-mysql-with-ansible/"/>
-    <updated>2015-02-17T09:19:00+09:00</updated>
-    <id>http://sgykfjsm.github.io/blog/2015/02/17/install-mysql-with-ansible</id>
-    <content type="html"><![CDATA[<p>AWSなんかを使ってると、イチからMySQLなどの基本的なミドルウェアをセットアップすることは減ってくる。そんな中、AnsibleでMySQLをインストールする事になったのだけど、意外と忘れてたりAnsibleで作業するのと手作業で進めることの差異でちょっと詰まったりしたので、ここに備忘しておく。</p>
-
-<!-- more -->
-
-
-<a name="L.................."></a>
-<h2>大まかな手順</h2>
-
-<ol>
-<li>最新安定版(MySQL5.6)をインストールするためのリポジトリを設定する。</li>
-<li>リポジトリ軽油でインストールする。</li>
-<li>初期セットアップを行なう。
-
-<ul>
-<li>rootのパスワード初期化</li>
-<li>mysql_secure_installationによるMySQLの初期化</li>
-<li>諸々の設定</li>
-</ul>
-</li>
-</ol>
-
-
-<p>たったこれだけなんだけど、Ansibleでこれらの作業を実装するのはちょっと面倒。というのも、mysql_secure_installationはコマンドを実行すると対話的に処理を進めることになるが、これをAnsibleで実行するのがちょっと面倒だったりする。また、rootのパスワード初期化についても考慮が必要で、playbookに直書きするのはもちろん駄目だし、mysql_config_editorはこれまた対話式のコマンドなので、自動化が微妙に難しい。諸々の設定に関して、設定すべき内容は案件などによると思うが、予めいくつかのmy.cnfなどを用意しておいて、それをコピーして使うようすればいいだけなので、あまり問題にはならない。</p>
-
-<p>ということで、rootのパスワード初期化および管理とmysql_secure_installationについて考える。</p>
-
-<a name="root...................................."></a>
-<h2>rootのパスワード初期化と管理</h2>
-
-<p>いくつかのブログなどにあるHowTo記事でrootの初期パスワードは.mysql_secretというファイルにある、と書かれていることがある。が、今回MySQL5.6をインストールしてみてもそのようなファイルは無かった。今までも見たことがないので、もしかしたらインストールの方法によってはこのファイルが生成されるのかもしれないが、とにかく無い。なので、パスワードの初期化は基本に忠実に以下のようにMySQLを起動させてからパスワードをSQLで更新した。</p>
-
-<pre><code>/bin/sh /usr/bin/mysqld_safe \
-    --datadir=/var/lib/mysql \
-    --socket=/var/lib/mysql/mysql.sock \
-    --pid-file=/var/run/mysqld/mysqld.pid \
-    --basedir=/usr \
-    --user=mysql \
-    --skip-grant-tables \
-    --skip-networking
-</code></pre>
-
-<p>この起動コマンドについての詳細は<a href="http://dev.mysql.com/doc/refman/5.1/en/resetting-permissions.html#resetting-permissions-generic">Resetting the Root Password: Generic Instructions</a>を参照。この方法がシンプルで覚えることが少なくて良いと思う。</p>
-
-<p>これでMySQLサーバを起動した後、以下のSQLでパスワードを更新する。パスワードはAnsibleの中で<code>cat /dev/urandom | LC_CTYPE=C tr -dc &lsquo;[:alnum:]&rsquo; | head -c 16 ; echo</code>とかやって適当な文字列を生成してあげれば良いと思う。パスワードをplaybookに直書きするよりかはマシだろう。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='sql'><span class='line'><span class="k">UPDATE</span> <span class="n">mysql</span><span class="p">.</span><span class="k">user</span> <span class="k">SET</span> <span class="n">Password</span><span class="o">=</span><span class="n">PASSWORD</span><span class="p">(</span><span class="s1">&#39;NewPassWord&#39;</span><span class="p">)</span> <span class="k">WHERE</span> <span class="k">User</span><span class="o">=</span><span class="s1">&#39;root&#39;</span><span class="p">;</span>
-</span><span class='line'><span class="n">FLUSH</span> <span class="k">PRIVILEGES</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>ここまでは特段問題が無くて、問題はこのパスワードをどこに保管するか、ということ。結論から言えば、/etc/my.cnf.d配下に管理することに落ち着いた。以下の様なファイルを作っておいて、それを/etc/my.cnf.d配下に配置しておけば良いと思う。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='ini'><span class='line'><span class="k">[db-administrator]</span>
-</span><span class='line'><span class="na">user</span> <span class="o">=</span> <span class="s">root</span>
-</span><span class='line'><span class="na">password</span> <span class="o">=</span> <span class="s">{ { mysql_root_password.stdout }}</span>
-</span><span class='line'><span class="na">host</span> <span class="o">=</span> <span class="s">localhost</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><code>{{ mysql_root_password.stdout }}</code>の部分はAnsible内で設定されるプレースホルダー。また、通常は<code>[client]</code>となっている部分は別の文言に変えている。そうでないと、デフォルトの接続情報として使われるので、注意すること。また、/etc/my.cnf.d配下のファイルが読み込まれるように、/etc/my.cnfには<code>!includedir /etc/my.cnf.d</code>を追加しておくこと。</p>
-
-<a name="Ansible...mysql_secure_installation..........................."></a>
-<h2>Ansibleでmysql_secure_installationを如何に行なうか。</h2>
-
-<p>ざっと思いついたのは以下の通り。</p>
-
-<ol>
-<li>普通にmysql_secure_installationを実行して、対話的に処理を行う。
-
-<ul>
-<li>そもそもAnsibleで行なう必要が無いのと、rootのパスワードなどをどこかにメモすることになるので却下</li>
-</ul>
-</li>
-<li>expectを使って、予め回答を入力しておいて、処理を自動化させる。
-
-<ul>
-<li>expectについては、<a href="http://www.math.kobe-u.ac.jp/~kodama/tips-expect.html%E3%81%BE%E3%81%9F%E3%81%AFhttp://linuxjm.sourceforge.jp/html/expect/man1/expect.1.html%E3%81%AA%E3%81%A9%E3%82%92%E5%8F%82%E7%85%A7%E3%80%82">http://www.math.kobe-u.ac.jp/~kodama/tips-expect.html%E3%81%BE%E3%81%9F%E3%81%AFhttp://linuxjm.sourceforge.jp/html/expect/man1/expect.1.html%E3%81%AA%E3%81%A9%E3%82%92%E5%8F%82%E7%85%A7%E3%80%82</a></li>
-<li>expectを別途インストールする必要がある。</li>
-<li>expcet/Tclの文法などを新たに覚えなければならない、かつあまり使うことがなさそうなので、あんまり覚える気がしない。</li>
-<li>試してみたけど微妙だった（予めすべてのパターンの質問を拾って、回答を用意しなければならない）</li>
-<li>ということで却下</li>
-</ul>
-</li>
-<li>mysql_secure_installationと同等の処理を実装し、それを実行する。
-
-<ul>
-<li>mysql_secure_installationがやっている処理自体はいくつかのSQLを実行しているだけで、実装自体は容易。</li>
-<li>ただし、今後のバージョンアップなどでmysql_secure_installationの内容を常に気にしておく必要がある。</li>
-<li>1と2の案に比べて、必要な時間が圧倒的に少なく済むので、今回はこの案にした。</li>
-</ul>
-</li>
-</ol>
-
-
-<p>で、その内容は以下の通り。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#!/bin/bash</span>
-</span><span class='line'><span class="c"># http://dev.mysql.com/doc/refman/5.0/en/resetting-permissions.html#resetting-permissions-unix</span>
-</span><span class='line'>
-</span><span class='line'><span class="nb">set</span> -xeu
-</span><span class='line'>
-</span><span class='line'><span class="o">[</span> <span class="k">$(</span>/usr/bin/whoami<span class="k">)</span> <span class="o">=</span> <span class="s1">&#39;root&#39;</span> <span class="o">]</span> <span class="o">||</span> <span class="o">{</span>
-</span><span class='line'>    /bin/echo root only
-</span><span class='line'>    <span class="nb">exit </span>1
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="nv">init_file</span><span class="o">=</span>/tmp/mysql-init
-</span><span class='line'>
-</span><span class='line'>/bin/cat <span class="s">&lt;&lt;EOF &gt; ${init_file}</span>
-</span><span class='line'><span class="s">-- Set the root password</span>
-</span><span class='line'><span class="s">UPDATE mysql.user SET Password=PASSWORD(&#39;${mysql_root_password}&#39;) WHERE User=&#39;root&#39;;</span>
-</span><span class='line'><span class="s">FLUSH PRIVILEGES;</span>
-</span><span class='line'><span class="s">-- Remove anonymous users</span>
-</span><span class='line'><span class="s">DELETE FROM mysql.user WHERE User=&#39;&#39;;</span>
-</span><span class='line'><span class="s">-- Disallow remote root login</span>
-</span><span class='line'><span class="s">DELETE FROM mysql.user WHERE User=&#39;root&#39; AND Host NOT IN (&#39;localhost&#39;,  &#39;127.0.0.1&#39;,  &#39;::1&#39;);</span>
-</span><span class='line'><span class="s">-- Remove test database</span>
-</span><span class='line'><span class="s">DROP DATABASE IF EXISTS test;</span>
-</span><span class='line'><span class="s">DELETE FROM mysql.db WHERE Db=&#39;test&#39; OR Db=&#39;test\\_%&#39;;</span>
-</span><span class='line'><span class="s">-- Reload privilege tables</span>
-</span><span class='line'><span class="s">FLUSH PRIVILEGES;</span>
-</span><span class='line'><span class="s">EOF</span>
-</span><span class='line'>chmod <span class="m">600</span> <span class="k">${</span><span class="nv">init_file</span><span class="k">}</span>
-</span><span class='line'>
-</span><span class='line'>nohup /bin/sh /usr/bin/mysqld_safe <span class="se">\</span>
-</span><span class='line'>    --datadir<span class="o">=</span>/var/lib/mysql <span class="se">\</span>
-</span><span class='line'>    --socket<span class="o">=</span>/var/lib/mysql/mysql.sock <span class="se">\</span>
-</span><span class='line'>    --pid-file<span class="o">=</span>/var/run/mysqld/mysqld.pid <span class="se">\</span>
-</span><span class='line'>    --basedir<span class="o">=</span>/usr <span class="se">\</span>
-</span><span class='line'>    --user<span class="o">=</span>mysql <span class="se">\</span>
-</span><span class='line'>    --skip-grant-tables <span class="se">\</span>
-</span><span class='line'>    --skip-networking <span class="p">&amp;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">while</span> :
-</span><span class='line'><span class="k">do</span>
-</span><span class='line'>    <span class="o">[</span> -r /var/run/mysqld/mysqld.pid <span class="o">]</span> <span class="o">||</span> <span class="k">continue</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">if</span> ps -ef <span class="p">|</span> grep -q <span class="k">$(</span>cat /var/run/mysqld/mysqld.pid<span class="k">)</span> <span class="p">;</span> <span class="k">then</span>
-</span><span class='line'>        <span class="nb">break</span>
-</span><span class='line'><span class="nb">    </span><span class="k">fi</span>
-</span><span class='line'>    sleep 10
-</span><span class='line'><span class="k">done</span>
-</span><span class='line'>
-</span><span class='line'>mysql -uroot &lt; <span class="k">${</span><span class="nv">init_file</span><span class="k">}</span> <span class="c"># 実際の処理では--login-pathを指定してrootでログイン、実行としている。</span>
-</span><span class='line'>
-</span><span class='line'>/etc/init.d/mysqld stop
-</span><span class='line'>
-</span><span class='line'>rm -f <span class="k">${</span><span class="nv">init_file</span><span class="k">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="nb">exit</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>実際に書いてみると、なんてことは無いコードではある。</p>
-
-<p>あと、他に何か書こうかと思ったけど、忘れたので、とりあえずMySQL56をインストールするためのplaybookを載っけてお茶を濁すことにする。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>---
-</span><span class='line'>- name: Install Official MySQL Repository
-</span><span class='line'>  yum: <span class="nv">name</span><span class="o">={</span> <span class="o">{</span> item <span class="p">|</span> quote <span class="o">}}</span> <span class="c"># 実際に使う時はスペースを削除すること</span>
-</span><span class='line'>  with_items:
-</span><span class='line'>    - http://dev.mysql.com/get/mysql-community-release-el6-5.noarch.rpm
-</span><span class='line'>  sudo: yes
-</span><span class='line'>  tags:
-</span><span class='line'>    - yum
-</span><span class='line'>    - mysql
-</span><span class='line'>
-</span><span class='line'>- name: Disable Official MySQL Repository
-</span><span class='line'>  replace: <span class="nv">dest</span><span class="o">=</span><span class="s2">&quot;/etc/yum.repos.d/{ { item }}.repo&quot;</span> <span class="nv">regexp</span><span class="o">=</span><span class="s2">&quot;^enabled *= *1$&quot;</span> <span class="nv">backup</span><span class="o">=</span>yes <span class="nv">replace</span><span class="o">=</span><span class="s1">&#39;enabled=0&#39;</span> <span class="c"># 実際に使う時はスペースを削除すること</span>
-</span><span class='line'>  with_items:
-</span><span class='line'>    - mysql-community
-</span><span class='line'>    - mysql-community-source
-</span><span class='line'>  sudo: yes
-</span><span class='line'>  tags:
-</span><span class='line'>    - yum
-</span><span class='line'>    - mysql
-</span><span class='line'>
-</span><span class='line'>- name: Install MySQL56
-</span><span class='line'>  yum: <span class="nv">name</span><span class="o">={</span> <span class="o">{</span> item <span class="p">|</span> quote <span class="o">}}</span> <span class="nv">state</span><span class="o">=</span>latest <span class="nv">enablerepo</span><span class="o">=</span>mysql56-community,remi <span class="c"># 実際に使う時はスペースを削除すること</span>
-</span><span class='line'>  with_items:
-</span><span class='line'>    - php56-php-mysqlnd <span class="c"># remi</span>
-</span><span class='line'>    - mysql-community-client
-</span><span class='line'>    - mysql-community-common
-</span><span class='line'>    - mysql-community-devel
-</span><span class='line'>    - mysql-community-libs
-</span><span class='line'>    - mysql-community-server
-</span><span class='line'>    - MySQL-python <span class="c"># for remote-host</span>
-</span><span class='line'>  sudo: yes
-</span><span class='line'>  tags:
-</span><span class='line'>    - mysql
-</span><span class='line'>
-</span><span class='line'>- name: Create root user password
-</span><span class='line'>  shell: cat /dev/urandom <span class="p">|</span> <span class="nv">LC_CTYPE</span><span class="o">=</span>C tr -dc <span class="s1">&#39;[:alnum:]&#39;</span> <span class="p">|</span> head -c 16
-</span><span class='line'>  register: mysql_root_password
-</span><span class='line'>  tags:
-</span><span class='line'>    - mysql
-</span><span class='line'>
-</span><span class='line'>- name: Execute mysql_secure_installation
-</span><span class='line'>  script: secure_install.sh <span class="o">{</span> <span class="o">{</span> mysql_root_password.stdout <span class="p">|</span> quote <span class="o">}}</span> <span class="c"># 実際に使う時はスペースを削除すること</span>
-</span><span class='line'>  sudo: yes
-</span><span class='line'>  register: result
-</span><span class='line'>  tags:
-</span><span class='line'>    - mysql
-</span><span class='line'>
-</span><span class='line'>- name: Add Line <span class="k">for</span> include append config
-</span><span class='line'>  lineinfile: &gt;
-</span><span class='line'>    <span class="nv">dest</span><span class="o">=</span>/etc/my.cnf
-</span><span class='line'>    <span class="nv">line</span><span class="o">=</span><span class="s2">&quot;!includedir /etc/my.cnf.d&quot;</span>
-</span><span class='line'>    <span class="nv">backup</span><span class="o">=</span>yes
-</span><span class='line'>  sudo: yes
-</span><span class='line'>  register: result
-</span><span class='line'>  tags:
-</span><span class='line'>    - mysql
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>- name: Copy my.cnf To /etc/my.cnf.d/login.cnf
-</span><span class='line'>  template: &gt;
-</span><span class='line'>    <span class="nv">src</span><span class="o">=</span>my.cnf.j2
-</span><span class='line'>    <span class="nv">dest</span><span class="o">=</span>/etc/my.cnf.d/login.cnf
-</span><span class='line'>    <span class="nv">owner</span><span class="o">=</span>root
-</span><span class='line'>    <span class="nv">group</span><span class="o">=</span>root
-</span><span class='line'>    <span class="nv">mode</span><span class="o">=</span>0600
-</span><span class='line'>  sudo: yes
-</span><span class='line'>  tags:
-</span><span class='line'>    - mysql
-</span><span class='line'>
-</span><span class='line'>- name: Add mysqld to StartUps on boot And Be Running
-</span><span class='line'>  service: <span class="nv">enabled</span><span class="o">=</span>yes <span class="nv">name</span><span class="o">=</span>mysqld <span class="nv">state</span><span class="o">=</span>running
-</span><span class='line'>  sudo: yes
-</span><span class='line'>  tags:
-</span><span class='line'>    - mysql
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>あんまりかっこよくないけど、Jekyllyがcodeブロック内の波括弧を解釈しようとして変な風になるので、スペースを入れてごまかしている。</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[sbtから起動させる処理にコマンドラインから引数を渡す]]></title>
-    <link href="http://sgykfjsm.github.io/blog/2015/02/15/pass-params-to-sbt-on-cli/"/>
-    <updated>2015-02-15T02:02:00+09:00</updated>
-    <id>http://sgykfjsm.github.io/blog/2015/02/15/pass-params-to-sbt-on-cli</id>
-    <content type="html"><![CDATA[<p>以下はskinny frameworkをつかって処理を書いているが、sbtからの起動させる際にはskinny frameworkを使ってるかどうかは関係ないはず。</p>
-
-<!-- more -->
-
-
-<p>こんな処理を書いたとする。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">package</span> <span class="nn">batch</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">object</span> <span class="nc">MyBatch</span> <span class="k">extends</span> <span class="n">skinny</span><span class="o">.</span><span class="n">logging</span><span class="o">.</span><span class="nc">Logging</span> <span class="k">with</span> <span class="nc">App</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">def</span> <span class="n">runMain</span><span class="o">(</span><span class="n">params</span><span class="k">:</span><span class="kt">List</span><span class="o">[</span><span class="kt">String</span><span class="o">])</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
-</span><span class='line'>    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="o">(</span><span class="s">&quot;start&quot;</span><span class="o">)</span>
-</span><span class='line'>    <span class="n">params</span> <span class="n">foreach</span> <span class="n">println</span>
-</span><span class='line'>    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="o">(</span><span class="s">&quot;end&quot;</span><span class="o">)</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="n">runMain</span><span class="o">(</span><span class="n">args</span><span class="o">.</span><span class="n">toList</span><span class="o">)</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>その場合、以下の様に起動させれば良い。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">$</span> <span class="o">./</span><span class="n">sbt</span> <span class="s">&quot;run-main batch.MyBatch foo bar&quot;</span>
-</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span> <span class="nc">Loading</span> <span class="n">project</span> <span class="n">definition</span> <span class="n">from</span> <span class="o">/</span><span class="nc">Users</span><span class="o">/</span><span class="n">sgyk</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">script</span><span class="o">/</span><span class="n">scala</span><span class="o">/</span><span class="n">skinny</span><span class="o">-</span><span class="n">blank</span><span class="o">-</span><span class="n">app</span><span class="o">/</span><span class="n">project</span>
-</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span> <span class="nc">Set</span> <span class="n">current</span> <span class="n">project</span> <span class="n">to</span> <span class="n">skinny</span><span class="o">-</span><span class="n">blank</span><span class="o">-</span><span class="n">app</span><span class="o">-</span><span class="n">dev</span> <span class="o">(</span><span class="n">in</span> <span class="n">build</span> <span class="n">file</span><span class="o">:/</span><span class="nc">Users</span><span class="o">/</span><span class="n">sgyk</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">script</span><span class="o">/</span><span class="n">scala</span><span class="o">/</span><span class="n">skinny</span><span class="o">-</span><span class="n">blank</span><span class="o">-</span><span class="n">app</span><span class="o">/)</span>
-</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span> <span class="nc">Generating</span> <span class="o">/</span><span class="nc">Users</span><span class="o">/</span><span class="n">sgyk</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">script</span><span class="o">/</span><span class="n">scala</span><span class="o">/</span><span class="n">skinny</span><span class="o">-</span><span class="n">blank</span><span class="o">-</span><span class="n">app</span><span class="o">/</span><span class="n">target</span><span class="o">/</span><span class="n">dev</span><span class="o">/</span><span class="n">scala</span><span class="o">-</span><span class="mf">2.11</span><span class="o">/</span><span class="n">resource_managed</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">rebel</span><span class="o">.</span><span class="n">xml</span><span class="o">.</span>
-</span><span class='line'><span class="o">[</span><span class="kt">info</span><span class="o">]</span> <span class="nc">Running</span> <span class="n">batch</span><span class="o">.</span><span class="nc">MyBatch</span> <span class="n">foo</span> <span class="n">bar</span>
-</span><span class='line'><span class="mi">2014</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">14</span> <span class="mi">18</span><span class="k">:</span><span class="err">43</span><span class="kt">:</span><span class="err">44</span><span class="kt">.</span><span class="err">985</span>  <span class="kt">INFO</span>   <span class="kt">---</span> <span class="o">[</span>     <span class="kt">run-main-</span><span class="err">0</span><span class="o">]</span> <span class="n">batch</span><span class="o">.</span><span class="nc">MyBatch</span><span class="n">$</span>                           <span class="k">:</span> <span class="kt">start</span>
-</span><span class='line'><span class="n">foo</span>
-</span><span class='line'><span class="n">bar</span>
-</span><span class='line'><span class="mi">2014</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">14</span> <span class="mi">18</span><span class="k">:</span><span class="err">43</span><span class="kt">:</span><span class="err">45</span><span class="kt">.</span><span class="err">005</span>  <span class="kt">INFO</span>   <span class="kt">---</span> <span class="o">[</span>     <span class="kt">run-main-</span><span class="err">0</span><span class="o">]</span> <span class="n">batch</span><span class="o">.</span><span class="nc">MyBatch</span><span class="n">$</span>                           <span class="k">:</span> <span class="kt">end</span>
-</span><span class='line'><span class="o">[</span><span class="kt">success</span><span class="o">]</span> <span class="nc">Total</span> <span class="n">time</span><span class="k">:</span> <span class="err">1</span> <span class="kt">s</span><span class="o">,</span> <span class="n">completed</span> <span class="mi">2014</span><span class="o">/</span><span class="mi">11</span><span class="o">/</span><span class="mi">14</span> <span class="mi">18</span><span class="k">:</span><span class="err">43</span><span class="kt">:</span><span class="err">45</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><code>run-main ${package-name}.${class-name} arg1 arg2 &hellip;</code>といった感じ。</p>
 ]]></content>
   </entry>
   

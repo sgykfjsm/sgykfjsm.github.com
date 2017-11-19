@@ -9,7 +9,7 @@
   <meta name="author" content="sgykfjsm">
 
   
-  <meta name="description" content="なんとなく色んな人のISUCON6の記事を読んでたら、Goの正規表現が遅くて苦労した、という話を多く見受けられた。そもそも一般的に正規表現自体が遅いとされており、だからこそ各言語では正規表現エンジンが色々実装されてたりするんだけど、Goではあまりそういう話を聞かない。 &hellip;">
+  <meta name="description" content="Webアプリケーションでデータを保存・参照・更新・削除という、いわゆるCRUD操作を行う場合はデータベースを利用するのが一般的で、特にリレーショナル・データベース（RDB）が利用される。RDBに対する操作はSQLを用いられる。これはまぁ一般常識。フルスタックWebアプリケーションの場合、 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,78 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2017/11/19/models-in-basic-by-tango-with-django/">models in basic by tango with django</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2017-11-19T20:15:21+09:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>19</span><span class='date-suffix'>th</span>, <span class='date-year'>2017</span></span> <span class='time'>8:15 pm</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Webアプリケーションでデータを保存・参照・更新・削除という、いわゆるCRUD操作を行う場合はデータベースを利用するのが一般的で、特にリレーショナル・データベース（RDB）が利用される。RDBに対する操作はSQLを用いられる。これはまぁ一般常識。フルスタックWebアプリケーションの場合、SQLで操作するデータをModelとして定義し、それをORM(Object Relational Mapper)を使って、Modelとデータ(データベースの中にあるテーブル定義)と対応させる。Djangoでもこういった機能を提供しており、今回はこれを学習する。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2017/11/19/models-in-basic-by-tango-with-django/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2017/10/11/monitaringunituitesi-ukoto/">モニタリングについて思うこと</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2017-10-11T21:25:29+09:00'><span class='date'><span class='date-month'>Oct</span> <span class='date-day'>11</span><span class='date-suffix'>th</span>, <span class='date-year'>2017</span></span> <span class='time'>9:25 pm</span></time>
+        
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>色々思うところがあって、こんな文章を書いたけど、途中で考えが整理できなくなった。でもまぁ、脳内の考えを一旦吐き出しておいて、いつか気が向いたら、改めて書き直そうと思う。</p>
+
+<p>最近、SRE(Site Reliablity Engineering)だとかなんとかでモニタリングが流行っている気がする。流行っているというか、今までもモニタリングをやっていたんだけど&#8221;SRE&#8221;という言葉が流行って行く中で、モニタリングの責任が明らかになって、より一般的になったというべきか。また、ポジションとしてのSRE(Site Reliablity Engineer)が確立し、職責として「だれがモニタリングを行なうべきか」ということも明確になったし、DataDogやMackerelなどのようにモニタリングがビジネスとして成立するようになってきたという背景もモニタリングの重要性を高めているのだと思う。あとはGrafanaなんかが提供するダッシュボードがカッコイイというのもあるかな。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2017/10/11/monitaringunituitesi-ukoto/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -399,76 +471,6 @@
   
     <footer>
       <a rel="full-article" href="/blog/2016/03/13/golang-json-api-tutorial/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2016/01/25/working-with-userdefined-type/">自分で定義したprimitiveな型を扱う際の注意点</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2016-01-25T01:11:59+09:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>25</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>1:11 am</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Goではよく知られているように自分で型(type)を宣言して、任意のfunctionを実装することができる。今回、あるプログラムを実装している時に少しハマったので、経緯と対応策を記録しておく。</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2016/01/25/working-with-userdefined-type/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2016/01/20/golang-function-tracing/">Goでfunctionが実行された順番を追いかける</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2016-01-20T00:33:25+09:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>20</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>12:33 am</span></time>
-        
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Goはgo routineを使って並行処理を容易に書くことができるが、下手に書くと色々なfunctionが相互に入り乱れて処理が追いづらいときがある。ここではGoでfunctionをトレースする方法をメモしておく。</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2016/01/20/golang-function-tracing/">Read on &rarr;</a>
     </footer>
   
 
